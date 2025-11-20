@@ -3,7 +3,14 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  
+  // --- TAMBAHAN KITA ---
+  // URL API ke server Laravel lokal Anda.
+  // Pastikan Anda menggunakan Laragon dengan SSL (https://)
+  // agar fitur kamera dan GPS berfungsi.
+  apiUrl: 'http://127.0.0.1:8000/api/v1'
+  // --- AKHIR TAMBAHAN ---
 };
 
 /*

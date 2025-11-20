@@ -1,0 +1,76 @@
+.login-bg {
+  /* Gunakan variabel global */
+  --background: var(--ion-background-color); 
+}
+
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100%;
+  padding: 20px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.login-header {
+  margin-bottom: 30px;
+
+  .logo-placeholder {
+    width: 80px;
+    height: 80px;
+    background: var(--ion-color-primary); /* Lilac */
+    color: var(--ion-color-primary-contrast);
+    border-radius: 20px; /* Lebih bulat */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    
+    h1 {
+      font-weight: bold;
+      font-size: 2rem;
+      margin: 0;
+    }
+  }
+
+  h2 {
+    font-weight: 700;
+    color: #333; /* Tetap gelap agar terbaca */
+    margin-bottom: 5px;
+  }
+
+  p {
+    color: #555;
+    font-size: 0.95rem;
+  }
+}
+
+.login-form {
+  background: #ffffff; /* Putih bersih */
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+
+  .input-item {
+    --padding-start: 0;
+    --inner-padding-end: 0;
+    --highlight-color-focused: var(--ion-color-primary);
+  }
+
+  .login-btn {
+    margin-top: 25px;
+    --background: var(--ion-color-primary); /* Lilac */
+    --color: var(--ion-color-primary-contrast);
+  }
+}
+
+.error-box {
+  text-align: center;
+  margin-top: 10px;
+  background: var(--ion-color-danger-tint); /* Merah pastel muda */
+  padding: 8px;
+  border-radius: 8px;
+  color: var(--ion-color-danger-shade);
+}

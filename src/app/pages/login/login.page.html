@@ -1,0 +1,55 @@
+<ion-content [fullscreen]="true" class="login-bg">
+  
+  <div class="login-container">
+    
+    <!-- Bagian Header / Logo -->
+    <div class="login-header ion-text-center">
+      <div class="logo-placeholder">
+        <!-- Anda bisa mengganti ini dengan <img> logo perusahaan -->
+        <h1>PR</h1> 
+      </div>
+      <h2>Attendance Mobile</h2>
+      <p class="ion-text-wrap">Silakan login untuk melanjutkan presensi.</p>
+    </div>
+
+    <!-- Form Login -->
+    <div class="login-form">
+      
+      <!-- Input Username -->
+      <ion-item lines="full" class="ion-margin-bottom input-item">
+        <ion-label position="floating">Username</ion-label>
+        <ion-input type="text" [(ngModel)]="username" name="username" required></ion-input>
+      </ion-item>
+
+      <!-- Input Password dengan Toggle Eye -->
+      <ion-item lines="full" class="ion-margin-bottom input-item">
+        <ion-label position="floating">Password</ion-label>
+        <ion-input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" name="password" required></ion-input>
+        <ion-icon slot="end" [name]="showPassword ? 'eye-off' : 'eye'" (click)="togglePassword()" class="password-icon"></ion-icon>
+      </ion-item>
+
+      <!-- Pesan Error -->
+      <div *ngIf="errorMessage" class="error-box ion-padding-bottom">
+        <ion-text color="danger">
+          <small>{{ errorMessage }}</small>
+        </ion-text>
+      </div>
+
+      <!-- Tombol Login -->
+      <ion-button expand="block" size="large" (click)="onLogin()" [disabled]="isSubmitting" class="login-btn">
+        <span *ngIf="!isSubmitting">Masuk</span>
+        <ion-spinner *ngIf="isSubmitting" name="crescent"></ion-spinner>
+      </ion-button>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="login-footer ion-text-center ion-margin-top">
+      <ion-text color="medium">
+        <small>Versi 1.0.0 | &copy; Adin Crystal</small>
+      </ion-text>
+    </div>
+
+  </div>
+
+</ion-content>

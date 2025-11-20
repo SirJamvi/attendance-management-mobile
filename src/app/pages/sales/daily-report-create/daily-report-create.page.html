@@ -1,0 +1,130 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/sales/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Laporan Harian</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding-vertical">
+  
+  <ion-refresher slot="fixed" (ionRefresh)="loadReportData($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Loading State -->
+  <app-loading-spinner *ngIf="isLoading" message="Memuat data laporan..."></app-loading-spinner>
+
+  <div *ngIf="!isLoading">
+
+    <!-- SKENARIO 1: SUDAH LAPOR -->
+    <div *ngIf="existingReport" class="ion-padding ion-text-center completed-container">
+      <ion-icon name="checkmark-done-circle" color="success" class="success-icon"></ion-icon>
+      <h2>Laporan Selesai!</h2>
+      <p class="ion-text-wrap text-muted">
+        Anda sudah mengirim laporan harian untuk tanggal {{ existingReport.report_date | date:'d MMMM y' }}.
+      </p>
+      
+      <ion-card class="result-card">
+        <ion-card-header>
+          <ion-card-subtitle>Rencana Besok Anda</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content class="ion-text-start">
+          "{{ existingReport.tomorrow_plan }}"
+        </ion-card-content>
+      </ion-card>
+
+      <ion-button expand="block" fill="outline" class="ion-margin-top" (click)="goBack()">
+        Kembali ke Dashboard
+      </ion-button>
+    </div>
+
+
+    <!-- SKENARIO 2: BELUM LAPOR -->
+    <div *ngIf="!existingReport">
+      
+      <div class="ion-padding-horizontal ion-margin-bottom">
+        <p class="small-text">
+          Laporan ini wajib diisi setiap akhir hari kerja (End of Day).
+        </p>
+      </div>
+
+      <!-- Bagian 1: Ringkasan Kunjungan Hari Ini (Read Only) -->
+      <ion-card class="summary-card">
+        <ion-card-header>
+          <ion-card-subtitle>Ringkasan Aktivitas Hari Ini</ion-card-subtitle>
+          <ion-card-title>Total Kunjungan: {{ todaySummary?.total_visits || 0 }}</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-grid>
+            <ion-row>
+              <ion-col size="6">
+                <div class="stat-item">
+                  <span class="value text-success">{{ todaySummary?.sign_up || 0 }}</span>
+                  <span class="label">Sign Up</span>
+                </div>
+              </ion-col>
+              <ion-col size="6">
+                <div class="stat-item">
+                  <span class="value text-primary">{{ todaySummary?.presentation || 0 }}</span>
+                  <span class="label">Presentasi</span>
+                </div>
+              </ion-col>
+              <ion-col size="6">
+                <div class="stat-item">
+                  <span class="value text-warning">{{ todaySummary?.follow_up || 0 }}</span>
+                  <span class="label">Follow Up</span>
+                </div>
+              </ion-col>
+              <ion-col size="6">
+                <div class="stat-item">
+                  <span class="value text-danger">{{ todaySummary?.rejected || 0 }}</span>
+                  <span class="label">Ditolak</span>
+                </div>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Bagian 2: Form Input -->
+      <form (ngSubmit)="onSubmit()" class="ion-padding">
+        
+        <ion-list lines="none" class="form-list">
+          <!-- Kendala -->
+          <ion-item class="rounded-item ion-margin-bottom">
+            <ion-label position="stacked">Kendala Hari Ini (Opsional)</ion-label>
+            <ion-textarea 
+              [(ngModel)]="obstacles" 
+              name="obstacles" 
+              rows="3" 
+              placeholder="Contoh: Cuaca buruk, macet, dll.">
+            </ion-textarea>
+          </ion-item>
+
+          <!-- Rencana Besok -->
+          <ion-item class="rounded-item">
+            <ion-label position="stacked">Rencana Besok <ion-text color="danger">*</ion-text></ion-label>
+            <ion-textarea 
+              [(ngModel)]="tomorrowPlan" 
+              name="tomorrowPlan" 
+              rows="3" 
+              placeholder="Area mana yang akan dikunjungi?" 
+              required>
+            </ion-textarea>
+          </ion-item>
+        </ion-list>
+
+        <div class="ion-margin-top">
+          <ion-button expand="block" type="submit" size="large" [disabled]="isSubmitting">
+            <span *ngIf="!isSubmitting">Kirim Laporan</span>
+            <ion-spinner *ngIf="isSubmitting"></ion-spinner>
+          </ion-button>
+        </div>
+      </form>
+
+    </div>
+
+  </div>
+</ion-content>

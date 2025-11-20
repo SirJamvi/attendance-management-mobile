@@ -1,0 +1,108 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Presensi Harian</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding-bottom">
+  
+  <!-- Spinner Loading Status Awal -->
+  <app-loading-spinner *ngIf="isLoading" message="Memuat data..."></app-loading-spinner>
+
+  <div *ngIf="!isLoading" class="ion-padding">
+
+    <!-- CASE 1: Belum Absen Masuk -->
+    <div *ngIf="!attendanceToday">
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Presensi Masuk</ion-card-title>
+          <ion-card-subtitle>Foto selfie untuk kehadiran.</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <!-- Component Kamera -->
+          <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
+
+          <!-- Indikator Loading GPS (Muncul setelah foto diambil tapi lokasi belum dapat) -->
+          <div *ngIf="photoData && !locationData" class="ion-text-center ion-padding-top">
+            <ion-spinner name="crescent" color="primary"></ion-spinner>
+            <p class="ion-text-wrap small-text">Mencari koordinat GPS...</p>
+          </div>
+          
+          <!-- Tombol Submit -->
+          <ion-button 
+            expand="block" 
+            class="ion-margin-top" 
+            [disabled]="isSubmitDisabled" 
+            (click)="submitCheckIn()">
+            <ion-icon slot="start" name="camera-outline"></ion-icon>
+            Submit Masuk
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- CASE 2: Sudah Masuk, Belum Pulang -->
+    <div *ngIf="attendanceToday && !attendanceToday.check_out_time">
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Presensi Pulang</ion-card-title>
+          <ion-card-subtitle>Foto selfie untuk pulang.</ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-item lines="none" color="light" class="info-box">
+            <ion-icon name="checkmark-circle" color="success" slot="start"></ion-icon>
+            <ion-label>
+              <h2>Sudah Masuk</h2>
+              <p>{{ attendanceToday.check_in_time | date: 'HH:mm' }} WIB</p>
+            </ion-label>
+          </ion-item>
+          
+          <div class="spacer"></div>
+
+          <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
+
+          <div *ngIf="photoData && !locationData" class="ion-text-center ion-padding-top">
+            <ion-spinner name="crescent" color="primary"></ion-spinner>
+            <p class="ion-text-wrap small-text">Mencari koordinat GPS...</p>
+          </div>
+
+          <ion-button 
+            expand="block" 
+            class="ion-margin-top" 
+            color="warning"
+            [disabled]="isSubmitDisabled" 
+            (click)="submitCheckOut()">
+            <ion-icon slot="start" name="camera-outline"></ion-icon>
+            Submit Pulang
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- CASE 3: Sudah Selesai Semua -->
+    <div *ngIf="attendanceToday && attendanceToday.check_out_time" class="ion-text-center ion-padding top-margin">
+      <ion-icon name="checkmark-done-circle" color="success" style="font-size: 80px;"></ion-icon>
+      <h2 class="ion-margin-top">Selesai!</h2>
+      <p class="ion-text-wrap" color="medium">
+        Presensi hari ini telah tuntas.
+      </p>
+      
+      <ion-card>
+        <ion-list lines="full">
+          <ion-item>
+            <ion-label>Jam Masuk</ion-label>
+            <ion-note slot="end" color="dark">{{ attendanceToday.check_in_time | date: 'HH:mm' }}</ion-note>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Jam Pulang</ion-label>
+            <ion-note slot="end" color="dark">{{ attendanceToday.check_out_time | date: 'HH:mm' }}</ion-note>
+          </ion-item>
+        </ion-list>
+      </ion-card>
+    </div>
+
+  </div>
+</ion-content>

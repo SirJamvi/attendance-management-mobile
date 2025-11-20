@@ -1,0 +1,151 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/driver/attendance"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Riwayat Presensi</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding-vertical">
+
+  <!-- Refresher -->
+  <ion-refresher slot="fixed" (ionRefresh)="loadHistory($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Filter Section -->
+  <ion-card class="filter-card ion-margin-horizontal">
+    <ion-card-content>
+      <ion-grid class="ion-no-padding">
+        <ion-row>
+          <ion-col size="5">
+            <ion-label position="stacked" color="medium" class="small-label">Dari</ion-label>
+            <ion-datetime-button datetime="startDate"></ion-datetime-button>
+            <ion-modal [keepContentsMounted]="true">
+              <ng-template>
+                <ion-datetime id="startDate" presentation="date" [(ngModel)]="startDate" (ionChange)="loadHistory()"></ion-datetime>
+              </ng-template>
+            </ion-modal>
+          </ion-col>
+          <ion-col size="2" class="ion-text-center arrow-col">
+            <ion-icon name="arrow-forward-outline"></ion-icon>
+          </ion-col>
+          <ion-col size="5">
+            <ion-label position="stacked" color="medium" class="small-label">Sampai</ion-label>
+            <ion-datetime-button datetime="endDate"></ion-datetime-button>
+            <ion-modal [keepContentsMounted]="true">
+              <ng-template>
+                <ion-datetime id="endDate" presentation="date" [(ngModel)]="endDate" (ionChange)="loadHistory()"></ion-datetime>
+              </ng-template>
+            </ion-modal>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Loading State -->
+  <app-loading-spinner *ngIf="isLoading" message="Memuat riwayat..."></app-loading-spinner>
+
+  <!-- List History -->
+  <ion-list *ngIf="!isLoading" class="ion-margin-top history-list">
+    
+    <div *ngIf="historyData.length === 0" class="ion-text-center ion-padding text-muted">
+      <ion-icon name="calendar-outline" style="font-size: 48px; opacity:0.5"></ion-icon>
+      <p>Tidak ada data presensi pada periode ini.</p>
+    </div>
+
+    <ion-item *ngFor="let item of historyData" button (click)="openDetail(item)" detail="false" class="history-item">
+      <ion-label>
+        <div class="item-header">
+          <h2>{{ item.date | date:'EEEE, d MMM y' }}</h2>
+          <ion-badge [color]="getStatusColor(item.status)">{{ getStatusLabel(item.status) }}</ion-badge>
+        </div>
+        
+        <div class="time-info">
+          <p>
+            <ion-icon name="log-in-outline" color="success"></ion-icon> 
+            Masuk: <strong>{{ item.check_in_time | date:'HH:mm' }}</strong>
+          </p>
+          <p *ngIf="item.check_out_time">
+            <ion-icon name="log-out-outline" color="danger"></ion-icon> 
+            Pulang: <strong>{{ item.check_out_time | date:'HH:mm' }}</strong>
+          </p>
+          <p *ngIf="!item.check_out_time" class="text-warning">
+            <ion-icon name="time-outline"></ion-icon> Belum Pulang
+          </p>
+        </div>
+      </ion-label>
+      <ion-icon name="chevron-forward-outline" slot="end" color="medium"></ion-icon>
+    </ion-item>
+  </ion-list>
+
+  <!-- Modal Detail Presensi -->
+  <ion-modal [isOpen]="isModalOpen" (didDismiss)="closeDetail()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Detail Presensi</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeDetail()">Tutup</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <div *ngIf="selectedAttendance">
+          
+          <div class="ion-text-center ion-margin-bottom">
+            <h2>{{ selectedAttendance.date | date:'fullDate' }}</h2>
+            <ion-badge [color]="getStatusColor(selectedAttendance.status)" class="ion-margin-top">
+              {{ getStatusLabel(selectedAttendance.status) }}
+            </ion-badge>
+          </div>
+
+          <!-- Bukti Masuk -->
+          <ion-card class="detail-card">
+            <ion-card-header>
+              <ion-card-subtitle>Presensi Masuk</ion-card-subtitle>
+              <ion-card-title>{{ selectedAttendance.check_in_time | date:'HH:mm:ss' }}</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <p class="location-text">
+                <ion-icon name="location"></ion-icon> 
+                {{ selectedAttendance.check_in_location.latitude }}, {{ selectedAttendance.check_in_location.longitude }}
+              </p>
+              <!-- Karena API Laravel mengembalikan path relatif, kita perlu base URL atau full path -->
+              <!-- Asumsi API Laravel sudah mengirim Full URL atau kita handle di frontend -->
+              <!-- Untuk demo kita pakai placeholder jika image broken -->
+              <img [src]="selectedAttendance.check_in_photo" 
+                   alt="Foto Masuk" 
+                   class="evidence-img"
+                   onerror="this.src='assets/images/no-image.png'">
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Bukti Pulang -->
+          <div *ngIf="selectedAttendance.check_out_time">
+            <ion-card class="detail-card">
+              <ion-card-header>
+                <ion-card-subtitle>Presensi Pulang</ion-card-subtitle>
+                <ion-card-title>{{ selectedAttendance.check_out_time | date:'HH:mm:ss' }}</ion-card-title>
+              </ion-card-header>
+              <ion-card-content>
+                <p class="location-text">
+                  <ion-icon name="location"></ion-icon> 
+                  {{ selectedAttendance.check_out_location?.latitude }}, {{ selectedAttendance.check_out_location?.longitude }}
+                </p>
+                <img [src]="selectedAttendance.check_out_photo" 
+                     alt="Foto Pulang" 
+                     class="evidence-img"
+                     onerror="this.src='assets/images/no-image.png'">
+              </ion-card-content>
+            </ion-card>
+          </div>
+
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

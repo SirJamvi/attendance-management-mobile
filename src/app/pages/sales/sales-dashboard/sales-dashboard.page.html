@@ -1,0 +1,122 @@
+<ion-content [fullscreen]="true" class="ion-padding-bottom">
+  
+  <div *ngIf="!isLoading && dashboardData">
+    
+    <ion-card class="status-card ion-margin-top" style="background: #ffffff;">
+      <ion-card-content class="ion-text-center">
+        <ion-icon [name]="dashboardData.attendanceToday?.check_in_time ? 'checkmark-circle' : 'time'" 
+                  [color]="dashboardData.attendanceToday?.check_in_time ? 'secondary' : 'warning'"
+                  size="large"></ion-icon>
+        
+        <h2 class="ion-text-uppercase ion-margin-top" style="color: #333;">
+          {{ dashboardData.attendanceToday?.check_in_time ? 'SUDAH PRESENSI' : 'BELUM PRESENSI' }}
+        </h2>
+        </ion-card-content>
+    </ion-card>
+
+    <h3 class="section-title ion-padding-horizontal">Performa Hari Ini</h3>
+    
+    <ion-grid class="stats-grid">
+      <ion-row>
+        <ion-col size="6">
+          <ion-card class="stat-card">
+            <ion-card-content>
+              <div class="stat-icon bg-lilac">
+                <ion-icon name="location"></ion-icon>
+              </div>
+              <div class="stat-value">
+                {{ dashboardData.visitMetrics.total_visits }} / <small>{{ dashboardData.dailyTarget }}</small>
+              </div>
+              <div class="stat-label">Kunjungan</div>
+              <ion-progress-bar [value]="calculateProgress(dashboardData.visitMetrics.total_visits, dashboardData.dailyTarget)" color="primary"></ion-progress-bar>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+
+        <ion-col size="6">
+          <ion-card class="stat-card">
+            <ion-card-content>
+              <div class="stat-icon bg-turquoise">
+                <ion-icon name="person-add"></ion-icon>
+              </div>
+              <div class="stat-value" style="color: var(--ion-color-secondary-shade)">
+                {{ dashboardData.visitMetrics.sign_up }}
+              </div>
+              <div class="stat-label">Sign Up Baru</div>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col size="12">
+          <ion-card class="stat-card">
+            <ion-card-content>
+              <ion-item lines="none" class="ion-no-padding transparent-bg">
+                <div class="stat-icon bg-lemon" slot="start" style="margin-bottom:0; margin-right:15px;">
+                   <ion-icon name="trophy" style="color: #555;"></ion-icon>
+                </div>
+                <ion-label>
+                  <h3>Target Closing Bulan Ini</h3>
+                  <p>Pencapaian: {{ dashboardData.monthlySignupsAchieved }} / {{ dashboardData.monthlySignupTarget }}</p>
+                </ion-label>
+                <h2 slot="end" style="color: #555;">
+                  {{ (calculateProgress(dashboardData.monthlySignupsAchieved, dashboardData.monthlySignupTarget) * 100) | number:'1.0-0' }}%
+                </h2>
+              </ion-item>
+              <ion-progress-bar [value]="calculateProgress(dashboardData.monthlySignupsAchieved, dashboardData.monthlySignupTarget)" color="warning"></ion-progress-bar>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+    <h3 class="section-title ion-padding-horizontal">Menu Utama</h3>
+    
+    <ion-grid class="menu-grid">
+      <ion-row>
+        <ion-col size="4">
+          <div class="menu-item" (click)="navigateTo('/tabs/sales/attendance')">
+            <div class="icon-box">
+              <ion-icon name="camera" class="icon-presensi"></ion-icon>
+            </div>
+            <label>Presensi</label>
+          </div>
+        </ion-col>
+        <ion-col size="4">
+          <div class="menu-item" (click)="navigateTo('/tabs/sales/visit-create')">
+            <div class="icon-box">
+              <ion-icon name="add-circle" class="icon-visit"></ion-icon>
+            </div>
+            <label>Visit Baru</label>
+          </div>
+        </ion-col>
+        <ion-col size="4">
+          <div class="menu-item" (click)="navigateTo('/tabs/sales/daily-report')">
+            <div class="icon-box">
+              <ion-icon name="document-text" class="icon-laporan"></ion-icon>
+            </div>
+            <label>Lap. Harian</label>
+          </div>
+        </ion-col>
+        <ion-col size="4">
+          <div class="menu-item" (click)="navigateTo('/tabs/sales/history')">
+            <div class="icon-box">
+              <ion-icon name="time" class="icon-riwayat"></ion-icon>
+            </div>
+            <label>Riwayat</label>
+          </div>
+        </ion-col>
+        <ion-col size="4">
+          <div class="menu-item" (click)="navigateTo('/tabs/sales/leave')">
+            <div class="icon-box">
+              <ion-icon name="calendar" class="icon-cuti"></ion-icon>
+            </div>
+            <label>Cuti</label>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+  </div>
+</ion-content>

@@ -1,0 +1,68 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Ajukan Cuti Baru</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <form (ngSubmit)="onSubmit()">
+    
+    <ion-item class="ion-margin-bottom rounded-item">
+      <ion-label position="stacked">Jenis Cuti</ion-label>
+      <ion-select [(ngModel)]="leaveType" name="leaveType" placeholder="Pilih jenis cuti" required>
+        <ion-select-option *ngFor="let type of leaveTypes" [value]="type.value">
+          {{ type.label }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-row>
+      <ion-col size="6">
+        <ion-item class="rounded-item">
+          <ion-label position="stacked">Mulai</ion-label>
+          <ion-datetime-button datetime="startDate"></ion-datetime-button>
+          <ion-modal [keepContentsMounted]="true">
+            <ng-template>
+              <ion-datetime id="startDate" presentation="date" [(ngModel)]="startDate" name="startDate"></ion-datetime>
+            </ng-template>
+          </ion-modal>
+        </ion-item>
+      </ion-col>
+      <ion-col size="6">
+        <ion-item class="rounded-item">
+          <ion-label position="stacked">Selesai</ion-label>
+          <ion-datetime-button datetime="endDate"></ion-datetime-button>
+          <ion-modal [keepContentsMounted]="true">
+            <ng-template>
+              <ion-datetime id="endDate" presentation="date" [(ngModel)]="endDate" name="endDate"></ion-datetime>
+            </ng-template>
+          </ion-modal>
+        </ion-item>
+      </ion-col>
+    </ion-row>
+
+    <ion-item class="ion-margin-top rounded-item">
+      <ion-label position="stacked">Alasan Cuti</ion-label>
+      <ion-textarea [(ngModel)]="reason" name="reason" rows="3" placeholder="Jelaskan alasan cuti Anda..." required></ion-textarea>
+    </ion-item>
+
+    <div *ngIf="leaveType === 'Sakit'" class="ion-margin-top camera-section">
+      <ion-label color="danger" class="ion-margin-bottom d-block">
+        * Wajib lampirkan foto surat dokter
+      </ion-label>
+      
+      <app-camera-view (photoTaken)="handleAttachment($event)"></app-camera-view>
+    </div>
+
+    <ion-button expand="block" type="submit" class="ion-margin-top" size="large" [disabled]="isSubmitting">
+      <span *ngIf="!isSubmitting">Kirim Pengajuan</span>
+      <ion-spinner *ngIf="isSubmitting"></ion-spinner>
+    </ion-button>
+
+  </form>
+
+</ion-content>

@@ -1,0 +1,16 @@
+.rounded-item {
+  --border-radius: 8px;
+  --background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.camera-section {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px dashed var(--ion-color-medium);
+}
+
+.d-block {
+  display: block;
+}

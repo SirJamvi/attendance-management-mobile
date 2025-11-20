@@ -1,0 +1,64 @@
+<ion-tabs>
+  
+  <!-- MENU DRIVER (Sesuai SOP: Minimalis) -->
+  <ion-tab-bar slot="bottom" *ngIf="userRole === 'driver'" class="driver-tab-bar">
+    
+    <!-- Tab 1: Presensi (Home) -->
+    <ion-tab-button tab="driver/attendance" class="tab-button">
+      <ion-icon name="home" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Presensi</ion-label>
+    </ion-tab-button>
+
+    <!-- Tab 2: Riwayat -->
+    <ion-tab-button tab="driver/history" class="tab-button">
+      <ion-icon name="time" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Riwayat</ion-label>
+    </ion-tab-button>
+
+    <!-- Tab 3: Cuti -->
+    <ion-tab-button tab="driver/leave" class="tab-button">
+      <ion-icon name="calendar" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Cuti</ion-label>
+    </ion-tab-button>
+
+  </ion-tab-bar>
+
+
+  <!-- MENU SALES (Sesuai SOP: Dashboard & Aktivitas) -->
+  <ion-tab-bar slot="bottom" *ngIf="userRole === 'sales'" class="sales-tab-bar">
+    
+    <!-- Tab 1: Dashboard -->
+    <ion-tab-button tab="sales/dashboard" class="tab-button">
+      <ion-icon name="speedometer" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Home</ion-label>
+    </ion-tab-button>
+
+    <!-- Tab 2: Presensi -->
+    <ion-tab-button tab="sales/attendance" class="tab-button">
+      <ion-icon name="location" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Absen</ion-label>
+    </ion-tab-button>
+
+    <!-- Tab 3: Upload Kunjungan (Visit) -->
+    <ion-tab-button tab="sales/visit-create" class="tab-button">
+      <ion-icon name="add-circle" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Visit</ion-label>
+    </ion-tab-button>
+
+    <!-- Tab 4: Laporan Harian -->
+    <ion-tab-button tab="sales/daily-report" class="tab-button">
+      <ion-icon name="document-text" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Laporan</ion-label>
+    </ion-tab-button>
+
+    <!-- Tab 5: Riwayat -->
+    <ion-tab-button tab="sales/history" class="tab-button">
+      <ion-icon name="time" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Riwayat</ion-label>
+    </ion-tab-button>
+
+  </ion-tab-bar>
+
+  <!-- Router outlet untuk konten -->
+  <ion-router-outlet></ion-router-outlet>
+</ion-tabs>

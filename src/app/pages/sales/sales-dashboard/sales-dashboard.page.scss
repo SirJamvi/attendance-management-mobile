@@ -1,0 +1,119 @@
+/* Header Kustom */
+.header-content {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  
+  small {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    font-weight: normal;
+  }
+  
+  .user-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+}
+
+/* Section Title */
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+/* Cards */
+.stat-card {
+  margin: 0;
+  height: 100%;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-radius: 12px;
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  
+  ion-icon {
+    font-size: 20px;
+    color: white;
+  }
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--ion-color-dark);
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--ion-color-medium);
+  margin-bottom: 8px;
+}
+
+/* Warna-warna Kustom */
+.bg-blue { background-color: #3880ff; }
+.bg-green { background-color: #2dd36f; }
+.bg-orange { background-color: #ffc409; }
+.bg-purple { background-color: #7044ff; }
+.bg-teal { background-color: #20c997; }
+.bg-gray { background-color: #92949c; }
+.bg-red { background-color: #eb445a; }
+
+.text-success { color: var(--ion-color-success); }
+.text-warning { color: var(--ion-color-warning); }
+
+/* Menu Grid */
+.menu-grid {
+  padding: 10px;
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 15px;
+  cursor: pointer;
+
+  .icon-box {
+    width: 55px;
+    height: 55px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.1s;
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    ion-icon {
+      font-size: 28px;
+      color: white;
+    }
+  }
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--ion-color-dark);
+  }
+}
+
+.monthly-card {
+  .transparent-bg {
+    --background: transparent;
+  }
+}

@@ -1,0 +1,67 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/sales/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Kunjungan Hari Ini</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="goToCreate()">
+        <ion-icon slot="icon-only" name="add"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding-vertical">
+
+  <ion-refresher slot="fixed" (ionRefresh)="loadVisits($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <app-loading-spinner *ngIf="isLoading" message="Memuat daftar kunjungan..."></app-loading-spinner>
+
+  <div *ngIf="!isLoading">
+    
+    <div *ngIf="visits.length === 0" class="empty-state ion-text-center ion-padding">
+      <div class="icon-container">
+        <ion-icon name="map-outline"></ion-icon>
+      </div>
+      <h3>Belum Ada Kunjungan</h3>
+      <p class="ion-text-muted">Anda belum melaporkan kunjungan apapun hari ini.</p>
+      <ion-button expand="block" class="ion-margin-top" (click)="goToCreate()">
+        <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+        Tambah Laporan
+      </ion-button>
+    </div>
+
+    <ion-list lines="none" class="visit-list" *ngIf="visits.length > 0">
+      <ion-item *ngFor="let visit of visits" class="visit-item">
+        <ion-label>
+          <div class="item-header">
+            <h2>{{ visit.place_name }}</h2>
+            <ion-badge [color]="getResultColor(visit.result)">{{ visit.result }}</ion-badge>
+          </div>
+          
+          <div class="item-details">
+            <p>
+              <ion-icon name="person-outline"></ion-icon> {{ visit.pic_name }}
+            </p>
+            <p>
+              <ion-icon name="time-outline"></ion-icon> {{ visit.created_at | date:'HH:mm' }} WIB
+            </p>
+          </div>
+
+          <div class="item-address">
+            <ion-icon name="location-outline"></ion-icon>
+            <span>{{ visit.address }}</span>
+          </div>
+
+          <div *ngIf="visit.notes" class="item-note">
+            <small>"{{ visit.notes }}"</small>
+          </div>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+  </div>
+</ion-content>

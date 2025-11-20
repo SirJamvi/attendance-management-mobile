@@ -1,0 +1,96 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Data Cuti</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="goToCreate()">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding-vertical">
+  
+  <ion-refresher slot="fixed" (ionRefresh)="loadLeaveData($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <app-loading-spinner *ngIf="isLoading" message="Memuat data cuti..."></app-loading-spinner>
+
+  <div *ngIf="!isLoading && leaveData">
+
+    <ion-grid class="ion-no-padding ion-margin-horizontal">
+      <ion-row>
+        <ion-col size="12" class="ion-margin-bottom">
+          <ion-card class="quota-card monthly-card">
+            <ion-card-header>
+              <ion-card-subtitle>Batas Bulan Ini</ion-card-subtitle>
+              <ion-card-title>{{ leaveData.monthlyLimit - leaveData.monthlyUsed }} Hari</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <p>Terpakai: {{ leaveData.monthlyUsed }} / {{ leaveData.monthlyLimit }} hari</p>
+              <ion-progress-bar [value]="leaveData.monthlyUsed / leaveData.monthlyLimit" color="light"></ion-progress-bar>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+
+        <ion-col size="12">
+          <ion-card class="quota-card annual-card">
+            <ion-card-header>
+              <ion-card-subtitle>Sisa Kuota Tahunan</ion-card-subtitle>
+              <ion-card-title>{{ leaveData.leaveQuota?.quota || 0 }} Hari</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <p>Khusus tipe 'Cuti Tahunan'</p>
+            </ion-card-content>
+          </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+    <div class="ion-padding">
+      <ion-button expand="block" size="large" (click)="goToCreate()" class="create-btn">
+        <ion-icon slot="start" name="add"></ion-icon>
+        Ajukan Cuti Baru
+      </ion-button>
+    </div>
+
+    <div class="ion-padding-horizontal">
+      <h3 class="section-title">Riwayat Pengajuan</h3>
+    </div>
+
+    <ion-list lines="none" class="history-list">
+      <ion-item *ngFor="let request of leaveData.leaveRequests.data" class="history-item">
+        <ion-label>
+          <div class="item-header">
+            <h2>{{ request.type }}</h2>
+            <ion-badge [color]="getStatusColor(request.status)">
+              {{ getStatusLabel(request.status) }}
+            </ion-badge>
+          </div>
+          <p class="date-range">
+            {{ request.start_date | date:'d MMM y' }} - {{ request.end_date | date:'d MMM y' }}
+          </p>
+          <p class="reason text-truncate">
+            "{{ request.reason }}"
+          </p>
+          
+          <p *ngIf="request.status === 'rejected' && request.rejection_reason" class="rejection-msg">
+            <ion-text color="danger">
+              <ion-icon name="alert-circle-outline"></ion-icon> {{ request.rejection_reason }}
+            </ion-text>
+          </p>
+        </ion-label>
+      </ion-item>
+
+      <div *ngIf="leaveData.leaveRequests.data.length === 0" class="empty-state">
+        <ion-icon name="document-text-outline"></ion-icon>
+        <p>Belum ada riwayat pengajuan.</p>
+      </div>
+    </ion-list>
+
+  </div>
+</ion-content>

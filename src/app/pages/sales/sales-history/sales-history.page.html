@@ -1,0 +1,198 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/sales/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Riwayat Aktivitas</ion-title>
+  </ion-toolbar>
+  
+  <ion-toolbar color="primary">
+    <ion-segment [value]="activeSegment" (ionChange)="segmentChanged($event)">
+      <ion-segment-button value="attendance">
+        <ion-label>Presensi</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="visits">
+        <ion-label>Kunjungan</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding-vertical">
+
+  <ion-refresher slot="fixed" (ionRefresh)="loadHistory($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <ion-accordion-group class="ion-margin-horizontal ion-margin-bottom">
+    <ion-accordion value="filter">
+      <ion-item slot="header" color="light">
+        <ion-label>Filter Tanggal</ion-label>
+        <ion-icon slot="end" name="calendar-outline"></ion-icon>
+      </ion-item>
+      <div class="ion-padding" slot="content">
+        <ion-grid>
+          <ion-row>
+            <ion-col size="6">
+              <ion-label position="stacked">Dari</ion-label>
+              <ion-datetime-button datetime="startDate"></ion-datetime-button>
+              <ion-modal [keepContentsMounted]="true">
+                <ng-template>
+                  <ion-datetime id="startDate" presentation="date" [(ngModel)]="startDate" (ionChange)="loadHistory()"></ion-datetime>
+                </ng-template>
+              </ion-modal>
+            </ion-col>
+            <ion-col size="6">
+              <ion-label position="stacked">Sampai</ion-label>
+              <ion-datetime-button datetime="endDate"></ion-datetime-button>
+              <ion-modal [keepContentsMounted]="true">
+                <ng-template>
+                  <ion-datetime id="endDate" presentation="date" [(ngModel)]="endDate" (ionChange)="loadHistory()"></ion-datetime>
+                </ng-template>
+              </ion-modal>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </div>
+    </ion-accordion>
+  </ion-accordion-group>
+
+  <app-loading-spinner *ngIf="isLoading" message="Memuat data..."></app-loading-spinner>
+
+  <div *ngIf="!isLoading && activeSegment === 'attendance'">
+    <ion-list class="history-list">
+      <div *ngIf="attendanceHistory.length === 0" class="empty-state">
+        <p>Belum ada data presensi.</p>
+      </div>
+
+      <ion-item *ngFor="let item of attendanceHistory" button (click)="openDetail(item)" detail="false" class="history-item">
+        <ion-label>
+          <div class="item-header">
+            <h2>{{ item.date | date:'EEE, d MMM' }}</h2>
+            <ion-badge [color]="getStatusColor(item.status)">
+              {{ item.status === 'late' ? 'Terlambat' : 'Hadir' }}
+            </ion-badge>
+          </div>
+          <div class="item-meta">
+            <span><ion-icon name="log-in"></ion-icon> {{ item.check_in_time | date:'HH:mm' }}</span>
+            <span *ngIf="item.check_out_time"><ion-icon name="log-out"></ion-icon> {{ item.check_out_time | date:'HH:mm' }}</span>
+          </div>
+        </ion-label>
+        <ion-icon name="chevron-forward" slot="end" color="medium"></ion-icon>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <div *ngIf="!isLoading && activeSegment === 'visits'">
+    <ion-list class="history-list">
+      <div *ngIf="visitHistory.length === 0" class="empty-state">
+        <p>Belum ada data kunjungan.</p>
+      </div>
+
+      <ion-item *ngFor="let item of visitHistory" button (click)="openDetail(item)" detail="false" class="history-item">
+        <ion-label>
+          <div class="item-header">
+            <h2 class="text-primary">{{ item.place_name }}</h2>
+            <ion-badge [color]="getStatusColor(item.result)">{{ item.result }}</ion-badge>
+          </div>
+          <p class="pic-info">
+            <ion-icon name="person"></ion-icon> {{ item.pic_name }}
+          </p>
+          <div class="item-meta">
+            <span><ion-icon name="calendar"></ion-icon> {{ item.created_at | date:'d MMM y, HH:mm' }}</span>
+          </div>
+        </ion-label>
+        <ion-icon name="chevron-forward" slot="end" color="medium"></ion-icon>
+      </ion-item>
+    </ion-list>
+  </div>
+
+
+  <ion-modal [isOpen]="isModalOpen" (didDismiss)="closeDetail()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Detail {{ activeSegment === 'attendance' ? 'Presensi' : 'Kunjungan' }}</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeDetail()">Tutup</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <div *ngIf="selectedItem">
+          
+          <div *ngIf="activeSegment === 'attendance'">
+            <div class="ion-text-center ion-margin-bottom">
+              <h2>{{ selectedItem.date | date:'fullDate' }}</h2>
+              <ion-badge [color]="getStatusColor(selectedItem.status)">{{ selectedItem.status }}</ion-badge>
+            </div>
+            
+            <ion-card class="detail-card">
+              <ion-card-header><ion-card-subtitle>Foto Masuk</ion-card-subtitle></ion-card-header>
+              <ion-card-content>
+                <img [src]="selectedItem.check_in_photo" class="evidence-img" onerror="this.src='assets/images/no-image.png'">
+                <p class="location-text mt-2">
+                  <ion-icon name="location"></ion-icon> {{ selectedItem.check_in_location?.latitude }}, {{ selectedItem.check_in_location?.longitude }}
+                </p>
+              </ion-card-content>
+            </ion-card>
+
+            <div *ngIf="selectedItem.check_out_time">
+              <ion-card class="detail-card">
+                <ion-card-header><ion-card-subtitle>Foto Pulang</ion-card-subtitle></ion-card-header>
+                <ion-card-content>
+                  <img [src]="selectedItem.check_out_photo" class="evidence-img" onerror="this.src='assets/images/no-image.png'">
+                  <p class="location-text mt-2">
+                    <ion-icon name="location"></ion-icon> {{ selectedItem.check_out_location?.latitude }}, {{ selectedItem.check_out_location?.longitude }}
+                  </p>
+                </ion-card-content>
+              </ion-card>
+            </div>
+          </div>
+
+          <div *ngIf="activeSegment === 'visits'">
+            <h2 class="ion-text-center">{{ selectedItem.place_name }}</h2>
+            <p class="ion-text-center text-muted">{{ selectedItem.created_at | date:'fullDate' }}</p>
+            
+            <ion-list lines="none">
+              <ion-item>
+                <ion-label>
+                  <h3>Hasil</h3>
+                  <p><ion-badge [color]="getStatusColor(selectedItem.result)">{{ selectedItem.result }}</ion-badge></p>
+                </ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>
+                  <h3>Alamat</h3>
+                  <p class="ion-text-wrap">{{ selectedItem.address }}</p>
+                </ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>
+                  <h3>PIC</h3>
+                  <p>{{ selectedItem.pic_name }} ({{ selectedItem.pic_phone }})</p>
+                </ion-label>
+              </ion-item>
+              <ion-item>
+                <ion-label>
+                  <h3>Catatan</h3>
+                  <p class="ion-text-wrap">{{ selectedItem.notes || '-' }}</p>
+                </ion-label>
+              </ion-item>
+            </ion-list>
+
+            <h5 class="ion-padding-start ion-margin-top">Bukti Foto</h5>
+            <div *ngFor="let photo of selectedItem.photos">
+               <img [src]="photo.photo_path" class="evidence-img ion-margin-bottom" onerror="this.src='assets/images/no-image.png'">
+            </div>
+             <p class="location-text ion-padding-start">
+                <ion-icon name="location"></ion-icon> {{ selectedItem.location?.latitude }}, {{ selectedItem.location?.longitude }}
+             </p>
+          </div>
+
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

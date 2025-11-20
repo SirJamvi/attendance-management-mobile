@@ -1,0 +1,110 @@
+.quota-card {
+  margin: 0;
+  border-radius: 12px;
+  color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+
+  ion-card-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: white;
+  }
+  
+  ion-card-subtitle {
+    color: rgba(255,255,255,0.8);
+    font-weight: 600;
+  }
+  
+  p {
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    color: rgba(255,255,255,0.9);
+  }
+}
+
+.monthly-card {
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+}
+
+.annual-card {
+  background: linear-gradient(135deg, var(--ion-color-secondary), var(--ion-color-secondary-shade));
+}
+
+.create-btn {
+  --border-radius: 12px;
+  font-weight: 600;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(var(--ion-color-primary-rgb), 0.3);
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--ion-color-dark);
+  margin-bottom: 10px;
+  margin-top: 10px;
+}
+
+.history-list {
+  background: transparent;
+}
+
+.history-item {
+  --background: white;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --inner-padding-end: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+
+  .item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+    
+    h2 {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--ion-color-dark);
+    }
+  }
+
+  .date-range {
+    color: var(--ion-color-medium);
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+
+  .reason {
+    font-style: italic;
+    color: var(--ion-color-dark);
+    opacity: 0.8;
+  }
+
+  .rejection-msg {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    background: var(--ion-color-danger-tint);
+    padding: 5px 10px;
+    border-radius: 5px;
+  }
+}
+
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ion-color-medium);
+  
+  ion-icon {
+    font-size: 4rem;
+    opacity: 0.5;
+    margin-bottom: 10px;
+  }
+}
