@@ -1,19 +1,32 @@
-<!-- Tampilan awal: Tombol Kamera -->
-<div *ngIf="!photoPreview" class="camera-box ion-text-center" (click)="takePicture()">
-  <ion-icon name="camera" class="camera-icon"></ion-icon>
-  <ion-text color="medium">
-    <p>Tap untuk Ambil Foto</p>
-  </ion-text>
-</div>
-
-<!-- Tampilan setelah foto diambil: Preview & Retake -->
-<div *ngIf="photoPreview" class="preview-box ion-text-center">
-  <div class="image-container">
-    <img [src]="photoPreview" class="preview-image" alt="Pratinjau Foto" />
-  </div>
+<div class="camera-wrapper">
   
-  <ion-button (click)="retakePicture()" color="warning" size="small" class="ion-margin-top">
-    <ion-icon slot="start" name="refresh-outline"></ion-icon>
-    Ambil Ulang
-  </ion-button>
+  <!-- Tampilan awal: Tombol Kamera -->
+  <div 
+    *ngIf="!photoPreview" 
+    class="camera-box ion-text-center"
+    (click)="takePicture()"
+    (touchstart)="onTouchStart($event)"
+    (mousedown)="onMouseDown($event)">
+    <ion-icon name="camera" class="camera-icon"></ion-icon>
+    <ion-text color="medium">
+      <p>Tap untuk Ambil Foto</p>
+    </ion-text>
+  </div>
+
+  <!-- Tampilan setelah foto diambil -->
+  <div *ngIf="photoPreview" class="preview-box ion-text-center">
+    <div class="image-container">
+      <img [src]="photoPreview" class="preview-image" alt="Pratinjau Foto" />
+    </div>
+    
+    <ion-button 
+      (click)="retakePicture()" 
+      color="warning" 
+      size="small" 
+      class="ion-margin-top">
+      <ion-icon slot="start" name="refresh-outline"></ion-icon>
+      Ambil Ulang
+    </ion-button>
+  </div>
+
 </div>

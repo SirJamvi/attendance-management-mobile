@@ -63,7 +63,12 @@
     </div>
 
     <ion-list lines="none" class="history-list">
-      <ion-item *ngFor="let request of leaveData.leaveRequests.data" class="history-item">
+      <ion-item 
+        *ngFor="let request of leaveData.leaveRequests.data" 
+        class="history-item"
+        button
+        detail="false"
+        (click)="viewLeaveDetail(request)">
         <ion-label>
           <div class="item-header">
             <h2>{{ request.type }}</h2>

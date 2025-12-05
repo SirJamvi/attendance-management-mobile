@@ -11,44 +11,74 @@
 
   <form (ngSubmit)="onSubmit()">
     
-    <!-- BAGIAN 1: INFORMASI TEMPAT -->
     <ion-list-header>
       <ion-label>Informasi Tempat</ion-label>
     </ion-list-header>
     
     <ion-item class="rounded-item ion-margin-bottom">
-      <ion-label position="stacked">Nama Tempat / Bisnis <ion-text color="danger">*</ion-text></ion-label>
-      <ion-input [(ngModel)]="placeName" name="placeName" placeholder="Contoh: Toko Jaya Abadi" required></ion-input>
+      <ion-input 
+        label="Nama Tempat / Bisnis *" 
+        label-placement="stacked" 
+        [(ngModel)]="placeName" 
+        name="placeName" 
+        placeholder="Contoh: Toko Jaya Abadi" 
+        required>
+      </ion-input>
     </ion-item>
 
     <ion-item class="rounded-item ion-margin-bottom">
-      <ion-label position="stacked">Alamat Lengkap <ion-text color="danger">*</ion-text></ion-label>
-      <ion-textarea [(ngModel)]="address" name="address" rows="2" placeholder="Jl. Jendral Sudirman No. 1..." required></ion-textarea>
+      <ion-textarea 
+        label="Alamat Lengkap *" 
+        label-placement="stacked" 
+        [(ngModel)]="address" 
+        name="address" 
+        rows="2" 
+        placeholder="Jl. Jendral Sudirman No. 1..." 
+        required>
+      </ion-textarea>
     </ion-item>
 
     <ion-row>
       <ion-col size="6">
         <ion-item class="rounded-item">
-          <ion-label position="stacked">Nama PIC <ion-text color="danger">*</ion-text></ion-label>
-          <ion-input [(ngModel)]="picName" name="picName" placeholder="Bpk. Budi" required></ion-input>
+          <ion-input 
+            label="Nama PIC *" 
+            label-placement="stacked"
+            [(ngModel)]="picName" 
+            name="picName" 
+            placeholder="Bpk. Budi" 
+            required>
+          </ion-input>
         </ion-item>
       </ion-col>
       <ion-col size="6">
         <ion-item class="rounded-item">
-          <ion-label position="stacked">No. HP PIC <ion-text color="danger">*</ion-text></ion-label>
-          <ion-input [(ngModel)]="picPhone" name="picPhone" type="tel" placeholder="081..." required></ion-input>
+          <ion-input 
+            label="No. HP PIC *" 
+            label-placement="stacked"
+            [(ngModel)]="picPhone" 
+            name="picPhone" 
+            type="tel" 
+            placeholder="081..." 
+            required>
+          </ion-input>
         </ion-item>
       </ion-col>
     </ion-row>
 
-    <!-- BAGIAN 2: HASIL KUNJUNGAN -->
     <ion-list-header class="ion-margin-top">
       <ion-label>Hasil Kunjungan</ion-label>
     </ion-list-header>
 
     <ion-item class="rounded-item ion-margin-bottom">
-      <ion-label position="stacked">Status Hasil <ion-text color="danger">*</ion-text></ion-label>
-      <ion-select [(ngModel)]="result" name="result" placeholder="Pilih Hasil" interface="action-sheet" required>
+      <ion-select 
+        label="Status Hasil *" 
+        label-placement="stacked"
+        [(ngModel)]="result" 
+        name="result" 
+        placeholder="Pilih Hasil Kunjungan" 
+        interface="action-sheet"
+        required>
         <ion-select-option *ngFor="let res of visitResults" [value]="res.value">
           {{ res.label }}
         </ion-select-option>
@@ -56,11 +86,16 @@
     </ion-item>
 
     <ion-item class="rounded-item ion-margin-bottom">
-      <ion-label position="stacked">Catatan Tambahan (Opsional)</ion-label>
-      <ion-textarea [(ngModel)]="notes" name="notes" rows="3" placeholder="Catatan khusus atau tindak lanjut..."></ion-textarea>
+      <ion-textarea 
+        label="Catatan Tambahan (Opsional)" 
+        label-placement="stacked"
+        [(ngModel)]="notes" 
+        name="notes" 
+        rows="3" 
+        placeholder="Catatan khusus atau tindak lanjut...">
+      </ion-textarea>
     </ion-item>
 
-    <!-- BAGIAN 3: BUKTI FOTO & GPS -->
     <ion-list-header class="ion-margin-top">
       <ion-label>Bukti Kunjungan</ion-label>
     </ion-list-header>
@@ -70,10 +105,8 @@
         Ambil foto lokasi/bersama PIC. GPS akan dicatat otomatis.
       </ion-label>
       
-      <!-- Komponen Kamera -->
       <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
 
-      <!-- Status GPS -->
       <div *ngIf="photoData && !locationData" class="ion-text-center ion-padding-top">
         <ion-spinner name="dots" color="primary"></ion-spinner>
         <p class="small-text">Sedang mengambil lokasi GPS...</p>
@@ -85,7 +118,6 @@
       </div>
     </div>
 
-    <!-- Tombol Submit -->
     <ion-button expand="block" type="submit" size="large" class="ion-margin-top" [disabled]="isSubmitting || !photoData || !locationData">
       <span *ngIf="!isSubmitting">Submit Laporan</span>
       <ion-spinner *ngIf="isSubmitting"></ion-spinner>

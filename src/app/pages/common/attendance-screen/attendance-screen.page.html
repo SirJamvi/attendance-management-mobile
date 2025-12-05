@@ -9,10 +9,13 @@
 
 <ion-content [fullscreen]="true" class="ion-padding-bottom">
   
-  <!-- Spinner Loading Status Awal -->
-  <app-loading-spinner *ngIf="isLoading" message="Memuat data..."></app-loading-spinner>
+  <!-- ✅ PERBAIKAN: Spinner dengan z-index rendah -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <app-loading-spinner message="Memuat data..."></app-loading-spinner>
+  </div>
 
-  <div *ngIf="!isLoading" class="ion-padding">
+  <!-- ✅ KONTEN UTAMA - Tidak overlap dengan spinner -->
+  <div *ngIf="!isLoading" class="content-wrapper ion-padding">
 
     <!-- CASE 1: Belum Absen Masuk -->
     <div *ngIf="!attendanceToday">
@@ -22,15 +25,22 @@
           <ion-card-subtitle>Foto selfie untuk kehadiran.</ion-card-subtitle>
         </ion-card-header>
         <ion-card-content>
-          <!-- Component Kamera -->
-          <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
+          
+          <!-- ✅ Component Kamera dengan style explicit -->
+          <div style="position: relative; z-index: 1;">
+            <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
+          </div>
 
-          <!-- Indikator Loading GPS (Muncul setelah foto diambil tapi lokasi belum dapat) -->
+          <!-- GPS Loading Indicator -->
           <div *ngIf="photoData && !locationData" class="ion-text-center ion-padding-top">
             <ion-spinner name="crescent" color="primary"></ion-spinner>
             <p class="ion-text-wrap small-text">Mencari koordinat GPS...</p>
           </div>
           
+          <div *ngIf="photoData" class="ion-text-center ion-margin-vertical">
+            <img [src]="photoData" style="max-height: 300px; border-radius: 10px; border: 2px solid #ddd;">
+          </div>
+
           <!-- Tombol Submit -->
           <ion-button 
             expand="block" 
@@ -60,9 +70,20 @@
             </ion-label>
           </ion-item>
           
-          <div class="spacer"></div>
+          <div class="spacer" style="height: 16px;"></div>
 
-          <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
+          <div style="position: relative; z-index: 1;">
+  <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
+</div>
+
+<div *ngIf="photoData" class="ion-text-center ion-margin-top">
+  <img [src]="photoData" style="max-height: 400px; border-radius: 12px; border: 2px solid var(--ion-color-primary);">
+  
+  <ion-button fill="clear" color="danger" (click)="resetForm()">
+    <ion-icon name="trash-outline" slot="start"></ion-icon>
+    Hapus Foto
+  </ion-button>
+</div>
 
           <div *ngIf="photoData && !locationData" class="ion-text-center ion-padding-top">
             <ion-spinner name="crescent" color="primary"></ion-spinner>

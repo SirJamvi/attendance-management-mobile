@@ -1,9 +1,60 @@
-ion-list {
-  border-radius: 8px;
-  border: 1px solid var(--ion-color-medium-tint);
+:host {
+  display: block;
+  pointer-events: auto !important;
 }
 
-// Helper class untuk radius di item
-.ion-border-radius {
-  border-radius: 8px;
+ion-content {
+  --background: var(--ion-color-light);
+  pointer-events: auto !important;
+}
+
+.content-wrapper {
+  pointer-events: auto !important;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.95);
+  z-index: 9999;
+}
+
+.info-box {
+  --background: var(--ion-color-light);
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.small-text {
+  font-size: 14px;
+  color: var(--ion-color-medium);
+  margin-top: 8px;
+}
+
+.top-margin {
+  margin-top: 40px;
+}
+
+.spacer {
+  height: 16px;
+}
+
+// ✅ Force all ion-cards and buttons to be clickable
+ion-card {
+  pointer-events: auto !important;
+  
+  ion-card-content {
+    pointer-events: auto !important;
+  }
+}
+
+ion-button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
 }

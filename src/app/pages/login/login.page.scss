@@ -1,76 +1,171 @@
-.login-bg {
-  /* Gunakan variabel global */
-  --background: var(--ion-background-color); 
+:host {
+  ion-content {
+    --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
 }
 
-.login-container {
+.login-wrapper {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-height: 100%;
-  padding: 20px;
-  max-width: 400px;
-  margin: 0 auto;
+  align-items: center;
+  padding: 24px;
 }
 
 .login-header {
-  margin-bottom: 30px;
-
-  .logo-placeholder {
-    width: 80px;
-    height: 80px;
-    background: var(--ion-color-primary); /* Lilac */
-    color: var(--ion-color-primary-contrast);
-    border-radius: 20px; /* Lebih bulat */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px auto;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    
-    h1 {
-      font-weight: bold;
-      font-size: 2rem;
-      margin: 0;
-    }
-  }
-
-  h2 {
+  text-align: center;
+  margin-bottom: 40px;
+  
+  h1 {
+    font-size: 32px;
     font-weight: 700;
-    color: #333; /* Tetap gelap agar terbaca */
-    margin-bottom: 5px;
+    color: #ffffff;
+    margin-bottom: 8px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-
+  
   p {
-    color: #555;
-    font-size: 0.95rem;
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 400;
   }
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  padding: 32px 24px;
 }
 
 .login-form {
-  background: #ffffff; /* Putih bersih */
-  padding: 25px;
-  border-radius: 20px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-
-  .input-item {
-    --padding-start: 0;
-    --inner-padding-end: 0;
+  
+  ion-item {
+    --background: #F8F9FA;
+    --border-color: transparent;
+    --border-radius: 12px;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --inner-padding-end: 16px;
     --highlight-color-focused: var(--ion-color-primary);
-  }
-
-  .login-btn {
-    margin-top: 25px;
-    --background: var(--ion-color-primary); /* Lilac */
-    --color: var(--ion-color-primary-contrast);
+    margin-bottom: 16px;
+    border-radius: 12px;
+    
+    &::part(native) {
+      border-radius: 12px;
+    }
+    
+    ion-input {
+      --color: #2D3748;
+      --placeholder-color: #A0AEC0;
+      --placeholder-opacity: 1;
+      font-size: 15px;
+      
+      input {
+        color: #2D3748 !important;
+        -webkit-text-fill-color: #2D3748 !important;
+        
+        &::placeholder {
+          color: #A0AEC0 !important;
+          -webkit-text-fill-color: #A0AEC0 !important;
+          opacity: 1 !important;
+        }
+      }
+    }
+    
+    ion-icon {
+      color: #718096;
+      font-size: 22px;
+      cursor: pointer;
+      transition: color 0.2s;
+      
+      &:hover {
+        color: var(--ion-color-primary);
+      }
+    }
   }
 }
 
-.error-box {
-  text-align: center;
-  margin-top: 10px;
-  background: var(--ion-color-danger-tint); /* Merah pastel muda */
-  padding: 8px;
-  border-radius: 8px;
-  color: var(--ion-color-danger-shade);
+.login-button {
+  --border-radius: 12px;
+  --box-shadow: 0 4px 12px rgba(79, 195, 247, 0.3);
+  height: 52px;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+  
+  &:hover:not([disabled]) {
+    --box-shadow: 0 6px 16px rgba(79, 195, 247, 0.4);
+  }
+  
+  &[disabled] {
+    opacity: 0.5;
+  }
+}
+
+// ✅ Dark Mode Support
+@media (prefers-color-scheme: dark) {
+  :host {
+    ion-content {
+      --background: linear-gradient(135deg, #1A202C 0%, #2D3748 100%);
+    }
+  }
+  
+  .login-header {
+    h1 {
+      color: #F7FAFC;
+    }
+    
+    p {
+      color: #E2E8F0;
+    }
+  }
+  
+  .login-card {
+    background: #2D3748;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  }
+  
+  .login-form {
+    ion-item {
+      --background: #1A202C;
+      
+      ion-input {
+        --color: #F7FAFC;
+        --placeholder-color: #A0AEC0;
+        
+        input {
+          color: #F7FAFC !important;
+          -webkit-text-fill-color: #F7FAFC !important;
+          
+          &::placeholder {
+            color: #A0AEC0 !important;
+            -webkit-text-fill-color: #A0AEC0 !important;
+          }
+        }
+      }
+      
+      ion-icon {
+        color: #CBD5E0;
+      }
+    }
+  }
+}
+
+// ✅ Responsive untuk tablet
+@media (min-width: 768px) {
+  .login-card {
+    padding: 40px 32px;
+  }
+  
+  .login-header {
+    h1 {
+      font-size: 36px;
+    }
+  }
 }

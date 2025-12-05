@@ -76,10 +76,47 @@ export class AuthService {
   }
 
   /**
-   * TAMBAHAN: Method untuk mendapatkan current user value secara synchronous
+   * Method untuk mendapatkan current user value secara synchronous
    * Dibutuhkan oleh guard dan home.page.ts
    */
   getCurrentUserValue(): User | null {
     return this.currentUser.value;
+  }
+
+  // ✅ TAMBAHKAN METHOD INI
+  /**
+   * Check apakah user sudah login (synchronous)
+   * @returns true jika user sudah login, false jika belum
+   */
+  isLoggedIn(): boolean {
+    return this.authState.value === true;
+  }
+
+  // ✅ OPTIONAL: Method async untuk check token validity
+  /**
+   * Check apakah user sudah login dengan validate token (asynchronous)
+   * @returns Promise<boolean>
+   */
+  async checkAuthStatus(): Promise<boolean> {
+    const token = await this.storage.getToken();
+    if (!token) {
+      return false;
+    }
+    
+    try {
+      const response = await this.apiClient.get<ApiResponse<User>>('user').toPromise();
+      return response?.success === true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  // ✅ OPTIONAL: Method untuk get auth state value (synchronous)
+  /**
+   * Get current auth state value
+   * @returns boolean | null
+   */
+  getAuthStateValue(): boolean | null {
+    return this.authState.value;
   }
 }

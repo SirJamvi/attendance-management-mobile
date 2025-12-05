@@ -1,0 +1,219 @@
+// Ionic Variables and Theming. For more info, please see:
+// http://ionicframework.com/docs/theming/
+
+/** Ionic CSS Variables **/
+:root {
+  
+  // ============================================
+  // PRIMARY COLOR PALETTE - BIRU MUDA CERAH
+  // ============================================
+  --ion-color-primary: #4FC3F7;
+  --ion-color-primary-rgb: 79, 195, 247;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #46acd9;
+  --ion-color-primary-tint: #61c9f8;
+
+  // ============================================
+  // SECONDARY COLOR - BIRU LANGIT
+  // ============================================
+  --ion-color-secondary: #29B6F6;
+  --ion-color-secondary-rgb: 41, 182, 246;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #24a0d8;
+  --ion-color-secondary-tint: #3ebdf7;
+
+  // ============================================
+  // TERTIARY COLOR - BIRU AQUA
+  // ============================================
+  --ion-color-tertiary: #00BCD4;
+  --ion-color-tertiary-rgb: 0, 188, 212;
+  --ion-color-tertiary-contrast: #ffffff;
+  --ion-color-tertiary-contrast-rgb: 255, 255, 255;
+  --ion-color-tertiary-shade: #00a5bb;
+  --ion-color-tertiary-tint: #1ac3d8;
+
+  // ============================================
+  // SUCCESS COLOR - HIJAU MINT
+  // ============================================
+  --ion-color-success: #26D0CE;
+  --ion-color-success-rgb: 38, 208, 206;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #21b7b5;
+  --ion-color-success-tint: #3cd5d3;
+
+  // ============================================
+  // WARNING COLOR - ORANGE CERAH
+  // ============================================
+  --ion-color-warning: #FFA726;
+  --ion-color-warning-rgb: 255, 167, 38;
+  --ion-color-warning-contrast: #000000;
+  --ion-color-warning-contrast-rgb: 0, 0, 0;
+  --ion-color-warning-shade: #e09321;
+  --ion-color-warning-tint: #ffb03c;
+
+  // ============================================
+  // DANGER COLOR - MERAH CORAL
+  // ============================================
+  --ion-color-danger: #FF6B9D;
+  --ion-color-danger-rgb: 255, 107, 157;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #e05e8a;
+  --ion-color-danger-tint: #ff7aa7;
+
+  // ============================================
+  // LIGHT COLOR - PUTIH LEMBUT
+  // ============================================
+  --ion-color-light: #F8F9FA;
+  --ion-color-light-rgb: 248, 249, 250;
+  --ion-color-light-contrast: #000000;
+  --ion-color-light-contrast-rgb: 0, 0, 0;
+  --ion-color-light-shade: #dadbdc;
+  --ion-color-light-tint: #f9fafb;
+
+  // ============================================
+  // MEDIUM COLOR - ABU-ABU MODERN
+  // ============================================
+  --ion-color-medium: #A0AEC0;
+  --ion-color-medium-rgb: 160, 174, 192;
+  --ion-color-medium-contrast: #ffffff;
+  --ion-color-medium-contrast-rgb: 255, 255, 255;
+  --ion-color-medium-shade: #8d99a9;
+  --ion-color-medium-tint: #aab6c6;
+
+  // ============================================
+  // DARK COLOR
+  // ============================================
+  --ion-color-dark: #2D3748;
+  --ion-color-dark-rgb: 45, 55, 72;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #28303f;
+  --ion-color-dark-tint: #42475a;
+
+  // ============================================
+  // CUSTOM COLORS - TAMBAHAN
+  // ============================================
+  
+  // Info Color
+  --ion-color-info: #03A9F4;
+  --ion-color-info-rgb: 3, 169, 244;
+  --ion-color-info-contrast: #ffffff;
+  --ion-color-info-contrast-rgb: 255, 255, 255;
+  --ion-color-info-shade: #0395d7;
+  --ion-color-info-tint: #1cb2f5;
+
+  // Gradient Colors
+  --gradient-primary: linear-gradient(135deg, #4FC3F7 0%, #29B6F6 100%);
+  --gradient-secondary: linear-gradient(135deg, #29B6F6 0%, #00BCD4 100%);
+  --gradient-success: linear-gradient(135deg, #26D0CE 0%, #1DE9B6 100%);
+  --gradient-warning: linear-gradient(135deg, #FFA726 0%, #FF9800 100%);
+  --gradient-danger: linear-gradient(135deg, #FF6B9D 0%, #F06292 100%);
+  --gradient-purple: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --gradient-ocean: linear-gradient(135deg, #4FC3F7 0%, #00BCD4 100%);
+  
+  // Background Colors
+  --background-primary: #FFFFFF;
+  --background-secondary: #F8F9FA;
+  --background-tertiary: #E8F4F8;
+  --background-card: #FFFFFF;
+  
+  // Text Colors
+  --text-primary: #2D3748;
+  --text-secondary: #4A5568;
+  --text-tertiary: #718096;
+  --text-muted: #A0AEC0;
+  --text-white: #FFFFFF;
+  
+  // Border Colors
+  --border-light: #E2E8F0;
+  --border-medium: #CBD5E0;
+  --border-dark: #A0AEC0;
+  
+  // Shadow Colors
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  // Spacing
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  // Border Radius
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+  
+  // Font Families
+  --font-family-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-family-secondary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  // Font Sizes
+  --font-size-xs: 10px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-md: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  
+  // Font Weights
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  
+  // Transitions
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+  
+  // Z-Index
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+}
+
+// ============================================
+// MATIKAN DARK MODE - KOMENTARI SEMUA INI
+// ============================================
+/*
+@media (prefers-color-scheme: dark) {
+  body {
+    // Dark mode styles...
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body.dark-theme {
+    // Dark theme styles...
+  }
+}
+*/
+
+// ============================================
+// CUSTOM COLOR CLASSES
+// ============================================
+.ion-color-info {
+  --ion-color-base: var(--ion-color-info);
+  --ion-color-base-rgb: var(--ion-color-info-rgb);
+  --ion-color-contrast: var(--ion-color-info-contrast);
+  --ion-color-contrast-rgb: var(--ion-color-info-contrast-rgb);
+  --ion-color-shade: var(--ion-color-info-shade);
+  --ion-color-tint: var(--ion-color-info-tint);
+}

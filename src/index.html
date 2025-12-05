@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Ionic App</title>
+  <title>Attendance App</title>
 
   <base href="/" />
 
@@ -17,10 +17,86 @@
   <!-- add to homescreen for ios -->
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  <!-- ✅ CRITICAL FIX FOR IONIC TABS POINTER EVENTS -->
+  <style>
+    /* Fix ion-tabs router outlet blocking clicks */
+    ion-tabs {
+      position: relative;
+    }
+    
+    /* Make router outlet transparent to clicks */
+    ion-router-outlet,
+    .ion-page {
+      pointer-events: none !important;
+    }
+    
+    /* But allow all children to receive clicks */
+    ion-router-outlet > *,
+    .ion-page > *,
+    ion-content,
+    ion-content *,
+    ion-header,
+    ion-header *,
+    ion-card,
+    ion-card * {
+      pointer-events: auto !important;
+    }
+    
+    /* Tab bar must always be clickable */
+    ion-tab-bar,
+    ion-tab-bar * {
+      pointer-events: auto !important;
+      z-index: 10 !important;
+    }
+    
+    /* Force interactive elements to be clickable */
+    button,
+    ion-button,
+    a,
+    input,
+    select,
+    textarea,
+    [clickable],
+    .camera-box,
+    .clickable {
+      pointer-events: auto !important;
+      cursor: pointer !important;
+      touch-action: manipulation !important;
+    }
+    
+    /* Prevent text/icons from blocking parent clicks */
+    ion-icon:not(ion-button ion-icon):not(ion-tab-button ion-icon),
+    ion-label:not(ion-item ion-label),
+    ion-text,
+    p:not(ion-item p),
+    span:not(ion-button span),
+    h1, h2, h3, h4, h5, h6 {
+      pointer-events: none !important;
+    }
+    
+    /* Specific fix for camera box */
+    .camera-box {
+      position: relative;
+      z-index: 1;
+      pointer-events: auto !important;
+    }
+    
+    .camera-box * {
+      pointer-events: none !important;
+    }
+  </style>
 </head>
 
 <body>
   <app-root></app-root>
+  
+  <!-- Load PWA Elements for Camera -->
+  <script type="module">
+    import { defineCustomElements } from 'https://cdn.jsdelivr.net/npm/@ionic/pwa-elements@3/loader/index.es2017.js';
+    defineCustomElements(window);
+    console.log('✅ PWA Elements loaded successfully');
+  </script>
 </body>
 
 </html>

@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ModalController } from '@ionic/angular'; // Hapus '/standalone' jika error, gunakan module biasa
+import { IonicModule, NavController, AlertController } from '@ionic/angular';
 
-// Impor Service dan Komponen
 import { AttendanceService } from 'src/app/services/attendance';
 import { LoadingSpinnerComponent } from 'src/app/components/loading-spinner/loading-spinner.component';
 
@@ -16,52 +15,96 @@ import { LoadingSpinnerComponent } from 'src/app/components/loading-spinner/load
 })
 export class DriverHistoryPage implements OnInit {
 
-  // Data
   historyData: any[] = [];
   isLoading = false;
-
-  // Filter Tanggal (Default: Hari ini)
-  startDate: string = new Date().toISOString();
-  endDate: string = new Date().toISOString();
-
-  // Modal Detail
-  selectedAttendance: any = null;
-  isModalOpen = false;
+  startDate: string = '';
+  endDate: string = '';
 
   constructor(
     private attendanceService: AttendanceService,
-    private modalCtrl: ModalController
+    private navCtrl: NavController,
+    private alertCtrl: AlertController
   ) { }
 
   ngOnInit() {
-    // Set default tanggal awal ke 1 bulan yang lalu agar data terlihat
-    const date = new Date();
-    date.setDate(1); // Tanggal 1 bulan ini
-    this.startDate = date.toISOString();
+    const endDateObj = new Date();
+    const startDateObj = new Date();
+    startDateObj.setDate(1);
+    
+    this.startDate = this.formatDateForInput(startDateObj);
+    this.endDate = this.formatDateForInput(endDateObj);
   }
 
   ionViewWillEnter() {
     this.loadHistory();
   }
 
-  /**
-   * Load data riwayat dari API
-   */
+  formatDateForInput(date: Date): string {
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  formatDisplayDate(dateString: string): string {
+    if (!dateString) return 'Pilih tanggal';
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  }
+
+  async openStartDatePicker() {
+    const alert = await this.alertCtrl.create({
+      header: 'Tanggal Mulai',
+      inputs: [{ name: 'date', type: 'date', value: this.startDate }],
+      buttons: [
+        { text: 'Batal', role: 'cancel' },
+        {
+          text: 'OK',
+          handler: (data) => {
+            if (data.date) {
+              this.startDate = data.date;
+              if (this.endDate && this.endDate < this.startDate) {
+                this.endDate = this.startDate;
+              }
+              this.loadHistory();
+            }
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async openEndDatePicker() {
+    const alert = await this.alertCtrl.create({
+      header: 'Tanggal Akhir',
+      inputs: [{ name: 'date', type: 'date', value: this.endDate, min: this.startDate }],
+      buttons: [
+        { text: 'Batal', role: 'cancel' },
+        {
+          text: 'OK',
+          handler: (data) => {
+            if (data.date) {
+              this.endDate = data.date;
+              this.loadHistory();
+            }
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
   loadHistory(event?: any) {
     this.isLoading = true;
-
-    // Format tanggal ke YYYY-MM-DD untuk API Laravel
-    const start = this.startDate.split('T')[0];
-    const end = this.endDate.split('T')[0];
-
-    this.attendanceService.getHistory(start, end).subscribe({
+    this.attendanceService.getHistory(this.startDate, this.endDate).subscribe({
       next: (response) => {
-        this.historyData = response.data.data; // Laravel Pagination meletakkan items di dalam .data
+        this.historyData = response.data.data || response.data || [];
         this.isLoading = false;
         if (event) event.target.complete();
       },
       error: (err) => {
-        console.error('Gagal memuat history', err);
+        console.error('❌ Gagal memuat history:', err);
         this.isLoading = false;
         if (event) event.target.complete();
       }
@@ -69,26 +112,33 @@ export class DriverHistoryPage implements OnInit {
   }
 
   /**
-   * Tampilkan detail presensi (Foto & Lokasi)
+   * Navigate ke detail page dengan passing data
    */
   openDetail(item: any) {
-    this.selectedAttendance = item;
-    this.isModalOpen = true;
+    console.log('👁️ Navigating to detail page with data:', item);
+    
+    this.navCtrl.navigateForward('/attendance-detail', {
+      state: {
+        data: item
+      }
+    });
   }
 
-  closeDetail() {
-    this.isModalOpen = false;
-    this.selectedAttendance = null;
+  getStatusColor(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'late': return 'danger';
+      case 'on_time': return 'success';
+      case 'present': return 'success';
+      default: return 'warning';
+    }
   }
 
-  /**
-   * Helper untuk warna status
-   */
-  getStatusColor(status: string) {
-    return status === 'late' ? 'danger' : 'success';
-  }
-
-  getStatusLabel(status: string) {
-    return status === 'late' ? 'Terlambat' : 'Tepat Waktu';
+  getStatusLabel(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'late': return 'Terlambat';
+      case 'on_time': return 'Tepat Waktu';
+      case 'present': return 'Hadir';
+      default: return 'Unknown';
+    }
   }
 }

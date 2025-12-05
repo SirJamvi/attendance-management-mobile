@@ -1,0 +1,102 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Detail Presensi</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  
+  <div *ngIf="attendanceData">
+    
+    <div class="ion-text-center ion-margin-bottom">
+      <h2 class="date-title">{{ attendanceData.date | date:'fullDate' }}</h2>
+      <ion-badge [color]="getStatusColor(attendanceData.status)" class="status-badge">
+        {{ getStatusLabel(attendanceData.status) }}
+      </ion-badge>
+    </div>
+
+    <ion-card class="detail-card">
+      <ion-card-header>
+        <ion-card-subtitle class="subtitle-checkin">
+          <ion-icon name="log-in-outline"></ion-icon>
+          Presensi Masuk
+        </ion-card-subtitle>
+        <ion-card-title class="time-title">
+          {{ attendanceData.check_in_time | date:'HH:mm:ss' }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="location-box">
+          <ion-icon name="location" color="primary"></ion-icon>
+          <span>
+            {{ attendanceData.check_in_location?.latitude || '-' }}, 
+            {{ attendanceData.check_in_location?.longitude || '-' }}
+          </span>
+        </div>
+        
+        <div class="photo-box" *ngIf="attendanceData.check_in_photo">
+  <img 
+    [src]="getImageUrl(attendanceData.check_in_photo)" 
+    alt="Foto Masuk"
+    (error)="handleImgError($event)"> 
+    </div>
+        
+        <p *ngIf="!attendanceData.check_in_photo" class="no-photo">
+          <ion-icon name="image-outline"></ion-icon>
+          Tidak ada foto
+        </p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="detail-card" *ngIf="attendanceData.check_out_time">
+      <ion-card-header>
+        <ion-card-subtitle class="subtitle-checkout">
+          <ion-icon name="log-out-outline"></ion-icon>
+          Presensi Pulang
+        </ion-card-subtitle>
+        <ion-card-title class="time-title">
+          {{ attendanceData.check_out_time | date:'HH:mm:ss' }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="location-box">
+          <ion-icon name="location" color="primary"></ion-icon>
+          <span>
+            {{ attendanceData.check_out_location?.latitude || '-' }}, 
+            {{ attendanceData.check_out_location?.longitude || '-' }}
+          </span>
+        </div>
+        
+        <div class="photo-box" *ngIf="attendanceData.check_out_photo">
+  <img 
+    [src]="getImageUrl(attendanceData.check_out_photo)" 
+    alt="Foto Pulang"
+    (error)="handleImgError($event)">
+    </div>
+        
+        <p *ngIf="!attendanceData.check_out_photo" class="no-photo">
+          <ion-icon name="image-outline"></ion-icon>
+          Tidak ada foto
+        </p>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="detail-card no-checkout-card" *ngIf="!attendanceData.check_out_time">
+      <ion-card-content class="ion-text-center">
+        <ion-icon name="time-outline" color="warning" class="big-icon"></ion-icon>
+        <p class="no-checkout-text">Belum melakukan presensi pulang</p>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+
+  <div *ngIf="!attendanceData" class="ion-text-center ion-padding">
+    <ion-icon name="alert-circle-outline" style="font-size: 64px; color: var(--ion-color-danger);"></ion-icon>
+    <p>Data tidak ditemukan</p>
+    <ion-button (click)="goBack()">Kembali</ion-button>
+  </div>
+
+</ion-content>

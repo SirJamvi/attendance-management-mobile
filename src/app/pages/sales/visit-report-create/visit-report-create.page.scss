@@ -1,7 +1,45 @@
+ion-content {
+  --background: var(--ion-background-color, #f4f5f8);
+}
+
 .rounded-item {
   --border-radius: 8px;
   --background: #ffffff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  margin-bottom: 12px;
+  
+  --color: #333333; 
+  --placeholder-color: #888888;
+  --placeholder-opacity: 1;
+  
+  pointer-events: auto !important;
+  
+  &::part(native) {
+    pointer-events: auto !important;
+  }
+}
+
+// Style untuk item yang bisa diklik (dropdown custom)
+ion-item[button] {
+  cursor: pointer;
+  --ripple-color: rgba(79, 195, 247, 0.2);
+  
+  &::part(native) {
+    cursor: pointer;
+  }
+  
+  ion-text {
+    width: 100%;
+    display: block;
+    padding: 8px 0;
+    font-size: 14px;
+    color: #000000;
+  }
+  
+  .placeholder-text {
+    color: #888888;
+    opacity: 0.8;
+  }
 }
 
 .camera-section {
@@ -9,14 +47,22 @@
   padding: 15px;
   border-radius: 10px;
   border: 1px dashed var(--ion-color-medium);
+  margin-top: 16px;
+  margin-bottom: 16px;
 }
 
 .small-text {
   font-size: 0.85rem;
+  display: block;
+  margin-bottom: 8px;
 }
 
 .d-block {
   display: block;
+}
+
+.text-success {
+  color: var(--ion-color-success);
 }
 
 ion-list-header {
@@ -24,4 +70,40 @@ ion-list-header {
   font-weight: bold;
   color: var(--ion-color-dark);
   margin-bottom: 5px;
+  margin-top: 20px;
+}
+
+ion-select,
+ion-input,
+ion-textarea,
+ion-datetime-button {
+  pointer-events: auto !important;
+  cursor: pointer;
+  
+  &::part(native) {
+    pointer-events: auto !important;
+  }
+  
+  &::part(placeholder) {
+    pointer-events: auto !important;
+  }
+  
+  &::part(text) {
+    pointer-events: auto !important;
+  }
+}
+
+ion-item {
+  --min-height: 50px;
+  pointer-events: auto !important;
+  
+  &::part(native) {
+    pointer-events: auto !important;
+  }
+}
+
+form {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 1;
 }

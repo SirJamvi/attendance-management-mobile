@@ -24,6 +24,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/login/login.page').then( m => m.LoginPage),
     canActivate: [publicGuard] // <-- HANYA bisa diakses jika BELUM login
   },
+
+   {
+    path: 'attendance-detail',
+    loadComponent: () => import('./pages/driver/attendance-detail/attendance-detail.page').then(m => m.AttendanceDetailPage)
+  },
   {
     // Halaman Internal (Tabs) - (Dilindungi oleh AuthGuard)
     path: 'tabs',
@@ -114,5 +119,9 @@ export const routes: Routes = [
     path: 'visit-report-list',
     loadComponent: () => import('./pages/sales/visit-report-list/visit-report-list.page').then( m => m.VisitReportListPage),
     canActivate: [authGuard] // <-- Lindungi
+  },
+  {
+    path: 'attendance-detail',
+    loadComponent: () => import('./pages/driver/attendance-detail/attendance-detail.page').then( m => m.AttendanceDetailPage)
   }
 ];
