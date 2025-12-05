@@ -1,46 +1,64 @@
-.camera-box {
-  width: 100%;
-  height: 250px;
-  background-color: var(--ion-color-light-shade);
-  border: 2px dashed var(--ion-color-medium-shade);
-  border-radius: 10px;
-  
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  transition: background-color 0.2s;
+.camera-wrapper {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto !important;
+}
 
-  .camera-icon {
-    font-size: 64px;
-    color: var(--ion-color-medium-shade);
+.camera-box {
+  padding: 60px 20px;
+  border: 2px dashed var(--ion-color-medium);
+  border-radius: 12px;
+  background: var(--ion-color-light);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  // ✅ CRITICAL: Make sure it's clickable
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: rgba(79, 195, 247, 0.2);
+  
+  &:hover {
+    background: var(--ion-color-light-shade);
+    border-color: var(--ion-color-primary);
   }
+
+  &:active {
+    transform: scale(0.98);
+    background: var(--ion-color-primary-tint);
+  }
+}
+
+.camera-icon {
+  font-size: 64px;
+  color: var(--ion-color-medium);
+  margin-bottom: 16px;
+  pointer-events: none !important;
+}
+
+ion-text {
+  pointer-events: none !important;
   
   p {
-    font-weight: 500;
-    margin-top: 5px;
-  }
-
-  &:hover {
-    background-color: var(--ion-color-light-tint);
+    pointer-events: none !important;
   }
 }
 
 .preview-box {
-  position: relative;
-  width: 100%;
+  pointer-events: auto !important;
+  
+  .image-container {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
 
   .preview-image {
     width: 100%;
+    max-width: 400px;
     height: auto;
-    border-radius: 10px;
-    border: 2px solid var(--ion-color-medium-shade);
-  }
-
-  .retake-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
+    display: block;
+    margin: 0 auto;
   }
 }

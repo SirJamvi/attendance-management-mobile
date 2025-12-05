@@ -4,13 +4,18 @@
   "author": "Ionic Framework",
   "homepage": "https://ionicframework.com/",
   "scripts": {
-    "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "lint": "ng lint"
-  },
+  "ng": "ng",
+  "start": "ng serve",
+  "build": "ng build",
+  "build:prod": "ng build --configuration production",
+  "watch": "ng build --watch --configuration development",
+  "test": "ng test",
+  "lint": "ng lint",
+  "cap:sync": "npx cap sync",
+  "cap:open:android": "npx cap open android",
+  "android:dev": "ionic build && npx cap sync android && npx cap open android",
+  "android:prod": "ionic build --prod && npx cap sync android && npx cap open android"
+},
   "private": true,
   "dependencies": {
     "@angular/animations": "^20.0.0",

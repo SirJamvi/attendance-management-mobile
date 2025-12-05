@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, LoadingController, NavController } from '@ionic/angular';
+import { IonicModule, LoadingController, NavController, AlertController } from '@ionic/angular';
 
 // Impor Service dan Komponen
 import { LeaveService } from 'src/app/services/leave'; 
@@ -26,7 +26,8 @@ export class LeaveListPage implements OnInit {
     private leaveService: LeaveService,
     private authService: AuthService,
     private loadingCtrl: LoadingController,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private alertCtrl: AlertController
   ) { }
 
   ngOnInit() {
@@ -62,8 +63,41 @@ export class LeaveListPage implements OnInit {
    * Navigasi ke halaman Buat Pengajuan
    */
   goToCreate() {
+    console.log('🖱️ Navigating to create page');
     // Arahkan ke rute global (di luar tabs)
     this.navCtrl.navigateForward('/leave-create');
+  }
+
+  /**
+   * Tampilkan detail pengajuan cuti
+   */
+  async viewLeaveDetail(request: any) {
+    console.log('👁️ Viewing leave detail:', request);
+    
+    const alert = await this.alertCtrl.create({
+      header: request.type,
+      message: `
+        <strong>Status:</strong> ${this.getStatusLabel(request.status)}<br>
+        <strong>Tanggal:</strong> ${this.formatDisplayDate(request.start_date)} - ${this.formatDisplayDate(request.end_date)}<br>
+        <strong>Alasan:</strong> ${request.reason}<br>
+        ${request.status === 'rejected' && request.rejection_reason ? `<br><strong style="color: var(--ion-color-danger);">Alasan Ditolak:</strong> ${request.rejection_reason}` : ''}
+      `,
+      buttons: ['Tutup']
+    });
+
+    await alert.present();
+  }
+
+  /**
+   * Format tanggal untuk display (DD/MM/YYYY)
+   */
+  formatDisplayDate(dateString: string): string {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   }
 
   /**

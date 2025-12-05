@@ -11,45 +11,68 @@
 
   <form (ngSubmit)="onSubmit()">
     
-    <ion-item class="ion-margin-bottom rounded-item">
+    <!-- Jenis Cuti -->
+    <ion-item 
+      class="ion-margin-bottom rounded-item clickable-item" 
+      lines="none"
+      (click)="openLeaveTypeSelector()"
+      button
+      detail="false">
       <ion-label position="stacked">Jenis Cuti</ion-label>
-      <ion-select [(ngModel)]="leaveType" name="leaveType" placeholder="Pilih jenis cuti" required>
-        <ion-select-option *ngFor="let type of leaveTypes" [value]="type.value">
-          {{ type.label }}
-        </ion-select-option>
-      </ion-select>
+      <ion-text [color]="leaveType ? 'dark' : 'medium'" class="item-value">
+        {{ leaveTypeLabel }}
+      </ion-text>
     </ion-item>
 
+    <!-- Tanggal Mulai & Selesai -->
     <ion-row>
       <ion-col size="6">
-        <ion-item class="rounded-item">
-          <ion-label position="stacked">Mulai</ion-label>
-          <ion-datetime-button datetime="startDate"></ion-datetime-button>
-          <ion-modal [keepContentsMounted]="true">
-            <ng-template>
-              <ion-datetime id="startDate" presentation="date" [(ngModel)]="startDate" name="startDate"></ion-datetime>
-            </ng-template>
-          </ion-modal>
+        <ion-item 
+          class="rounded-item clickable-item" 
+          lines="none"
+          button
+          detail="false"
+          (click)="openStartDatePicker()">
+          <div class="w-100">
+            <ion-label position="stacked" color="medium">Mulai</ion-label>
+            <ion-text color="dark" class="date-display">
+              {{ formatDate(startDate) }}
+            </ion-text>
+          </div>
         </ion-item>
       </ion-col>
+      
       <ion-col size="6">
-        <ion-item class="rounded-item">
-          <ion-label position="stacked">Selesai</ion-label>
-          <ion-datetime-button datetime="endDate"></ion-datetime-button>
-          <ion-modal [keepContentsMounted]="true">
-            <ng-template>
-              <ion-datetime id="endDate" presentation="date" [(ngModel)]="endDate" name="endDate"></ion-datetime>
-            </ng-template>
-          </ion-modal>
+        <ion-item 
+          class="rounded-item clickable-item" 
+          lines="none"
+          button
+          detail="false"
+          (click)="openEndDatePicker()">
+          <div class="w-100">
+            <ion-label position="stacked" color="medium">Selesai</ion-label>
+            <ion-text color="dark" class="date-display">
+              {{ formatDate(endDate) }}
+            </ion-text>
+          </div>
         </ion-item>
       </ion-col>
     </ion-row>
 
-    <ion-item class="ion-margin-top rounded-item">
+    <!-- Alasan Cuti -->
+    <ion-item 
+      class="ion-margin-top rounded-item clickable-item" 
+      lines="none"
+      button
+      detail="false"
+      (click)="openReasonInput()">
       <ion-label position="stacked">Alasan Cuti</ion-label>
-      <ion-textarea [(ngModel)]="reason" name="reason" rows="3" placeholder="Jelaskan alasan cuti Anda..." required></ion-textarea>
+      <ion-text [color]="reason ? 'dark' : 'medium'" class="reason-text">
+        {{ reason || 'Ketuk untuk menulis alasan...' }}
+      </ion-text>
     </ion-item>
 
+    <!-- Camera Section -->
     <div *ngIf="leaveType === 'Sakit'" class="ion-margin-top camera-section">
       <ion-label color="danger" class="ion-margin-bottom d-block">
         * Wajib lampirkan foto surat dokter
@@ -58,9 +81,15 @@
       <app-camera-view (photoTaken)="handleAttachment($event)"></app-camera-view>
     </div>
 
-    <ion-button expand="block" type="submit" class="ion-margin-top" size="large" [disabled]="isSubmitting">
+    <!-- Submit Button -->
+    <ion-button 
+      expand="block" 
+      type="submit" 
+      class="ion-margin-top submit-button" 
+      size="large" 
+      [disabled]="isSubmitting">
       <span *ngIf="!isSubmitting">Kirim Pengajuan</span>
-      <ion-spinner *ngIf="isSubmitting"></ion-spinner>
+      <ion-spinner *ngIf="isSubmitting" name="crescent"></ion-spinner>
     </ion-button>
 
   </form>

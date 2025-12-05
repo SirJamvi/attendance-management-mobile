@@ -4,8 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule, AlertController, LoadingController, NavController, Platform } from '@ionic/angular';
 import { Geolocation, Position } from '@capacitor/geolocation';
 
-// Impor Service & Komponen
-import { SalesReportService } from 'src/app/services/sales-report'; // (Pastikan nama file benar)
+// WAJIB: Import Icon manual untuk Ionic Standalone/Modern
+import { addIcons } from 'ionicons';
+import { locationSharp } from 'ionicons/icons';
+
+import { SalesReportService } from 'src/app/services/sales-report'; 
 import { CameraViewComponent } from 'src/app/components/camera-view/camera-view.component';
 import { LoadingSpinnerComponent } from 'src/app/components/loading-spinner/loading-spinner.component';
 
@@ -14,7 +17,13 @@ import { LoadingSpinnerComponent } from 'src/app/components/loading-spinner/load
   templateUrl: './visit-report-create.page.html',
   styleUrls: ['./visit-report-create.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule, CameraViewComponent, LoadingSpinnerComponent]
+  imports: [
+    IonicModule, 
+    CommonModule, 
+    FormsModule, 
+    CameraViewComponent, 
+    LoadingSpinnerComponent
+  ]
 })
 export class VisitReportCreatePage implements OnInit {
 
@@ -23,17 +32,16 @@ export class VisitReportCreatePage implements OnInit {
   address: string = '';
   picName: string = '';
   picPhone: string = '';
-  result: string = ''; // 'Presentasi', 'Sign Up', 'Follow Up', 'Ditolak'
+  result: string = ''; 
   notes: string = '';
   
   // Data Bukti
   photoData: string | null = null;
   locationData: { latitude: number; longitude: number } | null = null;
 
-  // State UI
   isSubmitting = false;
 
-  // Opsi Hasil Kunjungan (Sesuai SOP)
+  // Data Dropdown
   visitResults = [
     { value: 'Presentasi', label: 'Presentasi (Penjelasan Produk)' },
     { value: 'Sign Up', label: 'Sign Up (Closing)' },
@@ -47,15 +55,12 @@ export class VisitReportCreatePage implements OnInit {
     private loadingCtrl: LoadingController,
     private navCtrl: NavController,
     private platform: Platform
-  ) { }
-
-  ngOnInit() {
+  ) { 
+    // Registrasi icon agar tidak error "Invalid base URL"
+    addIcons({ locationSharp });
   }
 
-  ionViewWillEnter() {
-    // Reset form saat halaman dibuka
-    this.resetForm();
-  }
+  ngOnInit() {}
 
   /**
    * Menangani foto dari komponen kamera
@@ -76,7 +81,7 @@ export class VisitReportCreatePage implements OnInit {
    */
   async getGeolocation() {
     try {
-      // (Mock lokasi untuk testing di browser)
+      // Mock lokasi jika di browser laptop
       if (!this.platform.is('capacitor')) {
         this.locationData = { latitude: -6.3518, longitude: 107.3701 };
         return;
@@ -109,7 +114,7 @@ export class VisitReportCreatePage implements OnInit {
       return;
     }
 
-    // 2. Validasi Bukti (Foto & GPS Wajib)
+    // 2. Validasi Bukti
     if (!this.photoData) {
       this.showAlert('Validasi', 'Foto bukti kunjungan wajib diambil.');
       return;
@@ -161,16 +166,5 @@ export class VisitReportCreatePage implements OnInit {
       buttons: ['OK']
     });
     await alert.present();
-  }
-
-  resetForm() {
-    this.placeName = '';
-    this.address = '';
-    this.picName = '';
-    this.picPhone = '';
-    this.result = '';
-    this.notes = '';
-    this.photoData = null;
-    this.locationData = null;
   }
 }

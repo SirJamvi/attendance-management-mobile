@@ -1,22 +1,103 @@
-ion-tab-bar {
-  --background: #ffffff;
-  --border: 1px solid var(--ion-color-light);
-  padding-top: 5px;
-  padding-bottom: 5px;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+// tabs.page.scss
+
+:host {
+  ion-tabs {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    
+    // ✅ CRITICAL: Router outlet harus transparent untuk clicks
+    ion-router-outlet {
+      position: relative;
+      pointer-events: none !important;
+      flex: 1;
+      
+      // Tapi semua children-nya bisa diklik
+      ::ng-deep > * {
+        pointer-events: auto !important;
+      }
+    }
+    
+    // ✅ Tab bar harus selalu di atas
+    ion-tab-bar {
+      position: relative;
+      z-index: 10 !important;
+      pointer-events: auto !important;
+    }
+  }
 }
 
-ion-tab-button {
-  --color: var(--ion-color-medium);
-  --color-selected: var(--ion-color-primary);
+// Styling untuk Driver Tab Bar
+.driver-tab-bar {
+  --background: var(--ion-color-primary);
+  --color: rgba(255, 255, 255, 0.6);
+  --color-selected: #ffffff;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: env(safe-area-inset-bottom);
   
-  ion-icon {
-    font-size: 24px;
-    margin-bottom: 2px;
+  ion-tab-button {
+    --color: rgba(255, 255, 255, 0.7);
+    --color-selected: #ffffff;
+    --ripple-color: rgba(255, 255, 255, 0.2);
+    
+    &.tab-selected {
+      .tab-icon {
+        color: #ffffff;
+        transform: scale(1.1);
+      }
+      
+      .tab-label {
+        font-weight: 600;
+      }
+    }
   }
+  
+  .tab-icon {
+    font-size: 24px;
+    margin-bottom: 4px;
+    transition: transform 0.2s ease;
+  }
+  
+  .tab-label {
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
 
-  ion-label {
-    font-size: 10px;
+// Styling untuk Sales Tab Bar
+.sales-tab-bar {
+  --background: var(--ion-color-secondary);
+  --color: rgba(255, 255, 255, 0.6);
+  --color-selected: #ffffff;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: env(safe-area-inset-bottom);
+  
+  ion-tab-button {
+    --color: rgba(255, 255, 255, 0.7);
+    --color-selected: #ffffff;
+    --ripple-color: rgba(255, 255, 255, 0.2);
+    
+    &.tab-selected {
+      .tab-icon {
+        color: #ffffff;
+        transform: scale(1.1);
+      }
+      
+      .tab-label {
+        font-weight: 600;
+      }
+    }
+  }
+  
+  .tab-icon {
+    font-size: 22px;
+    margin-bottom: 2px;
+    transition: transform 0.2s ease;
+  }
+  
+  .tab-label {
+    font-size: 11px;
     font-weight: 500;
   }
 }

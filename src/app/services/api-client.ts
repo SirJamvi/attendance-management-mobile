@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { Storage } from './storage'; // Impor Storage service kita
 import { from, lastValueFrom } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators'; // Tambahkan 'tap' di sini
 
 @Injectable({
   providedIn: 'root',
@@ -48,13 +48,30 @@ export class ApiClient {
 
   /**
    * Wrapper untuk POST request (otomatis menambahkan token)
+   * DENGAN LOGGING ERROR DETAIL
    */
   public post<T>(endpoint: string, body: any) {
+    const fullUrl = `${this.apiUrl}/${endpoint}`;
+    console.log('--- IONIC PRE-FLIGHT CHECK ---');
+    console.log('Target URL:', fullUrl);
+    console.log('Body:', body);
+
     return this.getAuthHeaders().pipe(
       switchMap((headers) => {
-        return this.http.post<T>(`${this.apiUrl}/${endpoint}`, body, {
+        console.log('Headers yang akan dikirim:', headers.keys());
+        
+        return this.http.post<T>(fullUrl, body, {
           headers,
-        });
+        }).pipe(
+          tap({
+            error: (err) => {
+              console.error('--- IONIC ERROR RESPONSE ---');
+              console.error('Status:', err.status);
+              console.error('Message:', err.message);
+              console.error('Full Error:', err);
+            }
+          })
+        );
       })
     );
   }
