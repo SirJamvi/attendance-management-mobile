@@ -1,12 +1,10 @@
 import { Injectable } from '@angular/core';
 import { ApiClient } from './api-client';
 import { ApiResponse } from '../types/api.types';
-import { HttpParams } from '@angular/common/http'; // <-- TAMBAHKAN INI
 
 @Injectable({
   providedIn: 'root',
 })
-// PERBAIKAN: Ganti nama class menjadi 'SalesReportService'
 export class SalesReportService {
   constructor(private apiClient: ApiClient) {}
 
@@ -31,18 +29,17 @@ export class SalesReportService {
     return this.apiClient.post<ApiResponse<any>>('sales/daily-report', body);
   }
 
-  // Mengambil riwayat gabungan
   getHistory(startDate?: string, endDate?: string) {
+    let url = 'sales/history';
     
-    // --- PERBAIKAN UNTUK ERROR TYPE '{}' ---
-    // Beri tahu TypeScript bahwa 'params' adalah objek string
-    let params: { [key: string]: string } = {};
-    // --- AKHIR PERBAIKAN ---
+    const params: string[] = [];
+    if (startDate) params.push(`start_date=${startDate}`);
+    if (endDate) params.push(`end_date=${endDate}`);
+    
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
 
-    if (startDate) params['start_date'] = startDate;
-    if (endDate) params['end_date'] = endDate;
-    
-    // Kirim objek HttpParams baru
-    return this.apiClient.get<ApiResponse<any>>('sales/history', new HttpParams({ fromObject: params }));
+    return this.apiClient.get<ApiResponse<any>>(url);
   }
 }

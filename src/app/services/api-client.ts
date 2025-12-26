@@ -1,98 +1,94 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, from, switchMap, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { Storage } from './storage'; // Impor Storage service kita
-import { from, lastValueFrom } from 'rxjs';
-import { switchMap, tap } from 'rxjs/operators'; // Tambahkan 'tap' di sini
+import { Storage } from './storage';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class ApiClient {
-  private apiUrl = environment.apiUrl; // Ambil URL dari environment
+  private http = inject(HttpClient);
+  private storage = inject(Storage);
+  private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient, private storage: Storage) {}
+  constructor() {}
 
   /**
-   * Helper privat untuk membuat Header Otorisasi secara dinamis
+   * GET request dengan auto token injection
    */
-  private getAuthHeaders() {
-    // Kita gunakan 'from' untuk mengubah Promise (dari storage) menjadi Observable
-    // lalu 'pipe' dan 'switchMap' untuk mengambil token
+  get<T>(endpoint: string): Observable<T> {
     return from(this.storage.getToken()).pipe(
       switchMap((token) => {
-        let headers = new HttpHeaders();
-        headers = headers.set('Accept', 'application/json');
-
-        if (token) {
-          headers = headers.set('Authorization', `Bearer ${token}`);
-        }
-        return from(Promise.resolve(headers));
+        const headers = this.buildHeaders(token);
+        const url = `${this.apiUrl}/${endpoint}`;
+        console.log('🌐 ApiClient GET:', url);
+        console.log('🔑 Token:', token ? 'ADA' : 'TIDAK ADA');
+        return this.http.get<T>(url, { headers });
       })
     );
   }
 
   /**
-   * Wrapper untuk GET request (otomatis menambahkan token)
+   * POST request dengan auto token injection
    */
-  public get<T>(endpoint: string, params: HttpParams = new HttpParams()) {
-    return this.getAuthHeaders().pipe(
-      switchMap((headers) => {
-        return this.http.get<T>(`${this.apiUrl}/${endpoint}`, {
-          headers,
-          params,
-        });
+  post<T>(endpoint: string, body: any): Observable<T> {
+    return from(this.storage.getToken()).pipe(
+      switchMap((token) => {
+        const headers = this.buildHeaders(token);
+        const url = `${this.apiUrl}/${endpoint}`;
+        console.log('🌐 ApiClient POST:', url);
+        console.log('🔑 Token:', token ? 'ADA' : 'TIDAK ADA');
+        console.log('📦 Body:', body);
+        return this.http.post<T>(url, body, { headers });
       })
     );
   }
 
   /**
-   * Wrapper untuk POST request (otomatis menambahkan token)
-   * DENGAN LOGGING ERROR DETAIL
+   * PUT request dengan auto token injection
    */
-  public post<T>(endpoint: string, body: any) {
-    const fullUrl = `${this.apiUrl}/${endpoint}`;
-    console.log('--- IONIC PRE-FLIGHT CHECK ---');
-    console.log('Target URL:', fullUrl);
-    console.log('Body:', body);
-
-    return this.getAuthHeaders().pipe(
-      switchMap((headers) => {
-        console.log('Headers yang akan dikirim:', headers.keys());
-        
-        return this.http.post<T>(fullUrl, body, {
-          headers,
-        }).pipe(
-          tap({
-            error: (err) => {
-              console.error('--- IONIC ERROR RESPONSE ---');
-              console.error('Status:', err.status);
-              console.error('Message:', err.message);
-              console.error('Full Error:', err);
-            }
-          })
-        );
+  put<T>(endpoint: string, body: any): Observable<T> {
+    return from(this.storage.getToken()).pipe(
+      switchMap((token) => {
+        const headers = this.buildHeaders(token);
+        const url = `${this.apiUrl}/${endpoint}`;
+        console.log('🌐 ApiClient PUT:', url);
+        return this.http.put<T>(url, body, { headers });
       })
     );
   }
 
   /**
-   * Wrapper untuk POST request dengan FILE (FormData)
-   * (Penting untuk Cuti Sakit)
+   * DELETE request dengan auto token injection
    */
-  public postWithFile<T>(endpoint: string, formData: FormData) {
-    // Catatan: Saat mengirim FormData, JANGAN atur Content-Type
-    // Browser/HttpClient akan mengaturnya secara otomatis
-    return this.getAuthHeaders().pipe(
-      switchMap((headers) => {
-        // Hapus Content-Type agar browser bisa mengaturnya (penting untuk boundary)
-        headers = headers.delete('Content-Type');
-        return this.http.post<T>(`${this.apiUrl}/${endpoint}`, formData, {
-          headers,
-        });
+  delete<T>(endpoint: string): Observable<T> {
+    return from(this.storage.getToken()).pipe(
+      switchMap((token) => {
+        const headers = this.buildHeaders(token);
+        const url = `${this.apiUrl}/${endpoint}`;
+        console.log('🌐 ApiClient DELETE:', url);
+        return this.http.delete<T>(url, { headers });
       })
     );
   }
 
-  // Anda bisa menambahkan method 'put' dan 'delete' di sini jika perlu
+  /**
+   * Helper untuk build headers dengan token
+   */
+  private buildHeaders(token: string | null): HttpHeaders {
+    let headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+      console.log('✅ Authorization header ditambahkan');
+    } else {
+      console.log('⚠️ Token tidak ada, request tanpa Authorization');
+    }
+
+    return headers;
+  }
 }

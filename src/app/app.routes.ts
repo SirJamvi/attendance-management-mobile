@@ -46,6 +46,12 @@ export const routes: Routes = [
             path: 'attendance',
             loadComponent: () => import('./pages/common/attendance-screen/attendance-screen.page').then( m => m.AttendanceScreenPage)
           },
+          // --- TAMBAHKAN INI (Customer List) ---
+          {
+            path: 'customers',
+            loadComponent: () => import('./pages/driver/customer-list/customer-list.page').then( m => m.CustomerListPage)
+          },
+          // -------------------------------------
           {
             path: 'history',
             loadComponent: () => import('./pages/driver/driver-history/driver-history.page').then( m => m.DriverHistoryPage)
@@ -53,6 +59,10 @@ export const routes: Routes = [
           {
             path: 'leave',
             loadComponent: () => import('./pages/common/leave-list/leave-list.page').then( m => m.LeaveListPage)
+          },
+          {
+            path: 'salary',
+            loadComponent: () => import('./pages/driver/driver-salary/driver-salary.page').then( m => m.DriverSalaryPage)
           },
           {
             // Arahkan /tabs/driver ke halaman presensi
@@ -99,6 +109,12 @@ export const routes: Routes = [
           }
         ]
       },
+      
+      {
+        // ✅ ROUTE PROFILE BARU (DI DALAM TABS)
+        path: 'profile',
+        loadComponent: () => import('./pages/common/profile/profile.page').then(m => m.ProfilePage)
+      },
       {
         // Arahkan /tabs ke /home (jika user mengakses tanpa role)
         path: '',
@@ -123,5 +139,17 @@ export const routes: Routes = [
   {
     path: 'attendance-detail',
     loadComponent: () => import('./pages/driver/attendance-detail/attendance-detail.page').then( m => m.AttendanceDetailPage)
+  },
+  {
+    path: 'driver-salary',
+    loadComponent: () => import('./pages/driver/driver-salary/driver-salary.page').then( m => m.DriverSalaryPage)
+  },
+  {
+    path: 'profile',
+    loadComponent: () => import('./pages/common/profile/profile.page').then( m => m.ProfilePage)
+  },
+  {
+    path: 'customer-list',
+    loadComponent: () => import('./pages/driver/customer-list/customer-list.page').then( m => m.CustomerListPage)
   }
 ];

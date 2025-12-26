@@ -101,3 +101,152 @@
     font-weight: 500;
   }
 }
+
+// ===========================
+// 🎨 TABS STYLING WITH 3D EFFECT
+// ===========================
+
+ion-tab-bar {
+  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --color: rgba(255, 255, 255, 0.6);
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+}
+
+ion-tab-button {
+  --color-selected: #ffffff;
+  --ripple-color: rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0);
+    width: 80%;
+    height: 3px;
+    background: linear-gradient(90deg, #ffd700, #ffed4e);
+    border-radius: 0 0 4px 4px;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.5);
+  }
+
+  // ✅ SELECTED STATE
+  &.tab-selected {
+    &::before {
+      transform: translateX(-50%) scaleX(1);
+    }
+
+    ion-icon {
+      transform: translateY(-2px) scale(1.1);
+      filter: drop-shadow(0 4px 8px rgba(255, 215, 0, 0.4));
+    }
+
+    ion-label {
+      font-weight: 600;
+      transform: scale(1.05);
+    }
+  }
+
+  // ✅ HOVER EFFECT (untuk web)
+  &:hover:not(.tab-selected) {
+    ion-icon {
+      transform: translateY(-1px) scale(1.05);
+      filter: drop-shadow(0 2px 4px rgba(255, 255, 255, 0.3));
+    }
+  }
+}
+
+// ===========================
+// 🎯 ICON 3D EFFECT
+// ===========================
+.tab-icon {
+  font-size: 24px;
+  margin-bottom: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  // 3D Shadow Effect
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  
+  // Smooth animation
+  will-change: transform, filter;
+}
+
+// ===========================
+// 💼 SPECIAL STYLE FOR WALLET ICON
+// ===========================
+ion-tab-button[tab="driver/salary"] {
+  ion-icon {
+    // Gold/Yellow accent for salary icon
+    --ionicon-stroke-width: 40px;
+  }
+
+  &.tab-selected ion-icon {
+    color: #ffd700; // Gold color when selected
+    filter: drop-shadow(0 4px 12px rgba(255, 215, 0, 0.6));
+    animation: pulse-gold 2s ease-in-out infinite;
+  }
+}
+
+// Pulse animation for salary icon
+@keyframes pulse-gold {
+  0%, 100% {
+    transform: translateY(-2px) scale(1.1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.15);
+  }
+}
+
+// ===========================
+// 📱 LABEL STYLING
+// ===========================
+.tab-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+// ===========================
+// 🎨 DIFFERENT COLORS FOR ROLES
+// ===========================
+.driver-tab-bar {
+  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.sales-tab-bar {
+  --background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+// ===========================
+// 📱 RESPONSIVE
+// ===========================
+@media (max-width: 576px) {
+  .tab-icon {
+    font-size: 22px;
+  }
+  
+  .tab-label {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 768px) {
+  ion-tab-bar {
+    padding: 10px 0;
+  }
+  
+  .tab-icon {
+    font-size: 26px;
+  }
+  
+  .tab-label {
+    font-size: 12px;
+  }
+}
