@@ -1,0 +1,142 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/driver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Gaji & Insentif</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding-bottom bg-light">
+  
+  <!-- Pull to Refresh -->
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="ion-text-center ion-padding mt-5">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p class="text-medium text-muted">Sedang menghitung gaji...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMsg && !isLoading" class="ion-text-center ion-padding mt-5">
+    <ion-icon name="alert-circle-outline" size="large" color="medium"></ion-icon>
+    <p class="text-muted">{{ errorMsg }}</p>
+    <ion-button fill="outline" size="small" (click)="loadSalary()">Muat Ulang</ion-button>
+  </div>
+
+  <!-- Content Data -->
+  <div *ngIf="!isLoading && !errorMsg && salaryData">
+    
+    <!-- Periode Info -->
+    <div class="ion-padding-start ion-padding-top mb-2">
+      <ion-text color="medium">
+        <small class="text-uppercase fw-bold">Periode Berjalan</small>
+      </ion-text>
+      <h2 class="mt-0 fw-bold text-dark">{{ salaryData.period }}</h2>
+    </div>
+
+    <!-- MAIN CARD: FINAL SALARY -->
+    <ion-card class="main-card">
+      <ion-card-content class="ion-text-center text-white">
+        <p class="mb-1 opacity-75">Estimasi Gaji Bersih</p>
+        <h1 class="fw-bold display-amount">
+          {{ salaryData.final_salary | currency:'IDR':'Rp ':'1.0-0' }}
+        </h1>
+        
+        <div class="shift-badge">
+          <ion-icon name="time-outline" class="me-1"></ion-icon>
+          {{ salaryData.shift_info }}
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- PENDAPATAN -->
+    <ion-list inset="true" lines="full" class="custom-list">
+      <ion-item-divider color="light">
+        <ion-label>RINCIAN PENDAPATAN</ion-label>
+      </ion-item-divider>
+
+      <ion-item>
+        <div slot="start" class="icon-box bg-success-light">
+          <ion-icon name="wallet-outline" color="success"></ion-icon>
+        </div>
+        <ion-label>
+          <h3>Upah Harian</h3>
+          <p>Rate per kehadiran</p>
+        </ion-label>
+        <ion-note slot="end" color="dark" class="fw-bold">
+          {{ salaryData.daily_wage | currency:'IDR':'Rp ':'1.0-0' }}
+        </ion-note>
+      </ion-item>
+
+      <ion-item>
+        <div slot="start" class="icon-box bg-primary-light">
+          <ion-icon name="calendar-outline" color="primary"></ion-icon>
+        </div>
+        <ion-label>
+          <h3>Total Kehadiran</h3>
+          <p>Jumlah hari masuk</p>
+        </ion-label>
+        <ion-note slot="end" color="dark" class="fw-bold fs-6">
+          {{ salaryData.total_attendance }} Hari
+        </ion-note>
+      </ion-item>
+
+      <ion-item class="total-row">
+        <ion-label>Total Kotor</ion-label>
+        <ion-note slot="end" color="success" class="fw-bold">
+          {{ salaryData.total_gross_salary | currency:'IDR':'Rp ':'1.0-0' }}
+        </ion-note>
+      </ion-item>
+    </ion-list>
+
+    <!-- POTONGAN -->
+    <ion-list inset="true" lines="full" class="mt-3 custom-list">
+      <ion-item-divider color="light">
+        <ion-label>POTONGAN & DENDA</ion-label>
+      </ion-item-divider>
+
+      <ion-item>
+        <div slot="start" class="icon-box bg-warning-light">
+          <ion-icon name="warning-outline" color="warning"></ion-icon>
+        </div>
+        <ion-label>
+          <h3>Keterlambatan</h3>
+          <p>Frekuensi telat</p>
+        </ion-label>
+        <ion-badge slot="end" [color]="salaryData.total_lates > 0 ? 'warning' : 'medium'">
+          {{ salaryData.total_lates }}x
+        </ion-badge>
+      </ion-item>
+
+      <ion-item>
+        <div slot="start" class="icon-box bg-danger-light">
+          <ion-icon name="alert-circle-outline" color="danger"></ion-icon>
+        </div>
+        <ion-label class="ion-text-wrap">
+          <h3>Denda Telat</h3>
+          <p class="small text-muted" *ngIf="salaryData.penalty_amount > 0">
+            (>3x: -30rb, >6x: -60rb)
+          </p>
+          <p class="small text-muted" *ngIf="salaryData.penalty_amount === 0">
+            Tidak ada denda
+          </p>
+        </ion-label>
+        <ion-note slot="end" color="danger" class="fw-bold">
+          - {{ salaryData.penalty_amount | currency:'IDR':'Rp ':'1.0-0' }}
+        </ion-note>
+      </ion-item>
+    </ion-list>
+
+    <!-- Info -->
+    <div class="ion-padding text-center">
+      <p class="small text-muted fst-italic">
+        *Data diperbarui secara real-time saat Anda melakukan presensi.
+      </p>
+    </div>
+
+  </div>
+</ion-content>

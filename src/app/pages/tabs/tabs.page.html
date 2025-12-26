@@ -1,9 +1,7 @@
 <ion-tabs>
   
-  <!-- ✅ Router outlet HARUS di atas tab-bar -->
   <ion-router-outlet></ion-router-outlet>
 
-  <!-- MENU DRIVER -->
   <ion-tab-bar slot="bottom" *ngIf="userRole === 'driver'" class="driver-tab-bar">
     
     <ion-tab-button tab="driver/attendance" class="tab-button">
@@ -11,9 +9,18 @@
       <ion-label class="tab-label">Presensi</ion-label>
     </ion-tab-button>
 
+    <ion-tab-button tab="driver/customers" class="tab-button">
+      <ion-icon name="people" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Pelanggan</ion-label>
+    </ion-tab-button>
     <ion-tab-button tab="driver/history" class="tab-button">
       <ion-icon name="time" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Riwayat</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="driver/salary" class="tab-button">
+      <ion-icon name="wallet" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Gaji</ion-label>
     </ion-tab-button>
 
     <ion-tab-button tab="driver/leave" class="tab-button">
@@ -21,12 +28,15 @@
       <ion-label class="tab-label">Cuti</ion-label>
     </ion-tab-button>
 
+    <ion-tab-button tab="profile" class="tab-button">
+      <ion-icon name="person" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Profile</ion-label>
+    </ion-tab-button>
+
   </ion-tab-bar>
 
 
-  <!-- MENU SALES -->
   <ion-tab-bar slot="bottom" *ngIf="userRole === 'sales'" class="sales-tab-bar">
-    
     <ion-tab-button tab="sales/dashboard" class="tab-button">
       <ion-icon name="speedometer" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Home</ion-label>
@@ -52,6 +62,10 @@
       <ion-label class="tab-label">Riwayat</ion-label>
     </ion-tab-button>
 
+    <ion-tab-button tab="profile" class="tab-button">
+      <ion-icon name="person" class="tab-icon"></ion-icon>
+      <ion-label class="tab-label">Profile</ion-label>
+    </ion-tab-button>
   </ion-tab-bar>
 
 </ion-tabs>

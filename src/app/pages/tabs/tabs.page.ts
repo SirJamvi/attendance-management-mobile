@@ -11,7 +11,10 @@ import {
   speedometer, 
   location, 
   documentText,
-  addCircle 
+  addCircle,
+  wallet,
+  walletOutline,
+  people // <-- 1. TAMBAHKAN INI
 } from 'ionicons/icons';
 
 import { AuthService } from 'src/app/services/auth';
@@ -37,7 +40,6 @@ export class TabsPage implements OnInit {
   userRole: string = '';
 
   constructor(private authService: AuthService) {
-    // Daftarkan semua ikon yang digunakan di tab bar
     addIcons({ 
       home, 
       time, 
@@ -46,12 +48,14 @@ export class TabsPage implements OnInit {
       speedometer, 
       location, 
       documentText,
-      addCircle 
+      addCircle,
+      wallet,
+      walletOutline,
+      people // <-- 2. DAN DAFTARKAN DI SINI
     });
   }
 
   ngOnInit() {
-    // Ambil role user saat ini untuk menentukan tampilan tabs
     const user = this.authService.getCurrentUserValue();
     this.userRole = user?.role.slug || '';
   }

@@ -1,17 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { 
-  IonContent, IonHeader, IonTitle, IonToolbar, IonItem, IonLabel, 
+  IonContent, IonItem, IonLabel, 
   IonInput, IonButton, IonIcon, IonText, IonSpinner, ToastController 
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { eye, eyeOff, logIn } from 'ionicons/icons';
 
-// Impor Service kita
 import { AuthService } from 'src/app/services/auth';
-import { LoadingSpinnerComponent } from 'src/app/components/loading-spinner/loading-spinner.component';
+import { Storage } from 'src/app/services/storage';
 
 @Component({
   selector: 'app-login',
@@ -21,18 +20,15 @@ import { LoadingSpinnerComponent } from 'src/app/components/loading-spinner/load
   imports: [
     CommonModule, 
     FormsModule, 
-    IonContent, IonHeader, IonTitle, IonToolbar, 
-    IonItem, IonLabel, IonInput, IonButton, IonIcon, IonText, IonSpinner,
-    LoadingSpinnerComponent
+    IonContent,
+    IonItem, IonLabel, IonInput, IonButton, IonIcon, IonText, IonSpinner
   ]
 })
 export class LoginPage implements OnInit {
-
-  // Model untuk form
+  private storage = inject(Storage);
+  
   username = '';
   password = '';
-  
-  // State UI
   isSubmitting = false;
   showPassword = false;
   errorMessage = '';
@@ -42,24 +38,16 @@ export class LoginPage implements OnInit {
     private router: Router,
     private toastCtrl: ToastController
   ) { 
-    // Daftarkan ikon yang dipakai
     addIcons({ eye, eyeOff, logIn });
   }
 
   ngOnInit() {}
 
-  /**
-   * Toggle untuk melihat/menyembunyikan password
-   */
   togglePassword() {
     this.showPassword = !this.showPassword;
   }
 
-  /**
-   * Proses Login Utama
-   */
   async onLogin() {
-    // 1. Validasi Sederhana
     if (!this.username || !this.password) {
       this.errorMessage = 'Username dan Password wajib diisi.';
       return;
@@ -68,22 +56,37 @@ export class LoginPage implements OnInit {
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    // 2. Panggil AuthService
+    console.log('🔐 Attempting login...');
+
     this.authService.login(this.username, this.password).subscribe({
       next: async (response) => {
-        // Login Berhasil
+        console.log('📥 Login response received:', response);
         this.isSubmitting = false;
-        await this.showToast('Login Berhasil!', 'success');
         
-        // 3. Arahkan user berdasarkan Role (Sesuai SOP)
-        this.redirectUser(response.data.user);
+        if (response.success) {
+          console.log('✅ Login successful!');
+          
+          // Double check: Apakah token benar-benar tersimpan?
+          setTimeout(async () => {
+            const savedToken = await this.storage.getToken();
+            console.log('🔍 Double check - Token tersimpan?', savedToken ? 'YES' : 'NO');
+            
+            if (!savedToken) {
+              console.error('❌ CRITICAL: Token tidak tersimpan setelah login!');
+              await this.showToast('Error: Token tidak tersimpan. Coba login lagi.', 'danger');
+              return;
+            }
+            
+            console.log('✅ Token verified, redirecting...');
+            await this.showToast('Login Berhasil!', 'success');
+            this.redirectUser(response.data.user);
+          }, 500);
+        }
       },
       error: (err) => {
-        // Login Gagal
         this.isSubmitting = false;
-        console.error('Login error:', err);
+        console.error('❌ Login error:', err);
         
-        // Tampilkan pesan error dari API jika ada
         const apiMsg = err.error?.message || err.error?.data?.error || 'Login gagal. Periksa koneksi atau kredensial Anda.';
         this.errorMessage = apiMsg;
         this.showToast(apiMsg, 'danger');
@@ -91,19 +94,14 @@ export class LoginPage implements OnInit {
     });
   }
 
-  /**
-   * Helper untuk mengarahkan user
-   */
   redirectUser(user: any) {
     if (user.role.slug === 'driver') {
-      // Driver -> Langsung ke Presensi [SOP]
       this.router.navigate(['/tabs/driver'], { replaceUrl: true });
     } else if (user.role.slug === 'sales') {
-      // Sales -> Dashboard [SOP]
       this.router.navigate(['/tabs/sales'], { replaceUrl: true });
     } else {
       this.errorMessage = 'Role akun tidak dikenali untuk aplikasi mobile.';
-      this.authService.logout(); // Logout paksa jika bukan driver/sales
+      this.authService.logout();
     }
   }
 

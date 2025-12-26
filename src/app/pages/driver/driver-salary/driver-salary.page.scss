@@ -1,0 +1,251 @@
+// Background
+.bg-light {
+  --background: #f4f5f7;
+}
+
+.text-medium {
+  font-size: 1rem;
+}
+
+.text-muted {
+  color: #6c757d;
+}
+
+.text-dark {
+  color: #212529;
+}
+
+// ✅ CARD UTAMA GAJI - LEBIH MENONJOL
+.main-card {
+  background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+  border-radius: 20px;
+  margin: 16px;
+  box-shadow: 0 12px 24px rgba(76, 175, 80, 0.4);
+  overflow: hidden;
+  
+  ion-card-content {
+    padding: 32px 20px;
+  }
+}
+
+// ✅ JUMLAH UANG - SANGAT BESAR DAN JELAS
+.display-amount {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin: 12px 0 16px;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  line-height: 1;
+  
+  // Tambahkan animasi subtle
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.opacity-75 {
+  opacity: 0.85;
+}
+
+// ✅ BADGE SHIFT - LEBIH MODERN
+.shift-badge {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-top: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  
+  ion-icon {
+    font-size: 18px;
+    margin-right: 6px;
+  }
+}
+
+// ✅ LIST STYLING - LEBIH RAPI
+.custom-list {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin: 16px;
+  background: #ffffff;
+  
+  ion-item {
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --inner-padding-end: 0;
+    --min-height: 64px;
+  }
+  
+  ion-item-divider {
+    --background: #f8f9fa;
+    --padding-start: 16px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    border: none;
+  }
+}
+
+// ✅ TOTAL ROW - HIGHLIGHT
+.total-row {
+  --background: #f0f8ff;
+  font-weight: 700;
+  border-top: 2px solid #e3f2fd;
+  
+  ion-label {
+    font-size: 1.05rem;
+    font-weight: 700;
+  }
+  
+  ion-note {
+    font-size: 1.1rem;
+  }
+}
+
+// ✅ ICON BOX - LEBIH CANTIK
+.icon-box {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  
+  ion-icon {
+    font-size: 22px;
+  }
+}
+
+.bg-success-light { 
+  background: linear-gradient(135deg, rgba(76, 175, 80, 0.15), rgba(76, 175, 80, 0.1)); 
+}
+
+.bg-primary-light { 
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.15), rgba(33, 150, 243, 0.1)); 
+}
+
+.bg-warning-light { 
+  background: linear-gradient(135deg, rgba(255, 152, 0, 0.15), rgba(255, 152, 0, 0.1)); 
+}
+
+.bg-danger-light { 
+  background: linear-gradient(135deg, rgba(244, 67, 54, 0.15), rgba(244, 67, 54, 0.1)); 
+}
+
+// ✅ TEXT UTILITIES
+.fw-bold {
+  font-weight: 700;
+}
+
+.fs-6 {
+  font-size: 1rem;
+}
+
+.small {
+  font-size: 0.875rem;
+}
+
+.fst-italic {
+  font-style: italic;
+}
+
+.mt-0 {
+  margin-top: 0;
+}
+
+.mt-3 {
+  margin-top: 1rem;
+}
+
+.mt-5 {
+  margin-top: 3rem;
+}
+
+.mb-1 {
+  margin-bottom: 0.25rem;
+}
+
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.me-1 {
+  margin-right: 0.25rem;
+}
+
+// ✅ LABEL STYLING
+ion-label {
+  h3 {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: #212529;
+    margin-bottom: 2px;
+  }
+  
+  p {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 2px;
+  }
+}
+
+// ✅ NOTE (ANGKA) STYLING - LEBIH JELAS
+ion-note {
+  font-weight: 700;
+  font-size: 1rem;
+  
+  &[color="dark"] {
+    color: #212529 !important;
+  }
+  
+  &[color="success"] {
+    color: #4CAF50 !important;
+  }
+  
+  &[color="danger"] {
+    color: #f44336 !important;
+  }
+}
+
+// ✅ PERIODE INFO
+.ion-padding-start {
+  padding-left: 16px;
+}
+
+.ion-padding-top {
+  padding-top: 16px;
+}
+
+.text-uppercase {
+  text-transform: uppercase;
+}
+
+// ✅ RESPONSIVE
+@media (max-width: 360px) {
+  .display-amount {
+    font-size: 2.2rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .display-amount {
+    font-size: 3.2rem;
+  }
+}

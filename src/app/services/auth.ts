@@ -17,27 +17,35 @@ export class AuthService {
   }
 
   async loadToken() {
+    console.log('🔄 AuthService: Loading token...');
     const token = await this.storage.getToken();
+    
     if (token) {
+      console.log('✅ Token ditemukan:', token.substring(0, 30) + '...');
       try {
         const response = await this.apiClient.get<ApiResponse<User>>('user').toPromise();
         if (response && response.success) {
+          console.log('✅ User authenticated:', response.data.name);
           this.currentUser.next(response.data);
           this.authState.next(true);
         } else {
           throw new Error('Token tidak valid');
         }
       } catch (error) {
+        console.error('❌ Token tidak valid, menghapus...');
         await this.storage.removeToken();
         this.authState.next(false);
       }
     } else {
+      console.log('⚠️ Token tidak ditemukan');
       this.authState.next(false);
     }
   }
 
   login(username: string, password: string): Observable<ApiResponse<AuthResponse>> {
     const device_name = 'ionic-angular-device';
+    
+    console.log('🔐 Login attempt:', { username, device_name });
     
     return this.apiClient.post<ApiResponse<AuthResponse>>('login', {
         username,
@@ -46,23 +54,45 @@ export class AuthService {
       })
       .pipe(
         tap(async (response) => {
+          console.log('📥 Login response:', response);
+          
           if (response.success) {
+            console.log('✅ Login berhasil!');
+            console.log('🔑 Token received:', response.data.token.substring(0, 30) + '...');
+            
+            // SIMPAN TOKEN
             await this.storage.saveToken(response.data.token);
+            console.log('💾 Token disimpan ke storage');
+            
+            // VERIFY TOKEN TERSIMPAN
+            const verifyToken = await this.storage.getToken();
+            if (verifyToken) {
+              console.log('✅ VERIFIED: Token berhasil tersimpan!');
+            } else {
+              console.error('❌ GAGAL: Token tidak tersimpan!');
+            }
+            
             this.currentUser.next(response.data.user);
             this.authState.next(true);
+          } else {
+            console.error('❌ Login gagal:', response.message);
           }
         })
       );
   }
 
   async logout() {
+    console.log('🚪 Logout...');
     try {
       await this.apiClient.post('logout', {}).toPromise();
+      console.log('✅ Logout dari server berhasil');
     } catch (error) {
-      console.error('Gagal logout di server, tapi tetap logout lokal:', error);
+      console.error('⚠️ Gagal logout di server, tapi tetap logout lokal:', error);
     }
     
     await this.storage.removeToken();
+    console.log('🗑️ Token dihapus dari storage');
+    
     this.currentUser.next(null);
     this.authState.next(false);
   }
@@ -75,28 +105,14 @@ export class AuthService {
     return this.currentUser.asObservable();
   }
 
-  /**
-   * Method untuk mendapatkan current user value secara synchronous
-   * Dibutuhkan oleh guard dan home.page.ts
-   */
   getCurrentUserValue(): User | null {
     return this.currentUser.value;
   }
 
-  // ✅ TAMBAHKAN METHOD INI
-  /**
-   * Check apakah user sudah login (synchronous)
-   * @returns true jika user sudah login, false jika belum
-   */
   isLoggedIn(): boolean {
     return this.authState.value === true;
   }
 
-  // ✅ OPTIONAL: Method async untuk check token validity
-  /**
-   * Check apakah user sudah login dengan validate token (asynchronous)
-   * @returns Promise<boolean>
-   */
   async checkAuthStatus(): Promise<boolean> {
     const token = await this.storage.getToken();
     if (!token) {
@@ -111,11 +127,6 @@ export class AuthService {
     }
   }
 
-  // ✅ OPTIONAL: Method untuk get auth state value (synchronous)
-  /**
-   * Get current auth state value
-   * @returns boolean | null
-   */
   getAuthStateValue(): boolean | null {
     return this.authState.value;
   }

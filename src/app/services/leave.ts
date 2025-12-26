@@ -5,7 +5,6 @@ import { ApiResponse } from '../types/api.types';
 @Injectable({
   providedIn: 'root',
 })
-// PERBAIKAN: Ganti nama class menjadi 'LeaveService'
 export class LeaveService {
   constructor(private apiClient: ApiClient) {}
 
@@ -14,6 +13,6 @@ export class LeaveService {
   }
 
   submitLeave(formData: FormData) {
-    return this.apiClient.postWithFile<ApiResponse<any>>('leave', formData);
+    return this.apiClient.post<ApiResponse<any>>('leave', formData);
   }
 }

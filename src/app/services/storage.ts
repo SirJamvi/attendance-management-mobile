@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-// 1. Impor Ionic Storage
 import { Storage as IonicStorage } from '@ionic/storage-angular';
 
 @Injectable({
@@ -7,45 +6,53 @@ import { Storage as IonicStorage } from '@ionic/storage-angular';
 })
 export class Storage {
   private _storage: IonicStorage | null = null;
-  private readonly AUTH_TOKEN_KEY = '_my_token'; // Kunci untuk menyimpan token
+  // ✅ GUNAKAN KEY YANG KONSISTEN
+  private readonly AUTH_TOKEN_KEY = 'auth_token';
 
   constructor(private storage: IonicStorage) {
-    // Panggil init() saat service dibuat
     this.init();
   }
 
-  // 2. Inisialisasi driver storage
   async init() {
     const storage = await this.storage.create();
     this._storage = storage;
+    console.log('✅ Ionic Storage initialized');
   }
 
-  // 3. Simpan nilai (misal: token)
   public async set(key: string, value: any) {
     await this._storage?.set(key, value);
+    console.log(`💾 Storage SET: ${key}`);
   }
 
-  // 4. Ambil nilai (misal: token)
   public async get(key: string) {
-    return await this._storage?.get(key);
+    const value = await this._storage?.get(key);
+    console.log(`📦 Storage GET: ${key} =`, value ? 'ADA' : 'TIDAK ADA');
+    return value;
   }
 
-  // 5. Hapus nilai
   public async remove(key: string) {
     await this._storage?.remove(key);
+    console.log(`🗑️ Storage REMOVE: ${key}`);
   }
 
   // --- Helper khusus untuk Token Auth ---
-
   public async saveToken(token: string) {
     await this.set(this.AUTH_TOKEN_KEY, token);
+    console.log('✅ Token disimpan dengan key:', this.AUTH_TOKEN_KEY);
   }
 
   public async getToken() {
-    return await this.get(this.AUTH_TOKEN_KEY);
+    const token = await this.get(this.AUTH_TOKEN_KEY);
+    if (token) {
+      console.log('🔑 Token ditemukan:', token.substring(0, 30) + '...');
+    } else {
+      console.log('⚠️ Token TIDAK ditemukan!');
+    }
+    return token;
   }
 
   public async removeToken() {
     await this.remove(this.AUTH_TOKEN_KEY);
+    console.log('🗑️ Token dihapus');
   }
 }

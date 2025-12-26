@@ -293,14 +293,14 @@ export class LeaveCreatePage implements OnInit {
     await loading.present();
 
     this.leaveService.submitLeave(formData).subscribe({
-      next: async (response) => {
+      next: async (response: any) => {
         console.log('✅ Submit berhasil:', response);
         loading.dismiss();
         this.isSubmitting = false;
         await this.showAlert('Berhasil', 'Pengajuan cuti berhasil dikirim.');
         this.goBack();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('❌ Submit gagal:', err);
         loading.dismiss();
         this.isSubmitting = false;
