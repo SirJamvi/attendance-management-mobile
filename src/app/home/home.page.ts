@@ -34,7 +34,7 @@ export class HomePage implements OnDestroy {
         filter(state => state !== null), 
         take(1) 
       )
-      .subscribe((isLoggedIn: boolean | null) => { // <-- PERBAIKAN TIPE DATA
+      .subscribe((isLoggedIn: boolean | null) => {
         if (isLoggedIn) {
           this.redirectToDashboard();
         } else {
@@ -46,18 +46,34 @@ export class HomePage implements OnDestroy {
 
   /**
    * Mengarahkan user berdasarkan Role (Sesuai SOP)
+   * ✅ PERBAIKAN: role adalah string langsung dari backend
    */
   redirectToDashboard() {
     const user = this.authService.getCurrentUserValue();
     
-    if (user?.role.slug === 'driver') {
-      console.log('Driver logged in, redirecting to /tabs/driver');
+    console.log('🔍 User data:', user);
+    console.log('🔍 User role:', user?.role);
+    
+    if (!user) {
+      console.error('❌ User data tidak ada, redirecting to login.');
+      this.router.navigate(['/login'], { replaceUrl: true });
+      return;
+    }
+
+    // ✅ role adalah string langsung: 'driver' atau 'sales'
+    const roleSlug = user.role;
+    
+    console.log('🔍 Role detected:', roleSlug);
+    
+    // Route berdasarkan role
+    if (roleSlug === 'driver') {
+      console.log('✅ Driver logged in, redirecting to /tabs/driver');
       this.router.navigate(['/tabs/driver'], { replaceUrl: true }); 
-    } else if (user?.role.slug === 'sales') {
-      console.log('Sales logged in, redirecting to /tabs/sales');
+    } else if (roleSlug === 'sales') {
+      console.log('✅ Sales logged in, redirecting to /tabs/sales');
       this.router.navigate(['/tabs/sales'], { replaceUrl: true });
     } else {
-      console.error('Unknown role, redirecting to login.');
+      console.error('❌ Unknown role:', roleSlug, '- redirecting to login.');
       this.router.navigate(['/login'], { replaceUrl: true });
     }
   }

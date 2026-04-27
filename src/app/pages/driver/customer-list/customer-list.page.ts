@@ -4,13 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { 
   IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, 
   IonBackButton, IonList, IonItem, IonLabel, IonIcon, 
-  IonSkeletonText, IonRefresher, IonRefresherContent 
+  IonSkeletonText, IonRefresher, IonRefresherContent,
+  IonSearchbar
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { mapOutline, locationOutline, callOutline } from 'ionicons/icons';
+import { mapOutline, locationOutline, callOutline, arrowForward } from 'ionicons/icons'; // ← TAMBAHKAN arrowForward
 
-// --- IMPORT SERVICE & TYPE ---
-// Pastikan path import ini sesuai dengan struktur foldermu
 import { CustomerService } from 'src/app/services/customer.service';
 import { Customer } from 'src/app/types/customer.types';
 
@@ -24,17 +23,20 @@ import { Customer } from 'src/app/types/customer.types';
     FormsModule,
     IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, 
     IonBackButton, IonList, IonItem, IonLabel, IonIcon,
-    IonSkeletonText, IonRefresher, IonRefresherContent
+    IonSkeletonText, IonRefresher, IonRefresherContent,
+    IonSearchbar
   ]
 })
 export class CustomerListPage implements OnInit {
   
   customers: Customer[] = [];
+  filteredCustomers: Customer[] = [];
   isLoading: boolean = true;
+  searchTerm: string = '';
 
   constructor(private customerService: CustomerService) {
-    // Daftarkan icon yang dipakai
-    addIcons({ mapOutline, locationOutline, callOutline });
+    // ✅ PERBAIKAN: Tambahkan arrowForward
+    addIcons({ mapOutline, locationOutline, callOutline, arrowForward });
   }
 
   ngOnInit() {
@@ -47,12 +49,10 @@ export class CustomerListPage implements OnInit {
   loadData(event?: any) {
     this.customerService.getCustomers().subscribe({
       next: (response) => {
-        // response adalah object { success, data, message }
-        // Kita ambil array di dalam 'data'
         this.customers = response.data || [];
+        this.filteredCustomers = this.customers;
         this.isLoading = false;
         
-        // Matikan animasi loading refresher jika ada
         if (event) event.target.complete();
       },
       error: (err) => {
@@ -64,17 +64,37 @@ export class CustomerListPage implements OnInit {
   }
 
   /**
+   * Filter data customer berdasarkan search term
+   */
+  handleSearch(event: any) {
+    const query = event.target.value.toLowerCase();
+    this.searchTerm = query;
+
+    if (!query.trim()) {
+      this.filteredCustomers = this.customers;
+      return;
+    }
+
+    this.filteredCustomers = this.customers.filter((customer) => {
+      return (
+        customer.name?.toLowerCase().includes(query) ||
+        customer.address?.toLowerCase().includes(query) ||
+        customer.phone?.toLowerCase().includes(query)
+      );
+    });
+  }
+
+  /**
    * Membuka Google Maps Eksternal
    */
   openMap(link: string) {
     if (link) {
-      // '_system' akan memaksa membuka aplikasi Google Maps di HP
       window.open(link, '_system');
     }
   }
 
   /**
-   * (Opsional) Telepon Customer
+   * Telepon Customer
    */
   callCustomer(phone: string | null) {
     if (phone) {

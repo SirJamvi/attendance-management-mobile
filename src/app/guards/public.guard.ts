@@ -24,9 +24,10 @@ export const publicGuard: CanActivateFn = (route, state): Observable<boolean | U
       // 2. Alihkan ke halaman yang sesuai (Driver atau Sales)
       const currentUser = authService.getCurrentUserValue();
 
-      if (currentUser?.role.slug === 'driver') {
+      // ✅ PERBAIKAN: role adalah string langsung
+      if (currentUser?.role === 'driver') {
         return router.createUrlTree(['/tabs/driver']);
-      } else if (currentUser?.role.slug === 'sales') {
+      } else if (currentUser?.role === 'sales') {
         return router.createUrlTree(['/tabs/sales']);
       } else {
         // Fallback

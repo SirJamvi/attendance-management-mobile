@@ -5,6 +5,17 @@
     </ion-buttons>
     <ion-title>Daftar Pelanggan</ion-title>
   </ion-toolbar>
+  
+  <!-- Search Bar -->
+  <ion-toolbar>
+    <ion-searchbar 
+      [(ngModel)]="searchTerm"
+      (ionInput)="handleSearch($event)"
+      placeholder="Cari nama, alamat, atau telepon..."
+      animated
+      debounce="300">
+    </ion-searchbar>
+  </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding-top">
@@ -13,6 +24,7 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
+  <!-- Loading Skeleton -->
   <ion-list *ngIf="isLoading">
     <ion-item *ngFor="let i of [1,2,3,4,5]">
       <ion-label>
@@ -22,8 +34,9 @@
     </ion-item>
   </ion-list>
 
+  <!-- Customer List -->
   <ion-list *ngIf="!isLoading">
-    <ion-item *ngFor="let item of customers" lines="full">
+    <ion-item *ngFor="let item of filteredCustomers" lines="full">
       
       <ion-label class="ion-text-wrap">
         <h2 style="font-weight: bold; font-size: 1.1rem; color: var(--ion-color-dark);">
@@ -35,7 +48,7 @@
           <span>{{ item.address }}</span>
         </p>
 
-        <p *ngIf="item.phone" (click)="callCustomer(item.phone)" style="display: flex; align-items: center; gap: 6px; margin-top: 6px; color: var(--ion-color-primary);">
+        <p *ngIf="item.phone" (click)="callCustomer(item.phone)" style="display: flex; align-items: center; gap: 6px; margin-top: 6px; color: var(--ion-color-primary); cursor: pointer;">
           <ion-icon name="call-outline"></ion-icon>
           <span>{{ item.phone }}</span>
         </p>
@@ -61,9 +74,16 @@
     </ion-item>
   </ion-list>
 
+  <!-- Empty State - No Data -->
   <div *ngIf="!isLoading && customers.length === 0" class="ion-text-center ion-padding" style="margin-top: 50px;">
     <ion-icon name="map-outline" style="font-size: 64px; color: #ccc;"></ion-icon>
     <p style="color: gray; margin-top: 10px;">Belum ada data pelanggan.</p>
+  </div>
+
+  <!-- Empty State - No Search Results -->
+  <div *ngIf="!isLoading && customers.length > 0 && filteredCustomers.length === 0" class="ion-text-center ion-padding" style="margin-top: 50px;">
+    <ion-icon name="search-outline" style="font-size: 64px; color: #ccc;"></ion-icon>
+    <p style="color: gray; margin-top: 10px;">Tidak ada pelanggan yang cocok dengan pencarian.</p>
   </div>
 
 </ion-content>

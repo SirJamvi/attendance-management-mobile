@@ -23,25 +23,30 @@
             [(ngModel)]="username" 
             name="username" 
             required
-            autocomplete="username">
+            autocomplete="username"
+            placeholder="Masukkan username">
           </ion-input>
         </ion-item>
 
         <!-- Password -->
-        <ion-item lines="none" class="input-item">
+        <ion-item lines="none" class="input-item password-item">
           <ion-label position="floating">Password</ion-label>
           <ion-input 
             [type]="showPassword ? 'text' : 'password'" 
             [(ngModel)]="password" 
             name="password" 
             required
-            autocomplete="current-password">
+            autocomplete="current-password"
+            placeholder="Masukkan password">
           </ion-input>
           <ion-icon 
             slot="end" 
-            [name]="showPassword ? 'eye-off' : 'eye'" 
-            (click)="togglePassword()" 
-            class="password-toggle">
+            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" 
+            (click)="togglePassword()"
+            (touchstart)="togglePassword()"
+            class="password-toggle"
+            [attr.aria-label]="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
+            style="pointer-events: auto; z-index: 999; cursor: pointer;">
           </ion-icon>
         </ion-item>
 

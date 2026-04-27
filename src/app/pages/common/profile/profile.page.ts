@@ -102,12 +102,23 @@ export class ProfilePage implements OnInit {
 
   getRoleName(): string {
     if (!this.user?.role) return 'User';
-    return this.user.role.name || this.user.role.slug || 'User';
+    
+    // ✅ PERBAIKAN: role adalah string langsung
+    // Mapping untuk menampilkan nama role yang lebih bagus
+    const roleMap: { [key: string]: string } = {
+      'driver': 'Driver',
+      'sales': 'Sales',
+      'admin': 'Administrator'
+    };
+    
+    return roleMap[this.user.role] || this.user.role || 'User';
   }
 
   getRoleColor(): string {
-    const slug = this.user?.role?.slug || '';
-    switch(slug) {
+    // ✅ PERBAIKAN: role adalah string langsung
+    const role = this.user?.role || '';
+    
+    switch(role) {
       case 'driver': return 'primary';
       case 'sales': return 'success';
       case 'admin': return 'danger';

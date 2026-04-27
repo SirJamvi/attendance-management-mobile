@@ -4,15 +4,25 @@ import { Storage } from '@ionic/storage-angular';
 import { environment } from 'src/environments/environment';
 import { Observable, from, switchMap } from 'rxjs';
 
+// ✅ UPDATE: Interface disesuaikan dengan response Controller terbaru
 export interface SalaryData {
   period: string;
   shift_info: string;
   daily_wage: number;
   total_attendance: number;
+  
+  // ✅ TAMBAHAN PENTING: Field Lembur (Overtime)
+  // Field ini wajib ada karena dikirim dari Backend
+  total_overtime: number; 
+
   total_gross_salary: number;
   total_lates: number;
   penalty_amount: number;
   final_salary: number;
+  
+  // ✅ TAMBAHAN BARU: Field untuk Alert Denda
+  severe_warning?: boolean; 
+  warning_message?: string;
 }
 
 @Injectable({
@@ -31,11 +41,13 @@ export class SalaryService {
     // Ambil token dari storage terlebih dahulu
     return from(this.storage.get('auth_token')).pipe(
       switchMap((token) => {
+        // --- LOGIKA DEBUGGING ---
         console.log('🔍 SalaryService: Token ditemukan?', token ? 'YES' : 'NO');
         
         if (!token) {
-          console.error('❌ SalaryService: TOKEN TIDAK ADA!');
+          console.error('❌ SalaryService: TOKEN TIDAK ADA! User mungkin belum login.');
         } else {
+          // Log sebagian token untuk memastikan bukan string kosong/null
           console.log('🔑 SalaryService: Token =', token.substring(0, 30) + '...');
         }
         
@@ -46,15 +58,16 @@ export class SalaryService {
           'Content-Type': 'application/json'
         });
 
+        // Log Headers untuk memastikan format benar sebelum dikirim
         console.log('📤 SalaryService: Headers =', {
-          Authorization: `Bearer ${token?.substring(0, 20)}...`,
+          Authorization: `Bearer ${token ? token.substring(0, 20) : 'null'}...`,
           Accept: 'application/json'
         });
         
         const url = `${this.apiUrl}/driver/salary`;
-        console.log('🌐 SalaryService: Requesting =', url);
+        console.log('🌐 SalaryService: Requesting URL =', url);
 
-        // Kirim request dengan headers
+        // Kirim request ke Backend
         return this.http.get<{ success: boolean; data: SalaryData; message: string }>(
           url,
           { headers }

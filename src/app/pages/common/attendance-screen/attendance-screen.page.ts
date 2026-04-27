@@ -5,14 +5,14 @@ import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonButtons, 
   IonBackButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, 
   IonCardSubtitle, IonIcon, IonSpinner, IonItem, IonLabel, IonNote, IonList,
+  IonBadge, 
   AlertController, LoadingController, Platform 
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { cameraOutline, checkmarkCircle, checkmarkDoneCircle } from 'ionicons/icons';
+// ✅ Tambahkan 'warningOutline'
+import { cameraOutline, checkmarkCircle, checkmarkDoneCircle, calendarOutline, timeOutline, alertCircleOutline, warningOutline } from 'ionicons/icons'; 
 import { Geolocation, Position } from '@capacitor/geolocation';
 
-// PERBAIKAN 3: Path Import disesuaikan menjadi 3 level ke atas (../../../)
-// Karena posisi file ada di src/app/pages/common/attendance-screen/
 import { CameraViewComponent } from '../../../components/camera-view/camera-view.component';
 import { LoadingSpinnerComponent } from '../../../components/loading-spinner/loading-spinner.component';
 import { AttendanceService } from '../../../services/attendance';
@@ -30,7 +30,8 @@ import { Attendance } from '../../../types/api.types';
     LoadingSpinnerComponent,
     IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonButtons, 
     IonBackButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, 
-    IonCardSubtitle, IonIcon, IonSpinner, IonItem, IonLabel, IonNote, IonList
+    IonCardSubtitle, IonIcon, IonSpinner, IonItem, IonLabel, IonNote, IonList,
+    IonBadge 
   ]
 })
 export class AttendanceScreenPage implements OnInit {
@@ -38,6 +39,15 @@ export class AttendanceScreenPage implements OnInit {
   isLoading = true;
   attendanceToday: Attendance | null = null;
   
+  // Data Shift & Libur
+  shiftInfo: any = null;
+  isDayOff: boolean = false;
+  currentDayName: string = '';
+
+  // ✅ VARIABLE BARU UNTUK WARNING
+  hasSevereWarning: boolean = false;
+  warningMessage: string = '';
+
   photoData: string | null = null;
   locationData: { latitude: number; longitude: number } | null = null;
   isSubmitDisabled = true;
@@ -48,7 +58,8 @@ export class AttendanceScreenPage implements OnInit {
     private loadingCtrl: LoadingController,
     private platform: Platform
   ) {
-    addIcons({ cameraOutline, checkmarkCircle, checkmarkDoneCircle });
+    // ✅ Register icon warningOutline
+    addIcons({ cameraOutline, checkmarkCircle, checkmarkDoneCircle, calendarOutline, timeOutline, alertCircleOutline, warningOutline });
   }
 
   ngOnInit() {}
@@ -63,9 +74,23 @@ export class AttendanceScreenPage implements OnInit {
     this.attendanceService.getStatus().subscribe({
       next: (response: any) => {
         this.attendanceToday = response.data;
+        
+        if (response.meta) {
+          this.shiftInfo = {
+            name: response.meta.shift_name,
+            start: response.meta.shift_start,
+            end: response.meta.shift_end
+          };
+          this.isDayOff = response.meta.is_day_off;
+          this.currentDayName = response.meta.current_day;
+
+          // ✅ AMBIL DATA WARNING DARI API
+          this.hasSevereWarning = response.meta.severe_warning;
+          this.warningMessage = response.meta.warning_message;
+        }
+
         this.isLoading = false;
       },
-      // PERBAIKAN 4: Tambahkan tipe ': any' pada parameter error
       error: (err: any) => {
         this.isLoading = false;
         console.error('Error loading status:', err);
@@ -73,6 +98,7 @@ export class AttendanceScreenPage implements OnInit {
     });
   }
 
+  // ... (Sisa method handlePhoto, getGeolocation, submitCheckIn, dll TETAP SAMA) ...
   async handlePhoto(photoBase64: string | null) {
     this.photoData = photoBase64;
     if (this.photoData) {
@@ -83,10 +109,6 @@ export class AttendanceScreenPage implements OnInit {
 
   async getGeolocation() {
     try {
-      if (!this.platform.is('capacitor') && !this.platform.is('hybrid')) {
-        // Logic untuk web
-      }
-      
       const position: Position = await Geolocation.getCurrentPosition({
         enableHighAccuracy: true,
         timeout: 10000,
@@ -99,10 +121,7 @@ export class AttendanceScreenPage implements OnInit {
       
     } catch (error: any) {
       console.error('GPS Error', error);
-      let msg = 'Pastikan GPS aktif dan izin lokasi diberikan.';
-      if (error.message && error.message.includes('permission')) {
-        msg = 'Izin lokasi ditolak oleh browser/perangkat.';
-      }
+      let msg = 'Pastikan GPS aktif.';
       this.showAlert('Gagal Lokasi', msg);
       this.locationData = null;
     }
@@ -119,6 +138,11 @@ export class AttendanceScreenPage implements OnInit {
   }
 
   async submitCheckIn() {
+    if (this.isDayOff) {
+      this.showAlert('Hari Libur', 'Anda tidak bisa melakukan absen pada hari libur.');
+      return;
+    }
+
     if (this.isSubmitDisabled) return;
     
     const loading = await this.loadingCtrl.create({ message: 'Mengirim Absen Masuk...' });
@@ -135,7 +159,6 @@ export class AttendanceScreenPage implements OnInit {
         this.loadStatus();
         this.resetForm();
       },
-      // PERBAIKAN 4: Tambahkan tipe ': any' pada parameter error
       error: (err: any) => {
         loading.dismiss();
         this.showAlert('Gagal', err.error?.message || 'Gagal mengirim data.');
@@ -160,7 +183,6 @@ export class AttendanceScreenPage implements OnInit {
         this.loadStatus();
         this.resetForm();
       },
-      // PERBAIKAN 4: Tambahkan tipe ': any' pada parameter error
       error: (err: any) => {
         loading.dismiss();
         this.showAlert('Gagal', err.error?.message || 'Gagal mengirim data.');

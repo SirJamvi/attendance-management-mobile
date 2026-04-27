@@ -25,7 +25,7 @@ export const routes: Routes = [
     canActivate: [publicGuard] // <-- HANYA bisa diakses jika BELUM login
   },
 
-   {
+  {
     path: 'attendance-detail',
     loadComponent: () => import('./pages/driver/attendance-detail/attendance-detail.page').then(m => m.AttendanceDetailPage)
   },

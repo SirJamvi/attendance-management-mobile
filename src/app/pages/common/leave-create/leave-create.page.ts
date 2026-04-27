@@ -312,9 +312,11 @@ export class LeaveCreatePage implements OnInit {
 
   goBack() {
     const user = this.authService.getCurrentUserValue();
-    if (user?.role.slug === 'driver') {
+    
+    // ✅ PERBAIKAN: role adalah string langsung
+    if (user?.role === 'driver') {
       this.navCtrl.navigateBack('/tabs/driver/leave');
-    } else if (user?.role.slug === 'sales') {
+    } else if (user?.role === 'sales') {
       this.navCtrl.navigateBack('/tabs/sales/leave');
     } else {
       this.navCtrl.navigateBack('/tabs');
