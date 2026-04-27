@@ -3,18 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel, IonRouterOutlet } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { 
-  home, 
-  time, 
-  calendar, 
-  person, 
-  speedometer, 
-  location, 
+import {
+  home,
+  time,
+  calendar,
+  person,
+  speedometer,
+  location,
   documentText,
   addCircle,
   wallet,
-  walletOutline,
-  people // <-- 1. TAMBAHKAN INI
+  people,
+  arrowForward // ← TAMBAHAN untuk fix icon warning
 } from 'ionicons/icons';
 
 import { AuthService } from 'src/app/services/auth';
@@ -25,13 +25,13 @@ import { AuthService } from 'src/app/services/auth';
   styleUrls: ['./tabs.page.scss'],
   standalone: true,
   imports: [
-    IonTabs, 
-    IonTabBar, 
-    IonTabButton, 
-    IonIcon, 
-    IonLabel, 
+    IonTabs,
+    IonTabBar,
+    IonTabButton,
+    IonIcon,
+    IonLabel,
     IonRouterOutlet,
-    CommonModule, 
+    CommonModule,
     FormsModule
   ]
 })
@@ -40,24 +40,31 @@ export class TabsPage implements OnInit {
   userRole: string = '';
 
   constructor(private authService: AuthService) {
-    addIcons({ 
-      home, 
-      time, 
-      calendar, 
-      person, 
-      speedometer, 
-      location, 
+    // Daftarkan semua icon yang dipakai di tabs.page.html
+    addIcons({
+      home,
+      time,
+      calendar,
+      person,
+      speedometer,
+      location,
       documentText,
       addCircle,
       wallet,
-      walletOutline,
-      people // <-- 2. DAN DAFTARKAN DI SINI
+      people,
+      arrowForward // ← TAMBAHAN untuk fix icon warning
     });
   }
 
   ngOnInit() {
     const user = this.authService.getCurrentUserValue();
-    this.userRole = user?.role.slug || '';
+    
+    // ✅ PERBAIKAN: role adalah string langsung dari backend
+    this.userRole = user?.role || '';
+    
+    // Debugging: Cek di Console Chrome/Logcat apakah role terbaca dengan benar
+    console.log('🔹 Tabs Init - User Role:', this.userRole);
+    console.log('🔹 Tabs Init - User Object:', user);
   }
 
 }

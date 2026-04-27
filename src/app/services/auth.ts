@@ -26,6 +26,10 @@ export class AuthService {
         const response = await this.apiClient.get<ApiResponse<User>>('user').toPromise();
         if (response && response.success) {
           console.log('✅ User authenticated:', response.data.name);
+          console.log('👤 User data loaded:', response.data); // ← DEBUGGING USER DATA
+          console.log('🔑 User role type:', typeof response.data.role); // ← CEK TIPE ROLE
+          console.log('🔑 User role value:', response.data.role); // ← CEK VALUE ROLE
+          
           this.currentUser.next(response.data);
           this.authState.next(true);
         } else {
@@ -59,6 +63,11 @@ export class AuthService {
           if (response.success) {
             console.log('✅ Login berhasil!');
             console.log('🔑 Token received:', response.data.token.substring(0, 30) + '...');
+            
+            // ✅ DEBUGGING USER DATA DARI LOGIN
+            console.log('👤 User data from login:', response.data.user);
+            console.log('🔑 User role type from login:', typeof response.data.user.role);
+            console.log('🔑 User role value from login:', response.data.user.role);
             
             // SIMPAN TOKEN
             await this.storage.saveToken(response.data.token);

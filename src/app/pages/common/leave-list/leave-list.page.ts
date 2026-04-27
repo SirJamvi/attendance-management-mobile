@@ -8,6 +8,10 @@ import { LeaveService } from 'src/app/services/leave';
 import { AuthService } from 'src/app/services/auth';
 import { LoadingSpinnerComponent } from 'src/app/components/loading-spinner/loading-spinner.component';
 
+// ✅ TAMBAHAN: Import icon yang dibutuhkan
+import { addIcons } from 'ionicons';
+import { addCircleOutline, calendar, time, checkmarkCircle, closeCircle, alertCircle } from 'ionicons/icons';
+
 @Component({
   selector: 'app-leave-list',
   templateUrl: './leave-list.page.html',
@@ -28,12 +32,24 @@ export class LeaveListPage implements OnInit {
     private loadingCtrl: LoadingController,
     private navCtrl: NavController,
     private alertCtrl: AlertController
-  ) { }
+  ) {
+    // ✅ PERBAIKAN: Register icon yang digunakan di template
+    addIcons({ 
+      addCircleOutline,
+      calendar,
+      time,
+      checkmarkCircle,
+      closeCircle,
+      alertCircle
+    });
+  }
 
   ngOnInit() {
     // Ambil role user untuk keperluan navigasi/tampilan
     const user = this.authService.getCurrentUserValue();
-    this.userRole = user?.role.slug || '';
+    
+    // ✅ PERBAIKAN: role adalah string langsung (tanpa .slug)
+    this.userRole = user?.role || '';
   }
 
   // Gunakan ionViewWillEnter agar data di-refresh setiap kali halaman dibuka

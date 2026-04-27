@@ -7,7 +7,7 @@ import {
   IonInput, IonButton, IonIcon, IonText, IonSpinner, ToastController 
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { eye, eyeOff, logIn } from 'ionicons/icons';
+import { eye, eyeOff, eyeOutline, eyeOffOutline, logIn } from 'ionicons/icons';
 
 import { AuthService } from 'src/app/services/auth';
 import { Storage } from 'src/app/services/storage';
@@ -38,20 +38,39 @@ export class LoginPage implements OnInit {
     private router: Router,
     private toastCtrl: ToastController
   ) { 
-    addIcons({ eye, eyeOff, logIn });
+    // Menambahkan icon outline juga
+    addIcons({ eye, eyeOff, eyeOutline, eyeOffOutline, logIn });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    console.log('🔐 Login page initialized');
+  }
 
-  togglePassword() {
+  /**
+   * Toggle visibility password
+   */
+  togglePassword(event?: Event) {
+    // Prevent event bubbling
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    
     this.showPassword = !this.showPassword;
+    console.log('👁️ Password visibility toggled:', this.showPassword ? 'VISIBLE' : 'HIDDEN');
+    console.log('👁️ Current showPassword value:', this.showPassword);
   }
 
   async onLogin() {
+    // Validasi input
     if (!this.username || !this.password) {
       this.errorMessage = 'Username dan Password wajib diisi.';
       return;
     }
+
+    // Trim whitespace
+    this.username = this.username.trim();
+    this.password = this.password.trim();
 
     this.isSubmitting = true;
     this.errorMessage = '';
@@ -94,17 +113,27 @@ export class LoginPage implements OnInit {
     });
   }
 
+  /**
+   * Redirect user berdasarkan role
+   */
   redirectUser(user: any) {
-    if (user.role.slug === 'driver') {
+    console.log('🚀 Redirecting user with role:', user.role);
+    
+    // Cek langsung string role karena DB Buku Digital mengirimkan string, bukan objek
+    if (user.role === 'driver') {
       this.router.navigate(['/tabs/driver'], { replaceUrl: true });
-    } else if (user.role.slug === 'sales') {
+    } else if (user.role === 'sales') {
       this.router.navigate(['/tabs/sales'], { replaceUrl: true });
     } else {
+      console.error('❌ Unknown role:', user.role);
       this.errorMessage = 'Role akun tidak dikenali untuk aplikasi mobile.';
       this.authService.logout();
     }
   }
 
+  /**
+   * Menampilkan toast message
+   */
   async showToast(message: string, color: 'success' | 'danger' | 'warning') {
     const toast = await this.toastCtrl.create({
       message: message,

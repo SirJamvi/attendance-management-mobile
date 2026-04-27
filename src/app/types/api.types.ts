@@ -6,15 +6,16 @@ export interface Role {
   slug: 'admin' | 'driver' | 'sales';
 }
 
+// ✅ PERBAIKAN: Backend mengirim role sebagai STRING langsung ('driver' atau 'sales')
 export interface User {
   id: number;
   name: string;
   username: string;
   email: string;
-  phone: string;
-  role_id: number;
-  is_active: boolean;
-  role: Role; // Relasi
+  phone?: string;
+  role_id?: number;
+  is_active?: boolean;
+  role: string; // ← String langsung dari backend: 'driver' | 'sales' | 'admin'
   // ... (properti lain jika diperlukan)
 }
 

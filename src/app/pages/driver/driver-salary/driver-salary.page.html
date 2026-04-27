@@ -9,28 +9,36 @@
 
 <ion-content [fullscreen]="true" class="ion-padding-bottom bg-light">
   
-  <!-- Pull to Refresh -->
   <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- Loading State -->
   <div *ngIf="isLoading" class="ion-text-center ion-padding mt-5">
     <ion-spinner name="crescent" color="primary"></ion-spinner>
     <p class="text-medium text-muted">Sedang menghitung gaji...</p>
   </div>
 
-  <!-- Error State -->
   <div *ngIf="errorMsg && !isLoading" class="ion-text-center ion-padding mt-5">
     <ion-icon name="alert-circle-outline" size="large" color="medium"></ion-icon>
     <p class="text-muted">{{ errorMsg }}</p>
     <ion-button fill="outline" size="small" (click)="loadSalary()">Muat Ulang</ion-button>
   </div>
 
-  <!-- Content Data -->
   <div *ngIf="!isLoading && !errorMsg && salaryData">
     
-    <!-- Periode Info -->
+    <div *ngIf="salaryData.severe_warning" class="ion-padding-horizontal ion-padding-top">
+      <ion-card color="danger" class="ion-no-margin shadow-sm">
+        <ion-card-content class="d-flex align-items-start">
+          <ion-icon name="warning-outline" style="font-size: 2rem; margin-right: 12px;"></ion-icon>
+          <div>
+            <h2 class="fw-bold text-white fs-6 mt-0">PERINGATAN EVALUASI</h2>
+            <p class="mb-0 small" style="opacity: 0.9;">
+              {{ salaryData.warning_message || 'Terdeteksi keterlambatan berlebih minggu ini.' }}
+            </p>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
     <div class="ion-padding-start ion-padding-top mb-2">
       <ion-text color="medium">
         <small class="text-uppercase fw-bold">Periode Berjalan</small>
@@ -38,7 +46,6 @@
       <h2 class="mt-0 fw-bold text-dark">{{ salaryData.period }}</h2>
     </div>
 
-    <!-- MAIN CARD: FINAL SALARY -->
     <ion-card class="main-card">
       <ion-card-content class="ion-text-center text-white">
         <p class="mb-1 opacity-75">Estimasi Gaji Bersih</p>
@@ -53,7 +60,6 @@
       </ion-card-content>
     </ion-card>
 
-    <!-- PENDAPATAN -->
     <ion-list inset="true" lines="full" class="custom-list">
       <ion-item-divider color="light">
         <ion-label>RINCIAN PENDAPATAN</ion-label>
@@ -84,6 +90,19 @@
           {{ salaryData.total_attendance }} Hari
         </ion-note>
       </ion-item>
+      
+      <ion-item *ngIf="salaryData.total_overtime > 0">
+        <div slot="start" class="icon-box bg-primary-light">
+          <ion-icon name="cash-outline" color="primary"></ion-icon>
+        </div>
+        <ion-label>
+          <h3>Uang Lembur</h3>
+          <p>Tambahan jam kerja</p>
+        </ion-label>
+        <ion-note slot="end" color="success" class="fw-bold">
+          + {{ salaryData.total_overtime | currency:'IDR':'Rp ':'1.0-0' }}
+        </ion-note>
+      </ion-item>
 
       <ion-item class="total-row">
         <ion-label>Total Kotor</ion-label>
@@ -93,7 +112,6 @@
       </ion-item>
     </ion-list>
 
-    <!-- POTONGAN -->
     <ion-list inset="true" lines="full" class="mt-3 custom-list">
       <ion-item-divider color="light">
         <ion-label>POTONGAN & DENDA</ion-label>
@@ -105,7 +123,7 @@
         </div>
         <ion-label>
           <h3>Keterlambatan</h3>
-          <p>Frekuensi telat</p>
+          <p>Frekuensi telat bulan ini</p>
         </ion-label>
         <ion-badge slot="end" [color]="salaryData.total_lates > 0 ? 'warning' : 'medium'">
           {{ salaryData.total_lates }}x
@@ -119,7 +137,7 @@
         <ion-label class="ion-text-wrap">
           <h3>Denda Telat</h3>
           <p class="small text-muted" *ngIf="salaryData.penalty_amount > 0">
-            (>3x: -30rb, >6x: -60rb)
+            Akumulasi denda mingguan
           </p>
           <p class="small text-muted" *ngIf="salaryData.penalty_amount === 0">
             Tidak ada denda
@@ -131,10 +149,9 @@
       </ion-item>
     </ion-list>
 
-    <!-- Info -->
     <div class="ion-padding text-center">
       <p class="small text-muted fst-italic">
-        *Data diperbarui secara real-time saat Anda melakukan presensi.
+        *Reset denda dilakukan otomatis setiap hari Senin.
       </p>
     </div>
 

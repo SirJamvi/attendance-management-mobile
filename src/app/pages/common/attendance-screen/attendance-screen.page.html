@@ -9,15 +9,51 @@
 
 <ion-content [fullscreen]="true" class="ion-padding-bottom">
   
-  <!-- ✅ PERBAIKAN: Spinner dengan z-index rendah -->
   <div *ngIf="isLoading" class="loading-overlay">
     <app-loading-spinner message="Memuat data..."></app-loading-spinner>
   </div>
 
-  <!-- ✅ KONTEN UTAMA - Tidak overlap dengan spinner -->
   <div *ngIf="!isLoading" class="content-wrapper ion-padding">
 
-    <!-- CASE 1: Belum Absen Masuk -->
+    <ion-card *ngIf="hasSevereWarning" color="danger" class="ion-margin-bottom animate__animated animate__pulse">
+      <ion-card-content class="d-flex align-items-center">
+        <ion-icon name="warning-outline" style="font-size: 2.5rem; margin-right: 15px;"></ion-icon>
+        <div>
+          <h2 style="font-weight: bold; font-size: 1.1rem; margin-top: 0; margin-bottom: 5px;">PERINGATAN EVALUASI</h2>
+          <p class="ion-no-margin small" style="opacity: 0.95;">
+            {{ warningMessage || 'Keterlambatan mingguan melampaui batas.' }}
+          </p>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    <ion-card *ngIf="shiftInfo" [color]="isDayOff ? 'medium' : 'primary'" class="ion-margin-bottom">
+      <ion-card-content class="ion-text-center">
+        
+        <div *ngIf="isDayOff">
+          <ion-icon name="alert-circle-outline" style="font-size: 40px;"></ion-icon>
+          <h2 style="font-weight: bold; font-size: 1.5rem; margin-top: 5px;">HARI LIBUR</h2>
+          <p class="ion-no-margin">Hari ini ({{ currentDayName }}) jadwal Anda libur.</p>
+        </div>
+
+        <div *ngIf="!isDayOff">
+          <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
+            <ion-icon name="calendar-outline" style="font-size: 1.2rem;"></ion-icon>
+            <h3 style="font-weight: bold; font-size: 1.2rem; margin: 0;">{{ shiftInfo.name }}</h3>
+          </div>
+          
+          <div style="margin-top: 8px; font-size: 0.95rem; opacity: 0.9;">
+            <ion-icon name="time-outline" style="vertical-align: middle;"></ion-icon>
+            <span style="vertical-align: middle;"> {{ shiftInfo.start }} - {{ shiftInfo.end }} WIB</span>
+          </div>
+          
+          <ion-badge color="light" class="ion-margin-top" style="color: var(--ion-color-primary);">
+            {{ currentDayName }}
+          </ion-badge>
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+
     <div *ngIf="!attendanceToday">
       <ion-card>
         <ion-card-header>
@@ -26,35 +62,38 @@
         </ion-card-header>
         <ion-card-content>
           
-          <!-- ✅ Component Kamera dengan style explicit -->
-          <div style="position: relative; z-index: 1;">
-            <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
+          <div *ngIf="isDayOff" class="ion-text-center ion-padding">
+            <p class="text-danger">Absen dinonaktifkan karena hari libur.</p>
           </div>
 
-          <!-- GPS Loading Indicator -->
-          <div *ngIf="photoData && !locationData" class="ion-text-center ion-padding-top">
-            <ion-spinner name="crescent" color="primary"></ion-spinner>
-            <p class="ion-text-wrap small-text">Mencari koordinat GPS...</p>
-          </div>
-          
-          <div *ngIf="photoData" class="ion-text-center ion-margin-vertical">
-            <img [src]="photoData" style="max-height: 300px; border-radius: 10px; border: 2px solid #ddd;">
+          <div *ngIf="!isDayOff">
+            <div style="position: relative; z-index: 1;">
+              <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
+            </div>
+
+            <div *ngIf="photoData && !locationData" class="ion-text-center ion-padding-top">
+              <ion-spinner name="crescent" color="primary"></ion-spinner>
+              <p class="ion-text-wrap small-text">Mencari koordinat GPS...</p>
+            </div>
+            
+            <div *ngIf="photoData" class="ion-text-center ion-margin-vertical">
+              <img [src]="photoData" style="max-height: 300px; border-radius: 10px; border: 2px solid #ddd;">
+            </div>
+
+            <ion-button 
+              expand="block" 
+              class="ion-margin-top" 
+              [disabled]="isSubmitDisabled" 
+              (click)="submitCheckIn()">
+              <ion-icon slot="start" name="camera-outline"></ion-icon>
+              Submit Masuk
+            </ion-button>
           </div>
 
-          <!-- Tombol Submit -->
-          <ion-button 
-            expand="block" 
-            class="ion-margin-top" 
-            [disabled]="isSubmitDisabled" 
-            (click)="submitCheckIn()">
-            <ion-icon slot="start" name="camera-outline"></ion-icon>
-            Submit Masuk
-          </ion-button>
         </ion-card-content>
       </ion-card>
     </div>
 
-    <!-- CASE 2: Sudah Masuk, Belum Pulang -->
     <div *ngIf="attendanceToday && !attendanceToday.check_out_time">
       <ion-card>
         <ion-card-header>
@@ -73,17 +112,16 @@
           <div class="spacer" style="height: 16px;"></div>
 
           <div style="position: relative; z-index: 1;">
-  <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
-</div>
+            <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
+          </div>
 
-<div *ngIf="photoData" class="ion-text-center ion-margin-top">
-  <img [src]="photoData" style="max-height: 400px; border-radius: 12px; border: 2px solid var(--ion-color-primary);">
-  
-  <ion-button fill="clear" color="danger" (click)="resetForm()">
-    <ion-icon name="trash-outline" slot="start"></ion-icon>
-    Hapus Foto
-  </ion-button>
-</div>
+          <div *ngIf="photoData" class="ion-text-center ion-margin-top">
+            <img [src]="photoData" style="max-height: 400px; border-radius: 12px; border: 2px solid var(--ion-color-primary);">
+            <ion-button fill="clear" color="danger" (click)="resetForm()">
+              <ion-icon name="trash-outline" slot="start"></ion-icon>
+              Hapus Foto
+            </ion-button>
+          </div>
 
           <div *ngIf="photoData && !locationData" class="ion-text-center ion-padding-top">
             <ion-spinner name="crescent" color="primary"></ion-spinner>
@@ -103,7 +141,6 @@
       </ion-card>
     </div>
 
-    <!-- CASE 3: Sudah Selesai Semua -->
     <div *ngIf="attendanceToday && attendanceToday.check_out_time" class="ion-text-center ion-padding top-margin">
       <ion-icon name="checkmark-done-circle" color="success" style="font-size: 80px;"></ion-icon>
       <h2 class="ion-margin-top">Selesai!</h2>

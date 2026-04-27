@@ -2,70 +2,74 @@
   
   <ion-router-outlet></ion-router-outlet>
 
+  <!-- TAB BAR UNTUK DRIVER -->
   <ion-tab-bar slot="bottom" *ngIf="userRole === 'driver'" class="driver-tab-bar">
     
-    <ion-tab-button tab="driver/attendance" class="tab-button">
+    <ion-tab-button tab="driver/attendance">
       <ion-icon name="home" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Presensi</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="driver/customers" class="tab-button">
+    <ion-tab-button tab="driver/customers">
       <ion-icon name="people" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Pelanggan</ion-label>
     </ion-tab-button>
-    <ion-tab-button tab="driver/history" class="tab-button">
+
+    <ion-tab-button tab="driver/history">
       <ion-icon name="time" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Riwayat</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="driver/salary" class="tab-button">
+    <ion-tab-button tab="driver/salary">
       <ion-icon name="wallet" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Gaji</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="driver/leave" class="tab-button">
+    <ion-tab-button tab="driver/leave">
       <ion-icon name="calendar" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Cuti</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="profile" class="tab-button">
+    <ion-tab-button tab="profile">
       <ion-icon name="person" class="tab-icon"></ion-icon>
-      <ion-label class="tab-label">Profile</ion-label>
+      <ion-label class="tab-label">Profil</ion-label>
     </ion-tab-button>
 
   </ion-tab-bar>
 
-
+  <!-- TAB BAR UNTUK SALES -->
   <ion-tab-bar slot="bottom" *ngIf="userRole === 'sales'" class="sales-tab-bar">
-    <ion-tab-button tab="sales/dashboard" class="tab-button">
+    
+    <ion-tab-button tab="sales/dashboard">
       <ion-icon name="speedometer" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Home</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="sales/attendance" class="tab-button">
+    <ion-tab-button tab="sales/attendance">
       <ion-icon name="location" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Absen</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="sales/visit-create" class="tab-button">
+    <ion-tab-button tab="sales/visit-create">
       <ion-icon name="add-circle" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Visit</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="sales/daily-report" class="tab-button">
+    <ion-tab-button tab="sales/daily-report">
       <ion-icon name="document-text" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Laporan</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="sales/history" class="tab-button">
+    <ion-tab-button tab="sales/history">
       <ion-icon name="time" class="tab-icon"></ion-icon>
       <ion-label class="tab-label">Riwayat</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="profile" class="tab-button">
+    <ion-tab-button tab="profile">
       <ion-icon name="person" class="tab-icon"></ion-icon>
-      <ion-label class="tab-label">Profile</ion-label>
+      <ion-label class="tab-label">Profil</ion-label>
     </ion-tab-button>
+    
   </ion-tab-bar>
 
 </ion-tabs>
