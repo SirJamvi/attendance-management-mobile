@@ -151,5 +151,9 @@ export const routes: Routes = [
   {
     path: 'customer-list',
     loadComponent: () => import('./pages/driver/customer-list/customer-list.page').then( m => m.CustomerListPage)
+  },
+  {
+    path: 'cash-advance',
+    loadComponent: () => import('./pages/common/cash-advance/cash-advance.page').then( m => m.CashAdvancePage)
   }
 ];

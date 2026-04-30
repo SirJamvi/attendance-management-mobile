@@ -9,7 +9,6 @@ import {
   AlertController, LoadingController, Platform 
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-// ✅ Tambahkan 'warningOutline'
 import { cameraOutline, checkmarkCircle, checkmarkDoneCircle, calendarOutline, timeOutline, alertCircleOutline, warningOutline } from 'ionicons/icons'; 
 import { Geolocation, Position } from '@capacitor/geolocation';
 
@@ -44,7 +43,7 @@ export class AttendanceScreenPage implements OnInit {
   isDayOff: boolean = false;
   currentDayName: string = '';
 
-  // ✅ VARIABLE BARU UNTUK WARNING
+  // Variable untuk warning
   hasSevereWarning: boolean = false;
   warningMessage: string = '';
 
@@ -58,7 +57,6 @@ export class AttendanceScreenPage implements OnInit {
     private loadingCtrl: LoadingController,
     private platform: Platform
   ) {
-    // ✅ Register icon warningOutline
     addIcons({ cameraOutline, checkmarkCircle, checkmarkDoneCircle, calendarOutline, timeOutline, alertCircleOutline, warningOutline });
   }
 
@@ -84,7 +82,7 @@ export class AttendanceScreenPage implements OnInit {
           this.isDayOff = response.meta.is_day_off;
           this.currentDayName = response.meta.current_day;
 
-          // ✅ AMBIL DATA WARNING DARI API
+          // Ambil data warning dari API
           this.hasSevereWarning = response.meta.severe_warning;
           this.warningMessage = response.meta.warning_message;
         }
@@ -98,7 +96,6 @@ export class AttendanceScreenPage implements OnInit {
     });
   }
 
-  // ... (Sisa method handlePhoto, getGeolocation, submitCheckIn, dll TETAP SAMA) ...
   async handlePhoto(photoBase64: string | null) {
     this.photoData = photoBase64;
     if (this.photoData) {
@@ -121,8 +118,7 @@ export class AttendanceScreenPage implements OnInit {
       
     } catch (error: any) {
       console.error('GPS Error', error);
-      let msg = 'Pastikan GPS aktif.';
-      this.showAlert('Gagal Lokasi', msg);
+      this.showAlert('Gagal Lokasi', 'Pastikan GPS aktif.');
       this.locationData = null;
     }
   }
@@ -138,14 +134,14 @@ export class AttendanceScreenPage implements OnInit {
   }
 
   async submitCheckIn() {
-    if (this.isDayOff) {
-      this.showAlert('Hari Libur', 'Anda tidak bisa melakukan absen pada hari libur.');
-      return;
-    }
+    // ✅ Blok pemblokiran isDayOff DIHAPUS — presensi darurat kini diizinkan.
+    // Proses langsung dilanjutkan ke pengiriman API tanpa cek hari libur.
 
     if (this.isSubmitDisabled) return;
     
-    const loading = await this.loadingCtrl.create({ message: 'Mengirim Absen Masuk...' });
+    const loading = await this.loadingCtrl.create({ 
+      message: this.isDayOff ? 'Mengirim Presensi Darurat...' : 'Mengirim Absen Masuk...' 
+    });
     await loading.present();
 
     this.attendanceService.checkIn(
@@ -155,7 +151,10 @@ export class AttendanceScreenPage implements OnInit {
     ).subscribe({
       next: () => {
         loading.dismiss();
-        this.showAlert('Berhasil', 'Absen Masuk Tercatat!');
+        const message = this.isDayOff
+          ? 'Presensi darurat berhasil dikirim. Menunggu validasi Admin.'
+          : 'Absen Masuk Tercatat!';
+        this.showAlert('Berhasil', message);
         this.loadStatus();
         this.resetForm();
       },

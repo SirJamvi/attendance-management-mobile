@@ -26,6 +26,7 @@
         </div>
       </ion-card-content>
     </ion-card>
+
     <ion-card *ngIf="shiftInfo" [color]="isDayOff ? 'medium' : 'primary'" class="ion-margin-bottom">
       <ion-card-content class="ion-text-center">
         
@@ -54,19 +55,26 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- ✅ BLOK DIPERBARUI: Presensi Masuk / Presensi Darurat -->
     <div *ngIf="!attendanceToday">
       <ion-card>
         <ion-card-header>
-          <ion-card-title>Presensi Masuk</ion-card-title>
-          <ion-card-subtitle>Foto selfie untuk kehadiran.</ion-card-subtitle>
+          <ion-card-title [color]="isDayOff ? 'danger' : ''">
+            {{ isDayOff ? 'Presensi Darurat (Hari Libur)' : 'Presensi Masuk' }}
+          </ion-card-title>
+          <ion-card-subtitle>
+            {{ isDayOff ? 'Foto selfie untuk pengajuan darurat.' : 'Foto selfie untuk kehadiran.' }}
+          </ion-card-subtitle>
         </ion-card-header>
         <ion-card-content>
           
-          <div *ngIf="isDayOff" class="ion-text-center ion-padding">
-            <p class="text-danger">Absen dinonaktifkan karena hari libur.</p>
+          <div *ngIf="isDayOff" class="ion-text-center ion-padding-bottom">
+            <p class="text-danger" style="font-weight: bold;">
+              <ion-icon name="warning"></ion-icon> Absen Anda akan memerlukan validasi Admin.
+            </p>
           </div>
 
-          <div *ngIf="!isDayOff">
+          <div>
             <div style="position: relative; z-index: 1;">
               <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
             </div>
@@ -83,16 +91,18 @@
             <ion-button 
               expand="block" 
               class="ion-margin-top" 
+              [color]="isDayOff ? 'danger' : 'primary'"
               [disabled]="isSubmitDisabled" 
               (click)="submitCheckIn()">
               <ion-icon slot="start" name="camera-outline"></ion-icon>
-              Submit Masuk
+              {{ isDayOff ? 'Ajukan Presensi Darurat' : 'Submit Masuk' }}
             </ion-button>
           </div>
 
         </ion-card-content>
       </ion-card>
     </div>
+    <!-- ✅ AKHIR BLOK DIPERBARUI -->
 
     <div *ngIf="attendanceToday && !attendanceToday.check_out_time">
       <ion-card>
