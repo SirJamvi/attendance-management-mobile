@@ -6,10 +6,12 @@
 ion-content {
   --background: var(--ion-color-light);
   pointer-events: auto !important;
+  --padding-bottom: calc(68px + env(safe-area-inset-bottom) + 16px);
 }
 
 .content-wrapper {
   pointer-events: auto !important;
+  padding-bottom: calc(68px + env(safe-area-inset-bottom) + 16px) !important;
 }
 
 .loading-overlay {

@@ -1,0 +1,145 @@
+// app.component.scss
+// Semua style overlay radial menu ada di sini (level app)
+
+// ═══════════════════════════════════════════════
+// OVERLAY RADIAL
+// ═══════════════════════════════════════════════
+.radial-overlay {
+  // Fixed: menutupi seluruh layar tapi HANYA saat *ngIf=true
+  // Tidak ada opacity trick — elemen benar-benar tidak ada di DOM saat tertutup
+  position: fixed;
+  inset: 0;
+  z-index: 99999;   // di atas semua layer Ionic
+  pointer-events: all;
+
+  // Animasi masuk
+  animation: overlay-in 0.2s ease forwards;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.overlay-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 18, 40, 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+// ═══════════════════════════════════════════════
+// CONTAINER — terpusat di atas tombol menu
+// ═══════════════════════════════════════════════
+.radial-container {
+  position: absolute;
+  bottom: calc(68px + env(safe-area-inset-bottom));
+  // left diset via binding Angular di template
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+}
+
+// ═══════════════════════════════════════════════
+// ITEM RADIAL
+// ═══════════════════════════════════════════════
+.radial-item {
+  position: absolute;
+  top: 0; left: 0;
+  width: 64px;
+  height: 64px;
+  margin: -32px;    // center item ke origin
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+
+  // Animasi posisi dikontrol via transform binding di template
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.15s ease,
+              border-color 0.15s ease;
+
+  ion-icon {
+    font-size: 22px;
+    color: #2563eb;
+    transition: color 0.15s ease;
+  }
+
+  span {
+    font-size: 9px;
+    font-weight: 600;
+    color: #374151;
+    white-space: nowrap;
+    transition: color 0.15s ease;
+  }
+
+  &.hovered {
+    background: #2563eb;
+    border-color: #1d4ed8;
+    ion-icon { color: #fff; }
+    span { color: #fff; }
+  }
+}
+
+// ═══════════════════════════════════════════════
+// TOMBOL CLOSE DI TENGAH
+// ═══════════════════════════════════════════════
+.radial-close-btn {
+  position: absolute;
+  top: 0; left: 0;
+  width: 50px;
+  height: 50px;
+  margin: -25px;
+
+  background: #1d4ed8;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+  animation: pulse-ring 1.5s infinite;
+
+  ion-icon {
+    font-size: 22px;
+    color: #fff;
+  }
+}
+
+@keyframes pulse-ring {
+  0%   { box-shadow: 0 0 0 0   rgba(37, 99, 235, 0.55); }
+  70%  { box-shadow: 0 0 0 12px rgba(37, 99, 235, 0); }
+  100% { box-shadow: 0 0 0 0   rgba(37, 99, 235, 0); }
+}
+
+// ═══════════════════════════════════════════════
+// HINT
+// ═══════════════════════════════════════════════
+.swipe-hint {
+  position: absolute;
+  top: -130px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #1e40af;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: fadeInHint 0.3s ease forwards;
+}
+
+@keyframes fadeInHint {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}

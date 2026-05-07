@@ -1,0 +1,79 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/driver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Klasemen Harian</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div *ngIf="isLoading" class="ion-text-center ion-margin-top">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Memuat data klasemen...</p>
+  </div>
+
+  <div *ngIf="!isLoading && errorMessage" class="ion-text-center ion-margin-top">
+    <ion-text color="danger">
+      <p><b>{{ errorMessage }}</b></p>
+    </ion-text>
+    <ion-button fill="outline" (click)="fetchLeaderboard()">Coba Lagi</ion-button>
+  </div>
+
+  <div *ngIf="!isLoading && leaderboardData">
+    
+    <ion-card color="tertiary">
+      <ion-card-header>
+        <ion-card-subtitle>{{ leaderboardData.day }}, {{ leaderboardData.date }}</ion-card-subtitle>
+        <ion-card-title>Target Hari Ini: {{ leaderboardData.daily_target }} Bal</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        Selesaikan target untuk mengunci posisi klasemen dan kumpulkan poin bonus sebanyak-banyaknya!
+      </ion-card-content>
+    </ion-card>
+
+    <ion-list>
+      <ion-list-header>
+        <ion-label>Peringkat Driver</ion-label>
+      </ion-list-header>
+
+      <ion-item *ngFor="let driver of standings; let i = index">
+        <ion-avatar slot="start">
+          <div class="rank-badge" [ngClass]="{'rank-1': i === 0, 'rank-2': i === 1, 'rank-3': i === 2}">
+            {{ i + 1 }}
+          </div>
+        </ion-avatar>
+
+        <ion-label>
+          <h2><b>{{ driver.driver_name | uppercase }}</b></h2>
+          <p>
+            Sah: <b>{{ driver.total_approved_ball }} Bal</b> 
+            <span *ngIf="driver.total_pending_ball > 0" class="text-warning">
+              (+{{ driver.total_pending_ball }} pending)
+            </span>
+          </p>
+          <p>
+            <ion-text [color]="driver.has_entered_leaderboard ? 'success' : 'medium'">
+              <small>{{ driver.status_message }}</small>
+            </ion-text>
+          </p>
+        </ion-label>
+
+        <ion-badge slot="end" [color]="driver.bonus_points > 0 ? 'success' : 'medium'">
+          {{ driver.bonus_points }} Poin
+        </ion-badge>
+      </ion-item>
+    </ion-list>
+
+    <div *ngIf="standings.length === 0" class="ion-text-center ion-margin-top">
+      <ion-text color="medium">
+        <p>Belum ada pergerakan hari ini.<br>Ayo jadilah yang pertama!</p>
+      </ion-text>
+    </div>
+
+  </div>
+</ion-content>

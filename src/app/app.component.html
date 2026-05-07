@@ -1,3 +1,44 @@
+<!-- app.component.html -->
+<!-- Tambahkan radial-overlay DI SINI, bukan di tabs.page.html -->
+
 <ion-app>
   <ion-router-outlet></ion-router-outlet>
 </ion-app>
+
+<!-- ═══════════════════════════════════════════════════
+     RADIAL OVERLAY — dirender di luar ion-app
+     agar z-index tidak dibatasi stacking context Ionic
+     ═══════════════════════════════════════════════════ -->
+<div
+  *ngIf="radialMenu.isOpen"
+  class="radial-overlay"
+  (mousemove)="onSwipeMove($event)"
+  (touchmove)="onSwipeMove($event)"
+  (mouseup)="onRelease($event)"
+  (touchend)="onRelease($event)"
+>
+  <!-- Backdrop: tap untuk tutup -->
+  <div class="overlay-backdrop" (click)="radialMenu.close()"></div>
+
+  <!-- Container item-item radial, terpusat di atas tombol menu -->
+  <div class="radial-container" [style.left.px]="radialMenu.centerX">
+
+    <div
+      *ngFor="let item of radialMenu.items; let i = index"
+      class="radial-item"
+      [class.hovered]="hoveredIndex === i"
+      [style.transform]="getItemTransform(i)"
+    >
+      <ion-icon [name]="item.icon"></ion-icon>
+      <span>{{ item.label }}</span>
+    </div>
+
+    <!-- Tombol close di tengah -->
+    <div class="radial-close-btn" (click)="radialMenu.close()">
+      <ion-icon name="close"></ion-icon>
+    </div>
+
+    <div class="swipe-hint">Geser ke menu · lepas untuk masuk</div>
+
+  </div>
+</div>

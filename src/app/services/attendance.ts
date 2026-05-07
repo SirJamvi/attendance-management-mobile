@@ -32,15 +32,17 @@ export class AttendanceService {
 
   getHistory(startDate?: string, endDate?: string) {
     let url = 'driver/history';
-    
     const params: string[] = [];
     if (startDate) params.push(`start_date=${startDate}`);
     if (endDate) params.push(`end_date=${endDate}`);
-    
     if (params.length > 0) {
       url += '?' + params.join('&');
     }
-
     return this.apiClient.get<any>(url);
+  }
+
+  // ✅ FUNGSI BARU: Ambil daftar misi aktif beserta klasemennya
+  getActiveMissions() {
+    return this.apiClient.get<any>('driver/missions');
   }
 }

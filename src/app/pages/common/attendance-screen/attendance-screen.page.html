@@ -15,6 +15,7 @@
 
   <div *ngIf="!isLoading" class="content-wrapper ion-padding">
 
+    <!-- PERINGATAN EVALUASI -->
     <ion-card *ngIf="hasSevereWarning" color="danger" class="ion-margin-bottom animate__animated animate__pulse">
       <ion-card-content class="d-flex align-items-center">
         <ion-icon name="warning-outline" style="font-size: 2.5rem; margin-right: 15px;"></ion-icon>
@@ -27,6 +28,7 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- INFO SHIFT -->
     <ion-card *ngIf="shiftInfo" [color]="isDayOff ? 'medium' : 'primary'" class="ion-margin-bottom">
       <ion-card-content class="ion-text-center">
         
@@ -41,12 +43,10 @@
             <ion-icon name="calendar-outline" style="font-size: 1.2rem;"></ion-icon>
             <h3 style="font-weight: bold; font-size: 1.2rem; margin: 0;">{{ shiftInfo.name }}</h3>
           </div>
-          
           <div style="margin-top: 8px; font-size: 0.95rem; opacity: 0.9;">
             <ion-icon name="time-outline" style="vertical-align: middle;"></ion-icon>
             <span style="vertical-align: middle;"> {{ shiftInfo.start }} - {{ shiftInfo.end }} WIB</span>
           </div>
-          
           <ion-badge color="light" class="ion-margin-top" style="color: var(--ion-color-primary);">
             {{ currentDayName }}
           </ion-badge>
@@ -55,7 +55,7 @@
       </ion-card-content>
     </ion-card>
 
-    <!-- ✅ BLOK DIPERBARUI: Presensi Masuk / Presensi Darurat -->
+    <!-- BELUM ABSEN MASUK -->
     <div *ngIf="!attendanceToday">
       <ion-card>
         <ion-card-header>
@@ -102,8 +102,8 @@
         </ion-card-content>
       </ion-card>
     </div>
-    <!-- ✅ AKHIR BLOK DIPERBARUI -->
 
+    <!-- SUDAH MASUK, BELUM PULANG -->
     <div *ngIf="attendanceToday && !attendanceToday.check_out_time">
       <ion-card>
         <ion-card-header>
@@ -119,7 +119,7 @@
             </ion-label>
           </ion-item>
           
-          <div class="spacer" style="height: 16px;"></div>
+          <div class="spacer"></div>
 
           <div style="position: relative; z-index: 1;">
             <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
@@ -151,12 +151,11 @@
       </ion-card>
     </div>
 
+    <!-- SUDAH MASUK DAN PULANG -->
     <div *ngIf="attendanceToday && attendanceToday.check_out_time" class="ion-text-center ion-padding top-margin">
       <ion-icon name="checkmark-done-circle" color="success" style="font-size: 80px;"></ion-icon>
       <h2 class="ion-margin-top">Selesai!</h2>
-      <p class="ion-text-wrap" color="medium">
-        Presensi hari ini telah tuntas.
-      </p>
+      <p class="ion-text-wrap" color="medium">Presensi hari ini telah tuntas.</p>
       
       <ion-card>
         <ion-list lines="full">
@@ -171,6 +170,80 @@
         </ion-list>
       </ion-card>
     </div>
+
+    <!-- DEBUG SEMENTARA — hapus setelah confirmed working -->
+<!-- <div style="background: #fff3cd; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 12px;">
+  DEBUG: activeMissions.length = {{ activeMissions.length }}
+</div> -->
+
+    <!-- ✅ MISI AKTIF — di atas tombol navigasi agar selalu terlihat -->
+    <div *ngIf="activeMissions && activeMissions.length > 0" class="ion-margin-top ion-margin-bottom">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-left: 5px;">
+        <ion-icon name="flame" color="danger" style="font-size: 1.5rem;" class="animate__animated animate__pulse animate__infinite"></ion-icon>
+        <h3 style="margin: 0; font-weight: bold; font-size: 1.1rem; color: var(--ion-color-dark);">Misi Sedang Berjalan</h3>
+      </div>
+
+      <ion-card *ngFor="let mission of activeMissions" class="ion-no-margin ion-margin-bottom shadow-sm" style="border-top: 4px solid var(--ion-color-warning);">
+        <ion-card-header style="padding-bottom: 5px; background: rgba(var(--ion-color-warning-rgb), 0.1);">
+          <ion-card-subtitle color="primary" style="font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">
+            {{ mission.title }}
+          </ion-card-subtitle>
+          <ion-card-title style="font-size: 1.1rem; margin-top: 2px;">
+            <ion-icon name="gift-outline" color="warning"></ion-icon> Rp {{ mission.reward_amount | number }}
+          </ion-card-title>
+        </ion-card-header>
+        <ion-card-content class="ion-no-padding">
+          <ion-list lines="full">
+            <ion-item *ngFor="let p of mission.standings" [color]="p.is_me ? 'light' : ''">
+              <div slot="start" style="width: 35px; text-align: center; font-size: 1.3rem;">
+                <span *ngIf="p.rank === 1">🥇</span>
+                <span *ngIf="p.rank === 2">🥈</span>
+                <span *ngIf="p.rank === 3">🥉</span>
+                <span *ngIf="p.rank > 3" style="font-weight: bold; font-size: 1rem; color: #888;">#{{ p.rank }}</span>
+              </div>
+              <ion-label>
+                <h3 [style.font-weight]="p.is_me ? 'bold' : 'normal'" style="font-size: 1rem;">
+                  {{ p.name }} <span *ngIf="p.is_me" class="text-primary small">(Anda)</span>
+                </h3>
+              </ion-label>
+              <ion-note slot="end" [color]="p.rank === 1 ? 'success' : 'dark'" style="font-weight: bold; font-size: 0.95rem;">
+                {{ p.score_text }}
+              </ion-note>
+            </ion-item>
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- TOMBOL NAVIGASI BAWAH: Kirim Bukti & Klasemen -->
+    <div class="ion-margin-top">
+      <ion-grid class="ion-no-padding">
+        <ion-row>
+          <ion-col size="6">
+            <ion-card color="secondary" button="true" routerLink="/tabs/driver/delivery-proof" class="ion-margin-end" style="margin-left: 0; margin-bottom: 0;">
+              <ion-card-content class="ion-text-center">
+                <ion-icon name="cube-outline" style="font-size: 2.5rem;"></ion-icon>
+                <h2 style="font-weight: bold; margin-top: 10px; font-size: 1.1rem;">Kirim Bukti</h2>
+                <p class="ion-no-margin"><small>Laporan Es Kristal</small></p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="6">
+            <ion-card color="warning" button="true" routerLink="/tabs/driver/leaderboard" class="ion-margin-start" style="margin-right: 0; margin-bottom: 0;">
+              <ion-card-content class="ion-text-center">
+                <ion-icon name="podium-outline" style="font-size: 2.5rem;"></ion-icon>
+                <h2 style="font-weight: bold; margin-top: 10px; font-size: 1.1rem;">Klasemen</h2>
+                <p class="ion-no-margin"><small>Poin & Bonus</small></p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+
+    <!-- ✅ BUFFER AKHIR: Pastikan konten terakhir tidak terhalang tab bar -->
+    <div style="height: 16px;"></div>
 
   </div>
 </ion-content>

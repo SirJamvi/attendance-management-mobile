@@ -1,86 +1,107 @@
 <ion-tabs>
-  
+
   <ion-router-outlet></ion-router-outlet>
 
   <!-- TAB BAR UNTUK DRIVER -->
-  <ion-tab-bar slot="bottom" *ngIf="userRole === 'driver'" class="driver-tab-bar">
-    
-    <ion-tab-button tab="driver/attendance">
-      <ion-icon name="home" class="tab-icon"></ion-icon>
-      <ion-label class="tab-label">Presensi</ion-label>
+  <ion-tab-bar slot="bottom" *ngIf="userRole === 'driver'" class="custom-tab-bar">
+
+    <ion-tab-button tab="driver/attendance" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="home-outline" class="tab-icon"></ion-icon>
+      </div>
+      <ion-label class="tab-label">Beranda</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="driver/customers">
-      <ion-icon name="people" class="tab-icon"></ion-icon>
-      <ion-label class="tab-label">Pelanggan</ion-label>
+    <ion-tab-button tab="driver/customers" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="people-outline" class="tab-icon"></ion-icon>
+      </div>
+      <ion-label class="tab-label">Cust</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="driver/history">
-      <ion-icon name="time" class="tab-icon"></ion-icon>
-      <ion-label class="tab-label">Riwayat</ion-label>
-    </ion-tab-button>
+    <!-- MAIN MENU BUTTON -->
+    <div class="main-menu-slot">
+      <button
+        class="main-menu-btn"
+        [class.holding]="isHolding"
+        (mousedown)="onHoldStart($event)"
+        (touchstart)="onHoldStart($event)"
+        (mouseup)="onHoldEnd($event)"
+        (touchend)="onHoldEnd($event)"
+        (mouseleave)="cancelHold()"
+      >
+        <div class="main-menu-circle">
+          <ion-icon name="grid-outline" class="main-icon"></ion-icon>
+        </div>
+        <span class="main-label">Menu</span>
+      </button>
+    </div>
 
-    <ion-tab-button tab="driver/salary">
-      <ion-icon name="wallet" class="tab-icon"></ion-icon>
+    <ion-tab-button tab="driver/salary" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="wallet-outline" class="tab-icon"></ion-icon>
+      </div>
       <ion-label class="tab-label">Gaji</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="driver/leave">
-      <ion-icon name="calendar" class="tab-icon"></ion-icon>
+    <ion-tab-button tab="driver/leave" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="calendar-outline" class="tab-icon"></ion-icon>
+      </div>
       <ion-label class="tab-label">Cuti</ion-label>
-    </ion-tab-button>
-
-    <!-- ✅ TOMBOL KASBON DRIVER (BARU) -->
-    <ion-tab-button href="/cash-advance">
-      <ion-icon name="cash-outline" class="tab-icon"></ion-icon>
-      <ion-label class="tab-label">Kasbon</ion-label>
-    </ion-tab-button>
-
-    <ion-tab-button tab="profile">
-      <ion-icon name="person" class="tab-icon"></ion-icon>
-      <ion-label class="tab-label">Profil</ion-label>
     </ion-tab-button>
 
   </ion-tab-bar>
 
   <!-- TAB BAR UNTUK SALES -->
-  <ion-tab-bar slot="bottom" *ngIf="userRole === 'sales'" class="sales-tab-bar">
-    
-    <ion-tab-button tab="sales/dashboard">
-      <ion-icon name="speedometer" class="tab-icon"></ion-icon>
+  <ion-tab-bar slot="bottom" *ngIf="userRole === 'sales'" class="custom-tab-bar">
+
+    <ion-tab-button tab="sales/dashboard" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="speedometer-outline" class="tab-icon"></ion-icon>
+      </div>
       <ion-label class="tab-label">Home</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="sales/attendance">
-      <ion-icon name="location" class="tab-icon"></ion-icon>
+    <ion-tab-button tab="sales/attendance" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="location-outline" class="tab-icon"></ion-icon>
+      </div>
       <ion-label class="tab-label">Absen</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="sales/visit-create">
-      <ion-icon name="add-circle" class="tab-icon"></ion-icon>
-      <ion-label class="tab-label">Visit</ion-label>
-    </ion-tab-button>
+    <!-- MAIN MENU BUTTON -->
+    <div class="main-menu-slot">
+      <button
+        class="main-menu-btn"
+        [class.holding]="isHolding"
+        (mousedown)="onHoldStart($event)"
+        (touchstart)="onHoldStart($event)"
+        (mouseup)="onHoldEnd($event)"
+        (touchend)="onHoldEnd($event)"
+        (mouseleave)="cancelHold()"
+      >
+        <div class="main-menu-circle">
+          <ion-icon name="grid-outline" class="main-icon"></ion-icon>
+        </div>
+        <span class="main-label">Menu</span>
+      </button>
+    </div>
 
-    <ion-tab-button tab="sales/daily-report">
-      <ion-icon name="document-text" class="tab-icon"></ion-icon>
+    <ion-tab-button tab="sales/daily-report" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="document-text-outline" class="tab-icon"></ion-icon>
+      </div>
       <ion-label class="tab-label">Laporan</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button href="/cash-advance">
-      <ion-icon name="wallet" class="tab-icon"></ion-icon>
-      <ion-label class="tab-label">Kasbon</ion-label>
-    </ion-tab-button>
-
-    <ion-tab-button tab="sales/history">
-      <ion-icon name="time" class="tab-icon"></ion-icon>
+    <ion-tab-button tab="sales/history" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="time-outline" class="tab-icon"></ion-icon>
+      </div>
       <ion-label class="tab-label">Riwayat</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="profile">
-      <ion-icon name="person" class="tab-icon"></ion-icon>
-      <ion-label class="tab-label">Profil</ion-label>
-    </ion-tab-button>
-    
   </ion-tab-bar>
 
 </ion-tabs>
