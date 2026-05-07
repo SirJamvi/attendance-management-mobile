@@ -104,6 +104,19 @@
         </ion-note>
       </ion-item>
 
+      <ion-item *ngIf="salaryData.gamification_bonus > 0">
+        <div slot="start" class="icon-box bg-warning-light">
+          <ion-icon name="trophy-outline" color="warning"></ion-icon>
+        </div>
+        <ion-label>
+          <h3>Insentif Prestasi</h3>
+          <p class="text-wrap">{{ salaryData.gamification_title || 'Reward pencapaian bulan ini' }}</p>
+        </ion-label>
+        <ion-note slot="end" color="success" class="fw-bold">
+          + {{ salaryData.gamification_bonus | currency:'IDR':'Rp ':'1.0-0' }}
+        </ion-note>
+      </ion-item>
+
       <ion-item class="total-row">
         <ion-label>Total Kotor</ion-label>
         <ion-note slot="end" color="success" class="fw-bold">

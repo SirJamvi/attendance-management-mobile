@@ -1,0 +1,87 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/driver"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Laporan Pengiriman</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="delivery-content">
+
+  <div class="info-banner">
+    <ion-icon name="information-circle-outline"></ion-icon>
+    <p>Pastikan foto dan lokasi akurat agar poin masuk ke klasemen.</p>
+  </div>
+
+  <ion-list lines="full" class="form-list">
+
+    <ion-item>
+      <ion-label position="stacked">
+        Nama Warung / Pelanggan <ion-text color="danger">*</ion-text>
+      </ion-label>
+      <ion-input
+        [(ngModel)]="formData.butterfly_customer_name"
+        placeholder="Cth: Warung Dadakan Pak Budi"
+        type="text">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">
+        Jumlah Bal (10-12kg) <ion-text color="danger">*</ion-text>
+      </ion-label>
+      <ion-input
+        [(ngModel)]="formData.qty_half"
+        placeholder="0"
+        type="number"
+        min="0">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Metode Pembayaran</ion-label>
+      <ion-select [(ngModel)]="formData.payment_method" interface="action-sheet">
+        <ion-select-option value="Cash">Tunai (Cash)</ion-select-option>
+        <ion-select-option value="Transfer Bank">Transfer Bank</ion-select-option>
+        <ion-select-option value="Dana">DANA</ion-select-option>
+        <ion-select-option value="QRIS">QRIS</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Catatan Tambahan (Opsional)</ion-label>
+      <ion-input
+        [(ngModel)]="formData.payment_note"
+        placeholder="Cth: Titip di warung sebelah / TF"
+        type="text">
+      </ion-input>
+    </ion-item>
+
+  </ion-list>
+
+  <!-- Section Foto Bukti -->
+  <div class="photo-section">
+    <ion-button expand="block" color="secondary" (click)="takePicture()">
+      <ion-icon slot="start" name="camera-outline"></ion-icon>
+      {{ previewImage ? 'Ambil Ulang Foto' : 'Ambil Foto Bukti' }}
+    </ion-button>
+
+    <div *ngIf="previewImage" class="preview-container">
+      <img [src]="previewImage" alt="Preview Bukti" class="preview-image" />
+      <div *ngIf="formData.latitude" class="gps-badge">
+        <ion-icon name="location-outline"></ion-icon>
+        <span>GPS Terkunci</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Button di dalam konten agar tidak tertutup footer -->
+  <div class="submit-section">
+    <ion-button expand="block" color="primary" (click)="submitDelivery()">
+      <ion-icon slot="start" name="send-outline"></ion-icon>
+      Kirim Laporan
+    </ion-button>
+  </div>
+
+</ion-content>

@@ -1,21 +1,24 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+
 import { 
   IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonButtons, 
   IonBackButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, 
   IonCardSubtitle, IonIcon, IonSpinner, IonItem, IonLabel, IonNote, IonList,
-  IonBadge, 
+  IonBadge, IonGrid, IonRow, IonCol,
   AlertController, LoadingController, Platform 
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-// ✅ Tambahkan 'warningOutline'
-import { cameraOutline, checkmarkCircle, checkmarkDoneCircle, calendarOutline, timeOutline, alertCircleOutline, warningOutline } from 'ionicons/icons'; 
+// ✅ DIPERBARUI: Tambahkan flame dan giftOutline
+import { cameraOutline, checkmarkCircle, checkmarkDoneCircle, calendarOutline, timeOutline, alertCircleOutline, warningOutline, flame, giftOutline } from 'ionicons/icons'; 
 import { Geolocation, Position } from '@capacitor/geolocation';
 
 import { CameraViewComponent } from '../../../components/camera-view/camera-view.component';
 import { LoadingSpinnerComponent } from '../../../components/loading-spinner/loading-spinner.component';
 import { AttendanceService } from '../../../services/attendance';
+
 import { Attendance } from '../../../types/api.types';
 
 @Component({
@@ -26,12 +29,13 @@ import { Attendance } from '../../../types/api.types';
   imports: [
     CommonModule, 
     FormsModule, 
+    RouterModule,
     CameraViewComponent, 
     LoadingSpinnerComponent,
     IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonButtons, 
     IonBackButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle, 
     IonCardSubtitle, IonIcon, IonSpinner, IonItem, IonLabel, IonNote, IonList,
-    IonBadge 
+    IonBadge, IonGrid, IonRow, IonCol
   ]
 })
 export class AttendanceScreenPage implements OnInit {
@@ -39,12 +43,10 @@ export class AttendanceScreenPage implements OnInit {
   isLoading = true;
   attendanceToday: Attendance | null = null;
   
-  // Data Shift & Libur
   shiftInfo: any = null;
   isDayOff: boolean = false;
   currentDayName: string = '';
 
-  // ✅ VARIABLE BARU UNTUK WARNING
   hasSevereWarning: boolean = false;
   warningMessage: string = '';
 
@@ -52,14 +54,17 @@ export class AttendanceScreenPage implements OnInit {
   locationData: { latitude: number; longitude: number } | null = null;
   isSubmitDisabled = true;
 
+  // ✅ BARU: Properti untuk menyimpan data misi aktif
+  activeMissions: any[] = [];
+
   constructor(
     private attendanceService: AttendanceService,
     private alertCtrl: AlertController,
     private loadingCtrl: LoadingController,
     private platform: Platform
   ) {
-    // ✅ Register icon warningOutline
-    addIcons({ cameraOutline, checkmarkCircle, checkmarkDoneCircle, calendarOutline, timeOutline, alertCircleOutline, warningOutline });
+    // ✅ DIPERBARUI: Tambahkan flame dan giftOutline ke addIcons
+    addIcons({ cameraOutline, checkmarkCircle, checkmarkDoneCircle, calendarOutline, timeOutline, alertCircleOutline, warningOutline, flame, giftOutline });
   }
 
   ngOnInit() {}
@@ -83,8 +88,6 @@ export class AttendanceScreenPage implements OnInit {
           };
           this.isDayOff = response.meta.is_day_off;
           this.currentDayName = response.meta.current_day;
-
-          // ✅ AMBIL DATA WARNING DARI API
           this.hasSevereWarning = response.meta.severe_warning;
           this.warningMessage = response.meta.warning_message;
         }
@@ -96,9 +99,30 @@ export class AttendanceScreenPage implements OnInit {
         console.error('Error loading status:', err);
       }
     });
+
+    // ✅ BARU: Tarik data misi aktif secara paralel
+this.attendanceService.getActiveMissions().subscribe({
+  next: (res: any) => {
+    console.log('🎯 missions response:', JSON.stringify(res)); // ← DEBUG
+    // Toleran terhadap variasi format respons
+    if (res && res.success === true && Array.isArray(res.data)) {
+      this.activeMissions = res.data;
+      console.log('✅ activeMissions loaded:', this.activeMissions.length);
+    } else if (res && Array.isArray(res.data)) {
+      // Fallback jika backend tidak kirim field "success"
+      this.activeMissions = res.data;
+    } else {
+      console.warn('⚠️ Format respons tidak dikenali:', res);
+      this.activeMissions = [];
+    }
+  },
+  error: (err: any) => {
+    console.error('❌ Error loading active missions:', err);
+    console.error('❌ Status:', err.status, '| Message:', err.error?.message);
+  }
+});
   }
 
-  // ... (Sisa method handlePhoto, getGeolocation, submitCheckIn, dll TETAP SAMA) ...
   async handlePhoto(photoBase64: string | null) {
     this.photoData = photoBase64;
     if (this.photoData) {
@@ -113,16 +137,13 @@ export class AttendanceScreenPage implements OnInit {
         enableHighAccuracy: true,
         timeout: 10000,
       });
-      
       this.locationData = {
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
       };
-      
     } catch (error: any) {
       console.error('GPS Error', error);
-      let msg = 'Pastikan GPS aktif.';
-      this.showAlert('Gagal Lokasi', msg);
+      this.showAlert('Gagal Lokasi', 'Pastikan GPS aktif.');
       this.locationData = null;
     }
   }
@@ -138,14 +159,11 @@ export class AttendanceScreenPage implements OnInit {
   }
 
   async submitCheckIn() {
-    if (this.isDayOff) {
-      this.showAlert('Hari Libur', 'Anda tidak bisa melakukan absen pada hari libur.');
-      return;
-    }
-
     if (this.isSubmitDisabled) return;
     
-    const loading = await this.loadingCtrl.create({ message: 'Mengirim Absen Masuk...' });
+    const loading = await this.loadingCtrl.create({ 
+      message: this.isDayOff ? 'Mengirim Presensi Darurat...' : 'Mengirim Absen Masuk...' 
+    });
     await loading.present();
 
     this.attendanceService.checkIn(
@@ -155,7 +173,10 @@ export class AttendanceScreenPage implements OnInit {
     ).subscribe({
       next: () => {
         loading.dismiss();
-        this.showAlert('Berhasil', 'Absen Masuk Tercatat!');
+        const message = this.isDayOff
+          ? 'Presensi darurat berhasil dikirim. Menunggu validasi Admin.'
+          : 'Absen Masuk Tercatat!';
+        this.showAlert('Berhasil', message);
         this.loadStatus();
         this.resetForm();
       },

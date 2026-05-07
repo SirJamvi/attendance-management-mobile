@@ -1,0 +1,83 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Kasbon & Pinjaman</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" color="light">
+  
+  <ion-card class="ion-no-margin ion-margin-bottom shadow-sm">
+    <ion-card-header>
+      <ion-card-title style="font-size: 1.2rem;">Pengajuan Kasbon Baru</ion-card-title>
+      <ion-card-subtitle>Sistem akan memotong gaji secara otomatis</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      
+      <ion-item class="ion-margin-bottom" fill="outline" mode="md">
+        <ion-label position="floating">Nominal Pinjaman (Rp)</ion-label>
+        <ion-input type="number" [(ngModel)]="amount" placeholder="Contoh: 500000"></ion-input>
+      </ion-item>
+      
+      <ion-item class="ion-margin-bottom" fill="outline" mode="md">
+        <ion-label position="floating">Lama Cicilan</ion-label>
+        <ion-select [(ngModel)]="duration" interface="popover">
+          <ion-select-option [value]="1">1x (Lunas Sekaligus)</ion-select-option>
+          <ion-select-option [value]="2">2x Periode Gaji</ion-select-option>
+          <ion-select-option [value]="3">3x Periode Gaji</ion-select-option>
+          <ion-select-option [value]="4">4x Periode Gaji</ion-select-option>
+          <ion-select-option [value]="5">5x Periode Gaji</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item class="ion-margin-bottom" fill="outline" mode="md">
+        <ion-label position="floating">Alasan Pengajuan</ion-label>
+        <ion-textarea [(ngModel)]="reason" placeholder="Misal: Biaya sekolah anak..." rows="3"></ion-textarea>
+      </ion-item>
+
+      <ion-button expand="block" (click)="submitForm()" [disabled]="isSubmitting" style="height: 48px; font-weight: bold;">
+        <ion-spinner *ngIf="isSubmitting" name="crescent"></ion-spinner>
+        <span *ngIf="!isSubmitting">AJUKAN SEKARANG</span>
+      </ion-button>
+
+    </ion-card-content>
+  </ion-card>
+
+  <h3 class="ion-padding-horizontal" style="font-size: 1.1rem; font-weight: bold; color: #444;">Riwayat Anda</h3>
+  
+  <div *ngIf="isLoading" class="ion-text-center ion-padding">
+    <ion-spinner color="primary"></ion-spinner>
+  </div>
+
+  <div *ngIf="!isLoading && history.length === 0" class="ion-text-center ion-padding" style="color: #888;">
+    <ion-icon name="wallet-outline" style="font-size: 4rem; opacity: 0.5;"></ion-icon>
+    <p>Belum ada riwayat kasbon/pinjaman.</p>
+  </div>
+
+  <div *ngIf="!isLoading && history.length > 0">
+    <ion-card *ngFor="let item of history" class="ion-no-margin ion-margin-bottom shadow-sm">
+      <ion-item lines="none" [color]="item.status === 'paid_off' ? 'light' : ''">
+        <ion-icon name="cash" slot="start" [color]="getStatusColor(item.status)"></ion-icon>
+        <ion-label>
+          <h2 style="font-weight: bold; font-size: 1.1rem;">Rp {{ item.amount | number }}</h2>
+          <p>{{ item.created_at | date:'dd MMM yyyy' }}</p>
+        </ion-label>
+        <ion-badge slot="end" [color]="getStatusColor(item.status)">
+          {{ getStatusLabel(item.status) }}
+        </ion-badge>
+      </ion-item>
+      
+      <div style="padding: 0 16px 16px 16px;">
+        <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 0.9rem;">
+          <p style="margin: 0 0 5px 0;"><b>Alasan:</b> {{ item.reason }}</p>
+          <p style="margin: 0 0 5px 0;"><b>Cicilan:</b> {{ item.installment_duration }}x (Rp {{ item.installment_amount | number }}/periode)</p>
+          <p style="margin: 0; color: #d32f2f;" *ngIf="item.status === 'active'"><b>Sisa Hutang: Rp {{ item.remaining_amount | number }}</b></p>
+          <p style="margin: 0; color: #d32f2f;" *ngIf="item.status === 'rejected'"><b>Alasan Tolak:</b> {{ item.admin_note || '-' }}</p>
+        </div>
+      </div>
+    </ion-card>
+  </div>
+
+</ion-content>

@@ -10,17 +10,16 @@ export interface SalaryData {
   shift_info: string;
   daily_wage: number;
   total_attendance: number;
-  
-  // ✅ TAMBAHAN PENTING: Field Lembur (Overtime)
-  // Field ini wajib ada karena dikirim dari Backend
   total_overtime: number; 
-
   total_gross_salary: number;
   total_lates: number;
   penalty_amount: number;
-  final_salary: number;
   
-  // ✅ TAMBAHAN BARU: Field untuk Alert Denda
+  // ✅ TAMBAHAN GAMIFICATION:
+  gamification_bonus: number; 
+  gamification_title?: string;
+  
+  final_salary: number;
   severe_warning?: boolean; 
   warning_message?: string;
 }

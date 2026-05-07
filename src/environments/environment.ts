@@ -1,4 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://attendance.eskristalkarawang.com/api/v1'
+  // Otomatis terpakai saat Anda menjalankan perintah: ionic serve
+  apiUrl: 'https://staging.resdigaza.my.id/api/v1' 
 };

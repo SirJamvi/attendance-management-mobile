@@ -1,0 +1,41 @@
+.rank-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: #666;
+  border: 2px solid #ddd;
+}
+
+/* Emas untuk Juara 1 */
+.rank-1 { 
+  background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); 
+  color: #fff; 
+  border-color: #E6C200;
+  box-shadow: 0 4px 6px rgba(255, 215, 0, 0.4);
+}
+
+/* Perak untuk Juara 2 */
+.rank-2 { 
+  background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%); 
+  color: #fff; 
+  border-color: #9E9E9E;
+}
+
+/* Perunggu untuk Juara 3 */
+.rank-3 { 
+  background: linear-gradient(135deg, #CD7F32 0%, #A0522D 100%); 
+  color: #fff; 
+  border-color: #8B4513;
+}
+
+.text-warning {
+  color: var(--ion-color-warning);
+  font-size: 0.85em;
+  font-weight: bold;
+}

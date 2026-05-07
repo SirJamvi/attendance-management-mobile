@@ -64,6 +64,16 @@ export const routes: Routes = [
             path: 'salary',
             loadComponent: () => import('./pages/driver/driver-salary/driver-salary.page').then( m => m.DriverSalaryPage)
           },
+          // ✅ PINDAHKAN KEDUA RUTE INI KE SINI:
+          {
+            path: 'leaderboard',
+            loadComponent: () => import('./pages/driver/leaderboard/leaderboard.page').then( m => m.LeaderboardPage)
+          },
+          {
+            path: 'delivery-proof',
+            loadComponent: () => import('./pages/driver/delivery-proof/delivery-proof.page').then( m => m.DeliveryProofPage)
+          },
+          // ------------------------------------
           {
             // Arahkan /tabs/driver ke halaman presensi
             path: '',
@@ -151,5 +161,9 @@ export const routes: Routes = [
   {
     path: 'customer-list',
     loadComponent: () => import('./pages/driver/customer-list/customer-list.page').then( m => m.CustomerListPage)
+  },
+  {
+    path: 'cash-advance',
+    loadComponent: () => import('./pages/common/cash-advance/cash-advance.page').then( m => m.CashAdvancePage)
   }
 ];
