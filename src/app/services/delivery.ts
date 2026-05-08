@@ -24,4 +24,11 @@ export class DeliveryService {
   getLeaderboard(): Observable<any> {
     return this.apiClient.get<any>('driver/leaderboard');
   }
+
+  /**
+   * Mengambil daftar customer aktif untuk dropdown
+   */
+  getCustomerList(): Observable<any> {
+    return this.apiClient.get<any>('driver/customers');
+  }
 }

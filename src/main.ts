@@ -14,8 +14,8 @@ import { environment } from './environments/environment';
 
 // --- 2. IMPORT ICON ---
 import { addIcons } from 'ionicons';
-import { 
-  chevronDownOutline, 
+import {
+  chevronDownOutline,
   chevronUpOutline,
   chevronForwardOutline,
   chevronBackOutline,
@@ -23,6 +23,7 @@ import {
   timeOutline,
   cameraOutline,
   closeOutline,
+  closeCircle,         // ← untuk chip clear button
   checkmarkOutline,
   addOutline,
   removeOutline,
@@ -32,7 +33,31 @@ import {
   logOutOutline,
   homeOutline,
   documentTextOutline,
-  locationOutline
+  locationOutline,
+  // ── Icon tambahan untuk delivery-proof page ──
+  informationCircleOutline,
+  sendOutline,
+  storefrontOutline,
+  addCircleOutline,
+  listOutline,
+  alertCircleOutline,
+  // ── Icon lain yang umum dipakai ──
+  close,
+  trashOutline,
+  createOutline,
+  eyeOutline,
+  starOutline,
+  starSharp,
+  warningOutline,
+  checkmarkCircleOutline,
+  helpCircleOutline,
+  refreshOutline,
+  arrowBackOutline,
+  notificationsOutline,
+  settingsOutline,
+  // ── payment dropdown icons ──
+  cardOutline,
+  qrCodeOutline,
 } from 'ionicons/icons';
 
 if (environment.production) {
@@ -40,10 +65,9 @@ if (environment.production) {
 }
 
 // --- 3. JALANKAN LOADER SEBELUM BOOTSTRAP ---
-// Ini mendaftarkan komponen <pwa-camera-modal> ke browser
 defineCustomElements(window);
 
-// --- 4. REGISTER ICONS ---
+// --- 4. REGISTER ICONS (lengkap) ---
 addIcons({
   'chevron-down-outline': chevronDownOutline,
   'chevron-up-outline': chevronUpOutline,
@@ -53,6 +77,8 @@ addIcons({
   'time-outline': timeOutline,
   'camera-outline': cameraOutline,
   'close-outline': closeOutline,
+  'close': close,
+  'close-circle': closeCircle,
   'checkmark-outline': checkmarkOutline,
   'add-outline': addOutline,
   'remove-outline': removeOutline,
@@ -62,17 +88,40 @@ addIcons({
   'log-out-outline': logOutOutline,
   'home-outline': homeOutline,
   'document-text-outline': documentTextOutline,
-  'location-outline': locationOutline
+  'location-outline': locationOutline,
+  // ── delivery-proof ──
+  'information-circle-outline': informationCircleOutline,
+  'send-outline': sendOutline,
+  'storefront-outline': storefrontOutline,
+  'add-circle-outline': addCircleOutline,
+  'list-outline': listOutline,
+  'alert-circle-outline': alertCircleOutline,
+  // ── umum ──
+  'trash-outline': trashOutline,
+  'create-outline': createOutline,
+  'eye-outline': eyeOutline,
+  'star-outline': starOutline,
+  'star-sharp': starSharp,
+  'warning-outline': warningOutline,
+  'checkmark-circle-outline': checkmarkCircleOutline,
+  'help-circle-outline': helpCircleOutline,
+  'refresh-outline': refreshOutline,
+  'arrow-back-outline': arrowBackOutline,
+  'notifications-outline': notificationsOutline,
+  'settings-outline': settingsOutline,
+  'card-outline': cardOutline,
+  'qr-code-outline': qrCodeOutline,
 });
 
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
-    provideIonicAngular(),
+    provideIonicAngular({
+      mode: 'md',             // ← FIX #1: Force Material Design mode, stabil di Android WebView
+      animated: true,
+    }),
     provideRouter(routes),
-    // Menggunakan provideHttpClient (Code baru) menggantikan HttpClientModule
-    provideHttpClient(withInterceptorsFromDi()), 
-    // Storage tetap dipertahankan menggunakan importProvidersFrom
+    provideHttpClient(withInterceptorsFromDi()),
     importProvidersFrom(IonicStorageModule.forRoot())
   ],
 });

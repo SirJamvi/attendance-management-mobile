@@ -1,127 +1,245 @@
-// =============================================
-// delivery-proof.page.scss
-// =============================================
-
-// Pastikan konten tidak tertutup tab bar
-// Tab bar driver memiliki 7 item, perlu padding ekstra
-ion-content.delivery-content {
-  --padding-bottom: 80px; // Cukup untuk tab bar standar (56px) + buffer
-  --background: #f4f6f9;
+.delivery-content {
+  --background: #f4f5f8;
 }
 
-// Banner info di atas form
 .info-banner {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
-  background: rgba(var(--ion-color-primary-rgb), 0.08);
-  border-left: 3px solid var(--ion-color-primary);
-  border-radius: 0 8px 8px 0;
-  padding: 10px 14px;
-  margin: 16px 16px 8px 16px;
+  background: var(--ion-color-primary-tint, #4a90e2);
+  color: white;
+  padding: 10px 16px;
+  font-size: 13px;
 
-  ion-icon {
-    font-size: 18px;
-    color: var(--ion-color-primary);
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
-  p {
-    margin: 0;
-    font-size: 13px;
-    color: var(--ion-color-medium);
-    line-height: 1.4;
-  }
+  ion-icon { font-size: 18px; flex-shrink: 0; }
+  p { margin: 0; line-height: 1.4; }
 }
 
-// List form
 .form-list {
-  margin: 8px 0;
-  border-radius: 0;
-  background: #ffffff;
-
-  ion-item {
-    --padding-start: 16px;
-    --inner-padding-end: 16px;
-
-    ion-label {
-      font-size: 13px !important;
-      font-weight: 600;
-      color: var(--ion-color-medium) !important;
-      margin-bottom: 4px;
-    }
-
-    ion-input {
-      --padding-top: 4px;
-      --padding-bottom: 8px;
-      font-size: 15px;
-    }
-
-    ion-select {
-      --padding-top: 4px;
-      --padding-bottom: 8px;
-    }
-  }
+  margin: 12px 0;
+  border-radius: 8px;
+  overflow: visible; // jangan hidden — agar dropdown tidak terpotong
 }
 
-// Section tombol kamera & preview foto
-.photo-section {
-  padding: 16px 16px 0 16px;
-
-  ion-button {
-    margin: 0;
-    --border-radius: 8px;
-  }
+// ── Item yang menjadi host dropdown ──
+.dropdown-host-item {
+  overflow: visible;
+  --padding-bottom: 10px;
 }
 
-// Container preview gambar
-.preview-container {
-  margin-top: 14px;
-  position: relative;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-  background: #000;
-}
-
-.preview-image {
-  display: block;
-  width: 100%;
-  max-height: 260px;
-  object-fit: cover;
-  border-radius: 10px;
-}
-
-// Badge GPS terkunci di atas foto
-.gps-badge {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
+// ── Chip terpilih (customer & payment) ──
+.selected-chip {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  font-size: 12px;
-  padding: 4px 10px;
+  gap: 8px;
+  background: var(--ion-color-light, #f4f5f8);
+  border: 1px solid var(--ion-color-medium-shade, #d7d8da);
   border-radius: 20px;
-  backdrop-filter: blur(4px);
+  padding: 7px 12px;
+  margin: 6px 0 4px;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
 
-  ion-icon {
-    font-size: 13px;
+  ion-icon:first-child { font-size: 18px; flex-shrink: 0; }
+
+  .chip-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ion-color-dark, #222428);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .chip-badge {
+    background: var(--ion-color-success, #2dd36f);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .chip-clear {
+    font-size: 20px;
+    color: var(--ion-color-medium, #92949c);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .chip-chevron {
+    font-size: 16px;
+    color: var(--ion-color-medium, #92949c);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
   }
 }
 
-// Tombol submit di bagian bawah konten
-.submit-section {
-  padding: 20px 16px 16px 16px;
+// ── Search input wrapper ──
+.search-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
 
-  ion-button {
-    --border-radius: 10px;
-    height: 50px;
-    font-size: 15px;
-    font-weight: 600;
-    margin: 0;
+  ion-input { flex: 1; padding-right: 32px; }
+
+  .input-icon {
+    position: absolute;
+    right: 8px;
+    color: var(--ion-color-medium, #92949c);
+    font-size: 18px;
+    pointer-events: none;
+    width: 18px;
+    height: 18px;
   }
+}
+
+// ── Dropdown container (dipakai customer & payment) ──
+.custom-dropdown {
+  background: white;
+  border: 1px solid var(--ion-color-medium-shade, #d7d8da);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.10);
+  margin: 0 16px 4px;
+
+  &::-webkit-scrollbar { width: 4px; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--ion-color-medium-tint, #b2b3b8);
+    border-radius: 2px;
+  }
+}
+
+// ── Setiap item di dalam dropdown ──
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--ion-color-light-shade, #e8e8e8);
+  transition: background 0.12s ease;
+
+  &:last-child { border-bottom: none; }
+
+  &:active,
+  &:hover { background: var(--ion-color-light, #f4f5f8); }
+
+  // State terpilih (untuk payment)
+  &.is-selected {
+    background: #eff6ff;
+  }
+
+  ion-icon:first-child { font-size: 20px; flex-shrink: 0; }
+
+  .dropdown-text {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    flex: 1;
+    overflow: hidden;
+
+    .d-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ion-color-dark, #222428);
+    }
+
+    .d-sub {
+      font-size: 11px;
+      color: var(--ion-color-medium, #92949c);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .new-name {
+      color: var(--ion-color-success-shade, #28ba62);
+      font-style: italic;
+    }
+  }
+
+  .check-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+}
+
+// ── Tambah warung baru ──
+.dropdown-add {
+  background: rgba(45, 211, 111, 0.05);
+  &:hover { background: rgba(45, 211, 111, 0.1); }
+}
+
+// ── Pesan kosong ──
+.dropdown-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px;
+  color: var(--ion-color-medium, #92949c);
+  font-size: 13px;
+
+  ion-icon { font-size: 18px; }
+}
+
+// ── Hint ──
+.dropdown-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  color: var(--ion-color-medium, #92949c);
+  font-size: 12px;
+  background: var(--ion-color-light, #f4f5f8);
+
+  ion-icon { font-size: 16px; }
+}
+
+// ── Photo Section ──
+.photo-section {
+  padding: 12px 16px;
+  ion-button { margin-bottom: 12px; }
+}
+
+.preview-container {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid var(--ion-color-medium-shade, #d7d8da);
+
+  .preview-image {
+    width: 100%;
+    max-height: 260px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .gps-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(0, 0, 0, 0.65);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+
+    ion-icon { font-size: 13px; color: #2dd36f; }
+  }
+}
+
+// ── Submit ──
+.submit-section {
+  padding: 0 16px 32px;
 }

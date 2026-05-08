@@ -182,3 +182,29 @@ app-camera-view {
   display: block !important;
   pointer-events: auto !important;
 }
+
+
+// ============================================
+// FIX OVERLAY Z-INDEX (ion-select, ion-alert)
+// ============================================
+ion-alert,
+ion-action-sheet,
+ion-popover,
+ion-modal,
+ion-toast,
+ion-loading,
+ion-picker {
+  z-index: 99999 !important;
+}
+
+ion-backdrop {
+  z-index: 99998 !important;
+}
+
+ion-tab-bar {
+  z-index: 100 !important;
+}
+
+ion-app {
+  overflow: visible !important;
+}

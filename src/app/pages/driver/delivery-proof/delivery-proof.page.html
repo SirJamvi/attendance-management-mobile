@@ -16,17 +16,72 @@
 
   <ion-list lines="full" class="form-list">
 
-    <ion-item>
+    <!-- ── Searchable Customer Dropdown ── -->
+    <ion-item class="dropdown-host-item" [class.item-has-value]="selectedCustomer || isNewCustomer">
       <ion-label position="stacked">
         Nama Warung / Pelanggan <ion-text color="danger">*</ion-text>
       </ion-label>
-      <ion-input
-        [(ngModel)]="formData.butterfly_customer_name"
-        placeholder="Cth: Warung Dadakan Pak Budi"
-        type="text">
-      </ion-input>
+
+      <div *ngIf="selectedCustomer || isNewCustomer" class="selected-chip">
+        <ion-icon
+          [name]="selectedCustomer ? 'storefront-outline' : 'add-circle-outline'"
+          [color]="selectedCustomer ? 'primary' : 'success'">
+        </ion-icon>
+        <span class="chip-name">{{ formData.butterfly_customer_name }}</span>
+        <span *ngIf="isNewCustomer" class="chip-badge">Baru</span>
+        <ion-icon name="close-circle" class="chip-clear" (click)="clearCustomer()"></ion-icon>
+      </div>
+
+      <div *ngIf="!selectedCustomer && !isNewCustomer" class="search-wrapper">
+        <ion-input
+          [(ngModel)]="customerSearchQuery"
+          placeholder="Cari atau ketik nama warung..."
+          type="text"
+          (ionInput)="onCustomerInput($event)"
+          (ionFocus)="onCustomerFocus()"
+          (ionBlur)="onCustomerBlur()">
+        </ion-input>
+        <ion-spinner *ngIf="isLoadingCustomers" name="crescent" class="input-icon"></ion-spinner>
+        <ion-icon *ngIf="!isLoadingCustomers" name="search-outline" class="input-icon"></ion-icon>
+      </div>
     </ion-item>
 
+    <!-- Customer Dropdown List -->
+    <div *ngIf="showCustomerDropdown && !selectedCustomer && !isNewCustomer" class="custom-dropdown">
+      <div *ngFor="let customer of filteredCustomers"
+           class="dropdown-item"
+           (mousedown)="selectCustomer(customer)">
+        <ion-icon name="storefront-outline" color="primary"></ion-icon>
+        <div class="dropdown-text">
+          <span class="d-name">{{ customer.name }}</span>
+          <span class="d-sub" *ngIf="customer.address">{{ customer.address }}</span>
+        </div>
+      </div>
+
+      <div *ngIf="customerSearchQuery.trim() && filteredCustomers.length === 0"
+           class="dropdown-empty">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>Tidak ditemukan di daftar pelanggan</span>
+      </div>
+
+      <div *ngIf="customerSearchQuery.trim()"
+           class="dropdown-item dropdown-add"
+           (mousedown)="useAsNewCustomer()">
+        <ion-icon name="add-circle-outline" color="success"></ion-icon>
+        <div class="dropdown-text">
+          <span class="d-name">Tambah sebagai warung baru</span>
+          <span class="d-sub new-name">"{{ customerSearchQuery }}"</span>
+        </div>
+      </div>
+
+      <div *ngIf="!customerSearchQuery.trim() && filteredCustomers.length > 0"
+           class="dropdown-hint">
+        <ion-icon name="list-outline"></ion-icon>
+        <span>{{ filteredCustomers.length }} pelanggan — ketik untuk mencari</span>
+      </div>
+    </div>
+
+    <!-- ── Jumlah Bal ── -->
     <ion-item>
       <ion-label position="stacked">
         Jumlah Bal (10-12kg) <ion-text color="danger">*</ion-text>
@@ -39,16 +94,42 @@
       </ion-input>
     </ion-item>
 
-    <ion-item>
+    <!-- ── Metode Pembayaran — Custom Dropdown (100% native, tanpa ion-select) ── -->
+    <ion-item class="dropdown-host-item">
       <ion-label position="stacked">Metode Pembayaran</ion-label>
-      <ion-select [(ngModel)]="formData.payment_method" interface="action-sheet">
-        <ion-select-option value="Cash">Tunai (Cash)</ion-select-option>
-        <ion-select-option value="Transfer Bank">Transfer Bank</ion-select-option>
-        <ion-select-option value="Dana">DANA</ion-select-option>
-        <ion-select-option value="QRIS">QRIS</ion-select-option>
-      </ion-select>
+
+      <div class="selected-chip payment-chip" (click)="togglePaymentDropdown()">
+        <ion-icon [name]="getPaymentIcon(formData.payment_method)" color="primary"></ion-icon>
+        <span class="chip-name">{{ getPaymentLabel(formData.payment_method) }}</span>
+        <ion-icon
+          [name]="showPaymentDropdown ? 'chevron-up-outline' : 'chevron-down-outline'"
+          class="chip-chevron">
+        </ion-icon>
+      </div>
     </ion-item>
 
+    <!-- Payment Dropdown List -->
+    <div *ngIf="showPaymentDropdown" class="custom-dropdown">
+      <div *ngFor="let method of paymentMethods"
+           class="dropdown-item"
+           [class.is-selected]="formData.payment_method === method.value"
+           (click)="selectPayment(method.value)">
+        <ion-icon [name]="method.icon"
+                  [color]="formData.payment_method === method.value ? 'primary' : 'medium'">
+        </ion-icon>
+        <div class="dropdown-text">
+          <span class="d-name">{{ method.label }}</span>
+          <span class="d-sub">{{ method.desc }}</span>
+        </div>
+        <ion-icon *ngIf="formData.payment_method === method.value"
+                  name="checkmark-circle-outline"
+                  color="primary"
+                  class="check-icon">
+        </ion-icon>
+      </div>
+    </div>
+
+    <!-- ── Catatan Tambahan ── -->
     <ion-item>
       <ion-label position="stacked">Catatan Tambahan (Opsional)</ion-label>
       <ion-input
@@ -60,7 +141,7 @@
 
   </ion-list>
 
-  <!-- Section Foto Bukti -->
+  <!-- ── Section Foto Bukti ── -->
   <div class="photo-section">
     <ion-button expand="block" color="secondary" (click)="takePicture()">
       <ion-icon slot="start" name="camera-outline"></ion-icon>
@@ -76,7 +157,7 @@
     </div>
   </div>
 
-  <!-- Submit Button di dalam konten agar tidak tertutup footer -->
+  <!-- ── Submit Button ── -->
   <div class="submit-section">
     <ion-button expand="block" color="primary" (click)="submitDelivery()">
       <ion-icon slot="start" name="send-outline"></ion-icon>

@@ -1,10 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, LoadingController, ToastController, NavController } from '@ionic/angular';
 import { DeliveryService } from 'src/app/services/delivery';
 
-// Plugin Capacitor untuk Kamera & GPS
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
 
@@ -15,18 +14,19 @@ import { Geolocation } from '@capacitor/geolocation';
   standalone: true,
   imports: [IonicModule, CommonModule, FormsModule]
 })
-export class DeliveryProofPage {
+export class DeliveryProofPage implements OnInit {
   private deliveryService = inject(DeliveryService);
-  private loadingCtrl = inject(LoadingController);
-  private toastCtrl = inject(ToastController);
-  private navCtrl = inject(NavController);
+  private loadingCtrl    = inject(LoadingController);
+  private toastCtrl      = inject(ToastController);
+  private navCtrl        = inject(NavController);
 
-  // Model Data sesuai parameter Backend
+  // ── Form Data ──
   formData = {
+    customer_id: null as number | null,
     butterfly_customer_name: '',
     qty_20kg: 0,
     qty_b_half: 0,
-    qty_half: 0, // Prioritas penjualan bal 10-12kg
+    qty_half: 0,
     payment_method: 'Cash',
     payment_note: '',
     latitude: '',
@@ -36,13 +36,159 @@ export class DeliveryProofPage {
 
   previewImage: string | undefined;
 
+  // ── Customer Dropdown ──
+  allCustomers: any[]       = [];
+  filteredCustomers: any[]  = [];
+  customerSearchQuery       = '';
+  showCustomerDropdown      = false;
+  selectedCustomer: any     = null;
+  isNewCustomer             = false;
+  isLoadingCustomers        = false;
+
+  // ── Payment Method Dropdown ──
+  showPaymentDropdown = false;
+
+  // Definisi metode pembayaran — tidak bergantung pada ion-select
+  paymentMethods = [
+    {
+      value: 'Cash',
+      label: 'Tunai (Cash)',
+      desc:  'Bayar langsung di tempat',
+      icon:  'cash-outline'
+    },
+    {
+      value: 'Transfer Bank',
+      label: 'Transfer Bank',
+      desc:  'BCA, BRI, Mandiri, dll.',
+      icon:  'card-outline'
+    },
+    {
+      value: 'Dana',
+      label: 'DANA',
+      desc:  'Dompet digital DANA',
+      icon:  'wallet-outline'
+    },
+    {
+      value: 'QRIS',
+      label: 'QRIS',
+      desc:  'Scan kode QR',
+      icon:  'qr-code-outline'
+    }
+  ];
+
   constructor() {}
 
-  // 1. Ambil Titik Koordinat Lokasi
+  ngOnInit() {
+    this.loadCustomers();
+  }
+
+  // ─────────────────────────────────────────────
+  // PAYMENT DROPDOWN
+  // ─────────────────────────────────────────────
+
+  togglePaymentDropdown() {
+    this.showPaymentDropdown = !this.showPaymentDropdown;
+    // Tutup customer dropdown jika terbuka
+    if (this.showPaymentDropdown) {
+      this.showCustomerDropdown = false;
+    }
+  }
+
+  selectPayment(value: string) {
+    this.formData.payment_method = value;
+    this.showPaymentDropdown = false;
+  }
+
+  getPaymentLabel(value: string): string {
+    return this.paymentMethods.find(m => m.value === value)?.label ?? value;
+  }
+
+  getPaymentIcon(value: string): string {
+    return this.paymentMethods.find(m => m.value === value)?.icon ?? 'cash-outline';
+  }
+
+  // ─────────────────────────────────────────────
+  // CUSTOMER DROPDOWN
+  // ─────────────────────────────────────────────
+
+  loadCustomers() {
+    this.isLoadingCustomers = true;
+    this.deliveryService.getCustomerList().subscribe({
+      next: (res: any) => {
+        this.allCustomers      = res.data || res.result || [];
+        this.filteredCustomers = [...this.allCustomers];
+        this.isLoadingCustomers = false;
+      },
+      error: (err: any) => {
+        console.error('Gagal load customers', err);
+        this.isLoadingCustomers = false;
+      }
+    });
+  }
+
+  onCustomerInput(event: any) {
+    const query = (event.target?.value || '').toLowerCase().trim();
+    this.customerSearchQuery = event.target?.value || '';
+    this.selectedCustomer    = null;
+    this.formData.customer_id = null;
+    this.isNewCustomer       = false;
+
+    this.filteredCustomers = query
+      ? this.allCustomers.filter(c => c.name.toLowerCase().includes(query))
+      : [...this.allCustomers];
+
+    this.showCustomerDropdown  = true;
+    this.showPaymentDropdown   = false; // tutup payment jika customer dibuka
+  }
+
+  onCustomerFocus() {
+    this.filteredCustomers = this.customerSearchQuery
+      ? this.allCustomers.filter(c =>
+          c.name.toLowerCase().includes(this.customerSearchQuery.toLowerCase()))
+      : [...this.allCustomers];
+    this.showCustomerDropdown = true;
+    this.showPaymentDropdown  = false;
+  }
+
+  onCustomerBlur() {
+    setTimeout(() => { this.showCustomerDropdown = false; }, 200);
+  }
+
+  selectCustomer(customer: any) {
+    this.selectedCustomer              = customer;
+    this.formData.customer_id          = customer.id;
+    this.formData.butterfly_customer_name = customer.name;
+    this.customerSearchQuery           = customer.name;
+    this.showCustomerDropdown          = false;
+    this.isNewCustomer                 = false;
+  }
+
+  useAsNewCustomer() {
+    this.selectedCustomer              = null;
+    this.formData.customer_id          = null;
+    this.formData.butterfly_customer_name = this.customerSearchQuery;
+    this.isNewCustomer                 = true;
+    this.showCustomerDropdown          = false;
+  }
+
+  clearCustomer() {
+    this.selectedCustomer              = null;
+    this.isNewCustomer                 = false;
+    this.formData.customer_id          = null;
+    this.formData.butterfly_customer_name = '';
+    this.customerSearchQuery           = '';
+    this.filteredCustomers             = [...this.allCustomers];
+    this.showCustomerDropdown          = false;
+  }
+
+  // ─────────────────────────────────────────────
+  // KAMERA & GPS
+  // ─────────────────────────────────────────────
+
   async getLocation() {
     try {
       const position = await Geolocation.getCurrentPosition();
-      this.formData.latitude = position.coords.latitude.toString();
+      this.formData.latitude  = position.coords.latitude.toString();
       this.formData.longitude = position.coords.longitude.toString();
     } catch (error) {
       console.error('Gagal mengambil lokasi GPS', error);
@@ -50,38 +196,47 @@ export class DeliveryProofPage {
     }
   }
 
-  // 2. Buka Kamera dan Ambil Foto Base64
   async takePicture() {
     try {
       const image = await Camera.getPhoto({
-        quality: 60, // Kompresi agar tidak terlalu berat saat dikirim
+        quality: 60,
         allowEditing: false,
         resultType: CameraResultType.Base64,
-        source: CameraSource.Camera // Paksa buka kamera (bukan galeri)
+        source: CameraSource.Camera
       });
-
-      // Backend Laravel kita membutuhkan prefix data URI
-      this.previewImage = `data:image/jpeg;base64,${image.base64String}`;
-      this.formData.proof_image = this.previewImage;
-
-      // Ambil GPS secara diam-diam setelah foto diambil
+      this.previewImage           = `data:image/jpeg;base64,${image.base64String}`;
+      this.formData.proof_image   = this.previewImage;
       this.getLocation();
     } catch (error) {
       console.error('Kamera dibatalkan / error', error);
     }
   }
 
-  // 3. Kirim Data ke Backend
+  // ─────────────────────────────────────────────
+  // SUBMIT
+  // ─────────────────────────────────────────────
+
   async submitDelivery() {
-    // Validasi Sederhana
-    if (!this.formData.butterfly_customer_name) {
+    if (!this.formData.butterfly_customer_name?.trim()) {
       return this.showToast('Nama warung/pelanggan wajib diisi!', 'warning');
     }
-    if (this.formData.qty_half === 0 && this.formData.qty_20kg === 0 && this.formData.qty_b_half === 0) {
+
+    const totalQty =
+      (this.formData.qty_half   || 0) +
+      (this.formData.qty_20kg   || 0) +
+      (this.formData.qty_b_half || 0);
+
+    if (totalQty === 0) {
       return this.showToast('Masukkan minimal 1 bal es yang dikirim!', 'warning');
     }
+
     if (!this.formData.proof_image) {
       return this.showToast('Bukti foto wajib dilampirkan!', 'warning');
+    }
+
+    // ✅ TAMBAHAN: Cegah submit jika GPS belum terkunci
+    if (!this.formData.latitude || !this.formData.longitude) {
+      return this.showToast('Mohon tunggu sebentar, sedang mengunci lokasi GPS...', 'warning');
     }
 
     const loading = await this.loadingCtrl.create({
@@ -95,7 +250,6 @@ export class DeliveryProofPage {
         await loading.dismiss();
         if (res.status === 'success') {
           this.showToast('Bukti berhasil dikirim! Menunggu validasi admin.', 'success');
-          // Kembali ke halaman sebelumnya setelah sukses
           this.navCtrl.back();
         } else {
           this.showToast(res.message || 'Terjadi kesalahan sistem', 'danger');
@@ -111,10 +265,7 @@ export class DeliveryProofPage {
 
   async showToast(message: string, color: string) {
     const toast = await this.toastCtrl.create({
-      message,
-      duration: 3000,
-      color,
-      position: 'bottom'
+      message, duration: 3000, color, position: 'bottom'
     });
     toast.present();
   }
