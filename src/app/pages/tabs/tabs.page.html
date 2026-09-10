@@ -104,4 +104,41 @@
 
   </ion-tab-bar>
 
+  <!-- ✅ TAB BAR UNTUK KASIR -->
+  <ion-tab-bar slot="bottom" *ngIf="userRole === 'kasir'" class="custom-tab-bar">
+
+    <ion-tab-button tab="kasir/attendance" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="location-outline" class="tab-icon"></ion-icon>
+      </div>
+      <ion-label class="tab-label">Absen</ion-label>
+    </ion-tab-button>
+
+    <!-- MAIN MENU BUTTON -->
+    <div class="main-menu-slot">
+      <button
+        class="main-menu-btn"
+        [class.holding]="isHolding"
+        (mousedown)="onHoldStart($event)"
+        (touchstart)="onHoldStart($event)"
+        (mouseup)="onHoldEnd($event)"
+        (touchend)="onHoldEnd($event)"
+        (mouseleave)="cancelHold()"
+      >
+        <div class="main-menu-circle">
+          <ion-icon name="grid-outline" class="main-icon"></ion-icon>
+        </div>
+        <span class="main-label">Menu</span>
+      </button>
+    </div>
+
+    <ion-tab-button tab="profile" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="person-outline" class="tab-icon"></ion-icon>
+      </div>
+      <ion-label class="tab-label">Profil</ion-label>
+    </ion-tab-button>
+
+  </ion-tab-bar>
+
 </ion-tabs>

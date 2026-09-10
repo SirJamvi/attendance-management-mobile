@@ -52,6 +52,12 @@ export class TabsPage implements OnInit, OnDestroy {
     { label: 'Profil',   icon: 'person-outline',         route: '/tabs/profile'            },
   ];
 
+  // ✅ MENU UNTUK KASIR
+  kasirMenuItems: MenuItem[] = [
+    { label: 'Kasbon',   icon: 'cash-outline',           route: '/cash-advance'            },
+    { label: 'Profil',   icon: 'person-outline',         route: '/tabs/profile'            },
+  ];
+
   get menuOpen() { return this.radialMenuService.isOpen; }
 
   constructor(
@@ -89,7 +95,10 @@ export class TabsPage implements OnInit, OnDestroy {
     const rect = btn.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
 
-    const items = this.userRole === 'driver' ? this.driverMenuItems : this.salesMenuItems;
+    // ✅ LOGIKA PEMILIHAN MENU (driver / sales / kasir)
+    const items = this.userRole === 'driver' ? this.driverMenuItems :
+                  this.userRole === 'sales' ? this.salesMenuItems :
+                  this.kasirMenuItems;
 
     this.holdTimer = setTimeout(() => {
       this.isHolding = false;

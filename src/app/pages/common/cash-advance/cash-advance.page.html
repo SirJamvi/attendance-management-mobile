@@ -9,6 +9,15 @@
 
 <ion-content class="ion-padding" color="light">
   
+  <!-- Banner Informasi -->
+  <div class="info-banner">
+    <ion-icon name="information-circle-outline"></ion-icon>
+    <p>
+      <strong>Perhatikan:</strong> Dalam 1 periode (1–14 atau 15–30), Anda hanya dapat mengajukan maksimal <strong>2 kali</strong> kasbon dengan status <strong>pending/active</strong>.
+    </p>
+  </div>
+
+  <!-- Form Pengajuan -->
   <ion-card class="ion-no-margin ion-margin-bottom shadow-sm">
     <ion-card-header>
       <ion-card-title style="font-size: 1.2rem;">Pengajuan Kasbon Baru</ion-card-title>
@@ -16,28 +25,73 @@
     </ion-card-header>
     <ion-card-content>
       
+      <!-- Nominal -->
       <ion-item class="ion-margin-bottom" fill="outline" mode="md">
-        <ion-label position="floating">Nominal Pinjaman (Rp)</ion-label>
-        <ion-input type="number" [(ngModel)]="amount" placeholder="Contoh: 500000"></ion-input>
+        <ion-label position="floating">
+          Nominal Pinjaman (Rp) <ion-text color="danger">*</ion-text>
+        </ion-label>
+        <ion-input
+          inputmode="numeric"
+          [(ngModel)]="amount"
+          placeholder="Contoh: 500000"
+          (ionFocus)="false">
+        </ion-input>
       </ion-item>
       
-      <ion-item class="ion-margin-bottom" fill="outline" mode="md">
-        <ion-label position="floating">Lama Cicilan</ion-label>
-        <ion-select [(ngModel)]="duration" interface="popover">
-          <ion-select-option [value]="1">1x (Lunas Sekaligus)</ion-select-option>
-          <ion-select-option [value]="2">2x Periode Gaji</ion-select-option>
-          <ion-select-option [value]="3">3x Periode Gaji</ion-select-option>
-          <ion-select-option [value]="4">4x Periode Gaji</ion-select-option>
-          <ion-select-option [value]="5">5x Periode Gaji</ion-select-option>
-        </ion-select>
+      <!-- Lama Cicilan – Custom Dropdown -->
+      <ion-item class="dropdown-host-item ion-margin-bottom" lines="none">
+        <ion-label position="stacked">
+          Lama Cicilan <ion-text color="danger">*</ion-text>
+        </ion-label>
+
+        <div class="selected-chip payment-chip" (click)="toggleDurationDropdown()">
+          <ion-icon name="calendar-outline" color="primary"></ion-icon>
+          <span class="chip-name">{{ getDurationLabel(duration) }}</span>
+          <ion-icon
+            [name]="showDurationDropdown ? 'chevron-up-outline' : 'chevron-down-outline'"
+            class="chip-chevron">
+          </ion-icon>
+        </div>
       </ion-item>
 
+      <!-- Dropdown List -->
+      <div *ngIf="showDurationDropdown" class="custom-dropdown">
+        <div *ngFor="let opt of durationOptions"
+             class="dropdown-item"
+             [class.is-selected]="duration === opt.value"
+             (click)="selectDuration(opt.value)">
+          <ion-icon name="time-outline"
+                    [color]="duration === opt.value ? 'primary' : 'medium'">
+          </ion-icon>
+          <div class="dropdown-text">
+            <span class="d-name">{{ opt.label }}</span>
+            <span class="d-sub">{{ opt.desc }}</span>
+          </div>
+          <ion-icon *ngIf="duration === opt.value"
+                    name="checkmark-circle-outline"
+                    color="primary"
+                    class="check-icon">
+          </ion-icon>
+        </div>
+      </div>
+
+      <!-- Alasan (Opsional) -->
       <ion-item class="ion-margin-bottom" fill="outline" mode="md">
-        <ion-label position="floating">Alasan Pengajuan</ion-label>
-        <ion-textarea [(ngModel)]="reason" placeholder="Misal: Biaya sekolah anak..." rows="3"></ion-textarea>
+        <ion-label position="floating">Alasan Pengajuan (Opsional)</ion-label>
+        <ion-textarea
+          [(ngModel)]="reason"
+          placeholder="Misal: Biaya sekolah anak..."
+          rows="3"
+          (ionFocus)="false">
+        </ion-textarea>
       </ion-item>
 
-      <ion-button expand="block" (click)="submitForm()" [disabled]="isSubmitting" style="height: 48px; font-weight: bold;">
+      <!-- Tombol Submit -->
+      <ion-button
+        expand="block"
+        (click)="submitForm()"
+        [disabled]="isSubmitting"
+        style="height: 48px; font-weight: bold;">
         <ion-spinner *ngIf="isSubmitting" name="crescent"></ion-spinner>
         <span *ngIf="!isSubmitting">AJUKAN SEKARANG</span>
       </ion-button>
@@ -45,6 +99,7 @@
     </ion-card-content>
   </ion-card>
 
+  <!-- Riwayat -->
   <h3 class="ion-padding-horizontal" style="font-size: 1.1rem; font-weight: bold; color: #444;">Riwayat Anda</h3>
   
   <div *ngIf="isLoading" class="ion-text-center ion-padding">
@@ -71,7 +126,7 @@
       
       <div style="padding: 0 16px 16px 16px;">
         <div style="background: #f8f9fa; padding: 10px; border-radius: 8px; font-size: 0.9rem;">
-          <p style="margin: 0 0 5px 0;"><b>Alasan:</b> {{ item.reason }}</p>
+          <p style="margin: 0 0 5px 0;"><b>Alasan:</b> {{ item.reason || '-' }}</p>
           <p style="margin: 0 0 5px 0;"><b>Cicilan:</b> {{ item.installment_duration }}x (Rp {{ item.installment_amount | number }}/periode)</p>
           <p style="margin: 0; color: #d32f2f;" *ngIf="item.status === 'active'"><b>Sisa Hutang: Rp {{ item.remaining_amount | number }}</b></p>
           <p style="margin: 0; color: #d32f2f;" *ngIf="item.status === 'rejected'"><b>Alasan Tolak:</b> {{ item.admin_note || '-' }}</p>

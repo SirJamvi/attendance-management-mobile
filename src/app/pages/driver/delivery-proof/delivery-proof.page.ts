@@ -48,7 +48,6 @@ export class DeliveryProofPage implements OnInit {
   // ── Payment Method Dropdown ──
   showPaymentDropdown = false;
 
-  // Definisi metode pembayaran — tidak bergantung pada ion-select
   paymentMethods = [
     {
       value: 'Cash',
@@ -88,7 +87,6 @@ export class DeliveryProofPage implements OnInit {
 
   togglePaymentDropdown() {
     this.showPaymentDropdown = !this.showPaymentDropdown;
-    // Tutup customer dropdown jika terbuka
     if (this.showPaymentDropdown) {
       this.showCustomerDropdown = false;
     }
@@ -138,7 +136,7 @@ export class DeliveryProofPage implements OnInit {
       : [...this.allCustomers];
 
     this.showCustomerDropdown  = true;
-    this.showPaymentDropdown   = false; // tutup payment jika customer dibuka
+    this.showPaymentDropdown   = false;
   }
 
   onCustomerFocus() {
@@ -155,44 +153,61 @@ export class DeliveryProofPage implements OnInit {
   }
 
   selectCustomer(customer: any) {
-    this.selectedCustomer              = customer;
-    this.formData.customer_id          = customer.id;
+    this.selectedCustomer                 = customer;
+    this.formData.customer_id             = customer.id;
     this.formData.butterfly_customer_name = customer.name;
-    this.customerSearchQuery           = customer.name;
-    this.showCustomerDropdown          = false;
-    this.isNewCustomer                 = false;
+    this.customerSearchQuery              = customer.name;
+    this.showCustomerDropdown             = false;
+    this.isNewCustomer                    = false;
   }
 
   useAsNewCustomer() {
-    this.selectedCustomer              = null;
-    this.formData.customer_id          = null;
+    this.selectedCustomer                 = null;
+    this.formData.customer_id             = null;
     this.formData.butterfly_customer_name = this.customerSearchQuery;
-    this.isNewCustomer                 = true;
-    this.showCustomerDropdown          = false;
+    this.isNewCustomer                    = true;
+    this.showCustomerDropdown             = false;
   }
 
   clearCustomer() {
-    this.selectedCustomer              = null;
-    this.isNewCustomer                 = false;
-    this.formData.customer_id          = null;
+    this.selectedCustomer                 = null;
+    this.isNewCustomer                    = false;
+    this.formData.customer_id             = null;
     this.formData.butterfly_customer_name = '';
-    this.customerSearchQuery           = '';
-    this.filteredCustomers             = [...this.allCustomers];
-    this.showCustomerDropdown          = false;
+    this.customerSearchQuery              = '';
+    this.filteredCustomers                = [...this.allCustomers];
+    this.showCustomerDropdown             = false;
   }
 
   // ─────────────────────────────────────────────
   // KAMERA & GPS
   // ─────────────────────────────────────────────
 
-  async getLocation() {
+  /**
+   * Ambil koordinat GPS.
+   * - enableHighAccuracy: false  → pakai sinyal jaringan/WiFi dulu, lebih cepat
+   * - timeout: 30000            → tunggu hingga 30 detik (default sebelumnya ~10 detik)
+   * - maximumAge: 60000         → boleh pakai cache lokasi selama 60 detik terakhir
+   *
+   * Fungsi ini tidak menampilkan toast error karena dipanggil di background
+   * setelah foto diambil — biarkan submitDelivery() yang handle jika masih gagal.
+   */
+  async getLocation(): Promise<boolean> {
     try {
-      const position = await Geolocation.getCurrentPosition();
+      const position = await Geolocation.getCurrentPosition({
+        enableHighAccuracy: false,
+        timeout: 30000,
+        maximumAge: 60000
+      });
       this.formData.latitude  = position.coords.latitude.toString();
       this.formData.longitude = position.coords.longitude.toString();
+      console.log('✅ GPS terkunci:', this.formData.latitude, this.formData.longitude);
+      return true;
     } catch (error) {
-      console.error('Gagal mengambil lokasi GPS', error);
-      this.showToast('Gagal mendapatkan lokasi GPS. Pastikan izin lokasi aktif.', 'danger');
+      console.error('⚠️ getLocation() gagal:', error);
+      this.formData.latitude  = '';
+      this.formData.longitude = '';
+      return false;
     }
   }
 
@@ -204,8 +219,11 @@ export class DeliveryProofPage implements OnInit {
         resultType: CameraResultType.Base64,
         source: CameraSource.Camera
       });
-      this.previewImage           = `data:image/jpeg;base64,${image.base64String}`;
-      this.formData.proof_image   = this.previewImage;
+      this.previewImage         = `data:image/jpeg;base64,${image.base64String}`;
+      this.formData.proof_image = this.previewImage;
+
+      // Panggil GPS di background — tidak ditunggu (fire and forget).
+      // Hasilnya akan siap saat driver selesai mengisi form dan menekan Kirim.
       this.getLocation();
     } catch (error) {
       console.error('Kamera dibatalkan / error', error);
@@ -217,6 +235,7 @@ export class DeliveryProofPage implements OnInit {
   // ─────────────────────────────────────────────
 
   async submitDelivery() {
+    // ── Validasi form ──
     if (!this.formData.butterfly_customer_name?.trim()) {
       return this.showToast('Nama warung/pelanggan wajib diisi!', 'warning');
     }
@@ -234,11 +253,26 @@ export class DeliveryProofPage implements OnInit {
       return this.showToast('Bukti foto wajib dilampirkan!', 'warning');
     }
 
-    // ✅ TAMBAHAN: Cegah submit jika GPS belum terkunci
+    // ── GPS: coba ambil ulang jika belum tersedia ──
     if (!this.formData.latitude || !this.formData.longitude) {
-      return this.showToast('Mohon tunggu sebentar, sedang mengunci lokasi GPS...', 'warning');
+      const gpsLoading = await this.loadingCtrl.create({
+        message: 'Mengunci lokasi GPS, mohon tunggu...',
+        spinner: 'crescent'
+      });
+      await gpsLoading.present();
+
+      const gpsOk = await this.getLocation();
+      await gpsLoading.dismiss();
+
+      if (!gpsOk) {
+        return this.showToast(
+          'Gagal mendapatkan lokasi GPS. Pastikan GPS aktif, lalu coba lagi.',
+          'danger'
+        );
+      }
     }
 
+    // ── Kirim ke server ──
     const loading = await this.loadingCtrl.create({
       message: 'Mengirim bukti pengiriman...',
       spinner: 'crescent'
@@ -265,7 +299,10 @@ export class DeliveryProofPage implements OnInit {
 
   async showToast(message: string, color: string) {
     const toast = await this.toastCtrl.create({
-      message, duration: 3000, color, position: 'bottom'
+      message,
+      duration: 3000,
+      color,
+      position: 'bottom'
     });
     toast.present();
   }

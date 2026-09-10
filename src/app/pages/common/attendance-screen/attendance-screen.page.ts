@@ -11,13 +11,14 @@ import {
   AlertController, LoadingController, Platform 
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-// ✅ DIPERBARUI: Tambahkan flame dan giftOutline
 import { cameraOutline, checkmarkCircle, checkmarkDoneCircle, calendarOutline, timeOutline, alertCircleOutline, warningOutline, flame, giftOutline } from 'ionicons/icons'; 
 import { Geolocation, Position } from '@capacitor/geolocation';
 
 import { CameraViewComponent } from '../../../components/camera-view/camera-view.component';
 import { LoadingSpinnerComponent } from '../../../components/loading-spinner/loading-spinner.component';
 import { AttendanceService } from '../../../services/attendance';
+// ✅ TAMBAHKAN IMPORT INI
+import { AuthService } from '../../../services/auth';
 
 import { Attendance } from '../../../types/api.types';
 
@@ -54,20 +55,28 @@ export class AttendanceScreenPage implements OnInit {
   locationData: { latitude: number; longitude: number } | null = null;
   isSubmitDisabled = true;
 
-  // ✅ BARU: Properti untuk menyimpan data misi aktif
+  // Properti untuk menyimpan data misi aktif
   activeMissions: any[] = [];
+
+  // ✅ TAMBAHKAN PROPERTI INI
+  userRole: string = '';
 
   constructor(
     private attendanceService: AttendanceService,
+    // ✅ INJEKSI INI
+    private authService: AuthService,
     private alertCtrl: AlertController,
     private loadingCtrl: LoadingController,
     private platform: Platform
   ) {
-    // ✅ DIPERBARUI: Tambahkan flame dan giftOutline ke addIcons
     addIcons({ cameraOutline, checkmarkCircle, checkmarkDoneCircle, calendarOutline, timeOutline, alertCircleOutline, warningOutline, flame, giftOutline });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    // ✅ Ambil role saat halaman diinisialisasi
+    const user = this.authService.getCurrentUserValue();
+    this.userRole = user?.role || '';
+  }
 
   ionViewWillEnter() {
     this.loadStatus();
@@ -100,27 +109,29 @@ export class AttendanceScreenPage implements OnInit {
       }
     });
 
-    // ✅ BARU: Tarik data misi aktif secara paralel
-this.attendanceService.getActiveMissions().subscribe({
-  next: (res: any) => {
-    console.log('🎯 missions response:', JSON.stringify(res)); // ← DEBUG
-    // Toleran terhadap variasi format respons
-    if (res && res.success === true && Array.isArray(res.data)) {
-      this.activeMissions = res.data;
-      console.log('✅ activeMissions loaded:', this.activeMissions.length);
-    } else if (res && Array.isArray(res.data)) {
-      // Fallback jika backend tidak kirim field "success"
-      this.activeMissions = res.data;
-    } else {
-      console.warn('⚠️ Format respons tidak dikenali:', res);
-      this.activeMissions = [];
+    // ✅ PENCEGAHAN: Hanya tarik data misi jika dia adalah driver
+    if (this.userRole === 'driver') {
+      this.attendanceService.getActiveMissions().subscribe({
+        next: (res: any) => {
+          console.log('🎯 missions response:', JSON.stringify(res)); // ← DEBUG
+          // Toleran terhadap variasi format respons
+          if (res && res.success === true && Array.isArray(res.data)) {
+            this.activeMissions = res.data;
+            console.log('✅ activeMissions loaded:', this.activeMissions.length);
+          } else if (res && Array.isArray(res.data)) {
+            // Fallback jika backend tidak kirim field "success"
+            this.activeMissions = res.data;
+          } else {
+            console.warn('⚠️ Format respons tidak dikenali:', res);
+            this.activeMissions = [];
+          }
+        },
+        error: (err: any) => {
+          console.error('❌ Error loading active missions:', err);
+          console.error('❌ Status:', err.status, '| Message:', err.error?.message);
+        }
+      });
     }
-  },
-  error: (err: any) => {
-    console.error('❌ Error loading active missions:', err);
-    console.error('❌ Status:', err.status, '| Message:', err.error?.message);
-  }
-});
   }
 
   async handlePhoto(photoBase64: string | null) {

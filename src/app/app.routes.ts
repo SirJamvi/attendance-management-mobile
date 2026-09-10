@@ -34,7 +34,7 @@ export const routes: Routes = [
     path: 'tabs',
     loadComponent: () => import('./pages/tabs/tabs.page').then( m => m.TabsPage),
     canActivate: [authGuard], // <-- HANYA bisa diakses jika SUDAH login
-    
+
     // --- Rute anak di dalam Tabs ---
     children: [
       {
@@ -64,7 +64,7 @@ export const routes: Routes = [
             path: 'salary',
             loadComponent: () => import('./pages/driver/driver-salary/driver-salary.page').then( m => m.DriverSalaryPage)
           },
-          // ✅ PINDAHKAN KEDUA RUTE INI KE SINI:
+          // ✅ RUTE INI SUDAH ADA DI SINI:
           {
             path: 'leaderboard',
             loadComponent: () => import('./pages/driver/leaderboard/leaderboard.page').then( m => m.LeaderboardPage)
@@ -119,9 +119,24 @@ export const routes: Routes = [
           }
         ]
       },
-      
+      // ✅ TAMBAHKAN RUTE KASIR DI SINI
       {
-        // ✅ ROUTE PROFILE BARU (DI DALAM TABS)
+        path: 'kasir',
+        children: [
+          {
+            path: 'attendance',
+            loadComponent: () => import('./pages/common/attendance-screen/attendance-screen.page').then( m => m.AttendanceScreenPage)
+          },
+          {
+            path: '',
+            redirectTo: 'attendance',
+            pathMatch: 'full'
+          }
+        ]
+      },
+      // -----------------------------------
+      {
+        // Route Profile (di dalam Tabs)
         path: 'profile',
         loadComponent: () => import('./pages/common/profile/profile.page').then(m => m.ProfilePage)
       },
@@ -133,7 +148,7 @@ export const routes: Routes = [
       }
     ]
   },
-  
+
   // --- RUTE DILUAR TABS (UNTUK FORM) ---
   // (Kita letakkan di luar 'tabs' agar tidak ada navigasi bawah)
   {

@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ToastController } from '@ionic/angular';
 import { CashAdvanceService } from 'src/app/services/cash-advance/cash-advance.service';
-import { ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-cash-advance',
@@ -17,10 +16,19 @@ export class CashAdvancePage implements OnInit {
   isLoading = true;
   isSubmitting = false;
 
-  // Variabel Form
   amount: number | null = null;
   duration: number = 1;
   reason: string = '';
+
+  showDurationDropdown = false;
+
+  durationOptions = [
+    { value: 1, label: '1x', desc: 'Lunas sekaligus' },
+    { value: 2, label: '2x', desc: '2 periode gaji' },
+    { value: 3, label: '3x', desc: '3 periode gaji' },
+    { value: 4, label: '4x', desc: '4 periode gaji' },
+    { value: 5, label: '5x', desc: '5 periode gaji' }
+  ];
 
   constructor(
     private cashAdvanceService: CashAdvanceService,
@@ -38,44 +46,47 @@ export class CashAdvancePage implements OnInit {
         this.history = res.data;
         this.isLoading = false;
       },
-      error: (err) => {
+      error: () => {
         this.isLoading = false;
         this.showToast('Gagal memuat riwayat kasbon.', 'danger');
       }
     });
   }
 
+  toggleDurationDropdown() {
+    this.showDurationDropdown = !this.showDurationDropdown;
+  }
+
+  selectDuration(value: number) {
+    this.duration = value;
+    this.showDurationDropdown = false;
+  }
+
+  getDurationLabel(value: number): string {
+    const opt = this.durationOptions.find(o => o.value === value);
+    return opt ? opt.label : 'Pilih';
+  }
+
   submitForm() {
-    if (!this.amount || !this.duration || !this.reason) {
-      this.showToast('Harap lengkapi semua isian formulir.', 'warning');
+    if (!this.amount || this.amount < 10000) {
+      this.showToast('Nominal minimal Rp 10.000 dan wajib diisi.', 'warning');
       return;
     }
 
-    if (this.amount < 10000) {
-      this.showToast('Minimal pengajuan adalah Rp 10.000', 'warning');
+    if (!this.duration) {
+      this.showToast('Pilih lama cicilan.', 'warning');
       return;
     }
-
-    // ✅ Validasi batasan cicilan berdasarkan nominal
-    if (this.amount < 150000 && this.duration > 1) {
-      this.showToast('Pinjaman di bawah Rp 150.000 tidak bisa dicicil (Pilih 1x).', 'danger');
-      return;
-    }
-
-    if (this.amount >= 150000 && this.amount < 500000 && this.duration > 3) {
-      this.showToast('Pinjaman di bawah Rp 500.000 maksimal dicicil 3x.', 'danger');
-      return;
-    }
-    // ✅ Akhir validasi cicilan
 
     this.isSubmitting = true;
-    const data = {
+
+    const payload = {
       amount: this.amount,
       installment_duration: this.duration,
-      reason: this.reason
+      reason: this.reason?.trim() || ''
     };
 
-    this.cashAdvanceService.submitRequest(data).subscribe({
+    this.cashAdvanceService.submitRequest(payload).subscribe({
       next: (res: any) => {
         this.isSubmitting = false;
         this.showToast('Pengajuan kasbon berhasil dikirim!', 'success');
@@ -100,7 +111,7 @@ export class CashAdvancePage implements OnInit {
     const toast = await this.toastCtrl.create({
       message,
       color,
-      duration: 2000,
+      duration: 3000,
       position: 'bottom'
     });
     toast.present();

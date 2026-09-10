@@ -113,7 +113,7 @@ export class LoginPage implements OnInit {
     });
   }
 
-  /**
+ /**
    * Redirect user berdasarkan role
    */
   redirectUser(user: any) {
@@ -124,6 +124,10 @@ export class LoginPage implements OnInit {
       this.router.navigate(['/tabs/driver'], { replaceUrl: true });
     } else if (user.role === 'sales') {
       this.router.navigate(['/tabs/sales'], { replaceUrl: true });
+    } else if (user.role === 'kasir') {
+      // ✅ TAMBAHKAN BLOK INI UNTUK KASIR
+      // Pastikan rute '/tabs/kasir' (atau rute lain yang kamu siapkan) sudah ada di app.routes.ts
+      this.router.navigate(['/tabs/kasir'], { replaceUrl: true });
     } else {
       console.error('❌ Unknown role:', user.role);
       this.errorMessage = 'Role akun tidak dikenali untuk aplikasi mobile.';
