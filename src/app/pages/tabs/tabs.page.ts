@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import {
   IonTabs, IonTabBar, IonTabButton, IonIcon,
   IonLabel, IonRouterOutlet
@@ -13,7 +14,8 @@ import {
   location, locationOutline, documentText, documentTextOutline,
   addCircle, addCircleOutline, wallet, walletOutline,
   people, peopleOutline, cashOutline, cash,
-  gridOutline, close, closeOutline
+  gridOutline, close, closeOutline, clipboardOutline,
+  checkmarkDoneOutline, statsChartOutline, cubeOutline
 } from 'ionicons/icons';
 import { AuthService } from 'src/app/services/auth';
 import { RadialMenuService, MenuItem } from 'src/app/services/radial-menu.service';
@@ -30,18 +32,27 @@ import { RadialMenuService, MenuItem } from 'src/app/services/radial-menu.servic
 })
 export class TabsPage implements OnInit, OnDestroy {
 
-  userRole: string = '';
-  isHolding: boolean = false;
+  userRole = '';
+  isHolding = false;
 
   private holdTimer: any = null;
+  private userSub?: Subscription;
   private readonly HOLD_DURATION_MS = 400;
 
+  koMenuItems: MenuItem[] = [
+    { label: 'Riwayat',  icon: 'time-outline',     route: '/tabs/ko/checksheets/history' },
+    { label: 'Cuti',     icon: 'calendar-outline', route: '/tabs/ko/leave'               },
+    { label: 'Kasbon',   icon: 'cash-outline',     route: '/cash-advance'                },
+    { label: 'Profil',   icon: 'person-outline',   route: '/tabs/profile'                },
+  ];
+
   driverMenuItems: MenuItem[] = [
-    { label: 'Pelanggan', icon: 'people-outline',         route: '/tabs/driver/customers' },
-    { label: 'Riwayat',   icon: 'time-outline',           route: '/tabs/driver/history'   },
-    { label: 'Gaji',      icon: 'wallet-outline',         route: '/tabs/driver/salary'    },
-    { label: 'Cuti',      icon: 'calendar-outline',       route: '/tabs/driver/leave'     },
-    { label: 'Kasbon',    icon: 'cash-outline',           route: '/cash-advance'          },
+    { label: 'Pelanggan', icon: 'people-outline',   route: '/tabs/driver/customers'      },
+    { label: 'Order',     icon: 'cube-outline',     route: '/tabs/driver/delivery-proof' },
+    { label: 'Riwayat',   icon: 'time-outline',     route: '/tabs/driver/history'        },
+    { label: 'Cuti',      icon: 'calendar-outline', route: '/tabs/driver/leave'          },
+    { label: 'Kasbon',    icon: 'cash-outline',     route: '/cash-advance'               },
+    { label: 'Profil',    icon: 'person-outline',   route: '/tabs/profile'               },
   ];
 
   salesMenuItems: MenuItem[] = [
@@ -53,6 +64,10 @@ export class TabsPage implements OnInit, OnDestroy {
   ];
 
   get menuOpen() { return this.radialMenuService.isOpen; }
+
+  get isKoRole(): boolean {
+    return this.authService.isKoRole(this.userRole);
+  }
 
   constructor(
     private authService: AuthService,
@@ -66,34 +81,45 @@ export class TabsPage implements OnInit, OnDestroy {
       location, locationOutline, documentText, documentTextOutline,
       addCircle, addCircleOutline, wallet, walletOutline,
       people, peopleOutline, cashOutline, cash,
-      gridOutline, close, closeOutline
+      gridOutline, close, closeOutline, clipboardOutline,
+      checkmarkDoneOutline, statsChartOutline, cubeOutline
     });
   }
 
   ngOnInit() {
     const user = this.authService.getCurrentUserValue();
     this.userRole = user?.role || '';
+
+    this.userSub = this.authService.getCurrentUser().subscribe((u) => {
+      if (u?.role) {
+        this.userRole = u.role;
+      }
+    });
   }
 
   ngOnDestroy() {
     this.cancelHold();
     this.radialMenuService.close();
+    this.userSub?.unsubscribe();
   }
 
   onHoldStart(event: MouseEvent | TouchEvent) {
     event.preventDefault();
     this.isHolding = true;
 
-    // Ambil posisi X center tombol untuk RadialMenuService
     const btn = event.currentTarget as HTMLElement;
     const rect = btn.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
 
-    const items = this.userRole === 'driver' ? this.driverMenuItems : this.salesMenuItems;
+    let items = this.salesMenuItems;
+    if (this.isKoRole) {
+      items = this.koMenuItems;
+    } else if (this.userRole === 'driver') {
+      items = this.driverMenuItems;
+    }
 
     this.holdTimer = setTimeout(() => {
       this.isHolding = false;
-      // Buka menu via service — overlay dirender di AppComponent
       this.radialMenuService.open(items, centerX, (route) => {
         this.router.navigateByUrl(route);
       });
@@ -101,7 +127,6 @@ export class TabsPage implements OnInit, OnDestroy {
   }
 
   onHoldEnd(event: MouseEvent | TouchEvent) {
-    // Dilepas sebelum threshold — batalkan, jangan buka menu
     if (!this.menuOpen) {
       this.cancelHold();
     }

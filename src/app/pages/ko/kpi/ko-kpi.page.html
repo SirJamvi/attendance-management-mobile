@@ -1,0 +1,126 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Estimasi KPI KO</ion-title>
+    <ion-buttons slot="end">
+      <app-branch-badge></app-branch-badge>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Month Picker -->
+  <div class="month-bar">
+    <div class="month-input-wrap">
+      <ion-icon name="calendar-outline" color="primary"></ion-icon>
+      <input type="month" [(ngModel)]="selectedMonth" (change)="loadKpi()" />
+    </div>
+  </div>
+
+  <div *ngIf="isLoading" class="center-state">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Menghitung estimasi bonus KPI...</p>
+  </div>
+
+  <div *ngIf="!isLoading && errorMsg" class="center-state">
+    <ion-icon name="alert-circle-outline" color="danger" style="font-size: 44px;"></ion-icon>
+    <p>{{ errorMsg }}</p>
+    <ion-button fill="outline" size="small" (click)="loadKpi()">Muat Ulang</ion-button>
+  </div>
+
+  <div *ngIf="!isLoading && !errorMsg && summary">
+
+    <!-- HERO TOTAL BONUS KPI -->
+    <ion-card class="hero-card">
+      <ion-card-content>
+        <div class="hero-top">
+          <ion-icon name="trophy-outline"></ion-icon>
+          <span>Total Estimasi Bonus KPI ({{ summary.month || selectedMonth }})</span>
+        </div>
+        <h1 class="hero-amount">
+          {{ summary.total_kpi_bonus | currency:'IDR':'Rp ':'1.0-0' }}
+        </h1>
+        <p class="hero-max">
+          dari maksimal {{ (summary.max_kpi_bonus || MAX_TOTAL_KPI) | currency:'IDR':'Rp ':'1.0-0' }}
+        </p>
+        <ion-progress-bar [value]="totalBonusProgress"></ion-progress-bar>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- KOMPONEN A: DISIPLIN CHECKSHEET (MAKS Rp 50.000) -->
+    <ion-card class="comp-card">
+      <ion-card-header>
+        <div class="comp-header">
+          <div>
+            <ion-card-subtitle color="primary">KOMPONEN A · MAKS RP 50.000</ion-card-subtitle>
+            <ion-card-title>Disiplin Checksheet</ion-card-title>
+          </div>
+          <ion-badge color="primary">{{ summary.discipline_ratio | number:'1.0-1' }}%</ion-badge>
+        </div>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="comp-bonus-row">
+          <span>Estimasi Bonus A</span>
+          <strong class="bonus-val">
+            {{ summary.component_a_bonus | currency:'IDR':'Rp ':'1.0-0' }}
+          </strong>
+        </div>
+        <ion-progress-bar [value]="compAProgress" color="primary" class="ion-margin-vertical"></ion-progress-bar>
+
+        <div class="stat-grid">
+          <div class="stat-item">
+            <span class="stat-label">Slot Tepat Waktu</span>
+            <strong>{{ summary.on_time_slots }} / {{ summary.total_required_slots }}</strong>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Hari Kerja</span>
+            <strong>{{ summary.working_days }} hari</strong>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- KOMPONEN B: AKURASI KAS LACI / TEKOR (MAKS Rp 50.000) -->
+    <ion-card class="comp-card">
+      <ion-card-header>
+        <div class="comp-header">
+          <div>
+            <ion-card-subtitle color="tertiary">KOMPONEN B · MAKS RP 50.000</ion-card-subtitle>
+            <ion-card-title>Akurasi Kas Laci (Closing POS)</ion-card-title>
+          </div>
+          <ion-badge [color]="summary.total_shortage_amount > 0 ? 'warning' : 'success'">
+            {{ summary.total_shortage_amount > 0 ? 'Ada Tekor' : 'Nihil Tekor' }}
+          </ion-badge>
+        </div>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="comp-bonus-row">
+          <span>Estimasi Bonus B</span>
+          <strong class="bonus-val">
+            {{ summary.component_b_bonus | currency:'IDR':'Rp ':'1.0-0' }}
+          </strong>
+        </div>
+        <ion-progress-bar [value]="compBProgress" color="success" class="ion-margin-vertical"></ion-progress-bar>
+
+        <div class="stat-grid">
+          <div class="stat-item">
+            <span class="stat-label">Akumulasi Tekor Kas</span>
+            <strong [style.color]="summary.total_shortage_amount > 0 ? '#dc2626' : '#16a34a'">
+              {{ summary.total_shortage_amount | currency:'IDR':'Rp ':'1.0-0' }}
+            </strong>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Jumlah Closing</span>
+            <strong>{{ summary.closing_count }} kali</strong>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+  </div>
+
+  <div style="height: 84px;"></div>
+</ion-content>

@@ -88,7 +88,7 @@ $error-color: #e74c3c;        // Warna error
     --border-color: transparent;
     --border-radius: 14px;
     --padding-start: 16px;
-    --padding-end: 52px; // Lebih besar lagi untuk memberi ruang pada icon
+    --padding-end: 16px;
     --inner-padding-end: 0px;
     --highlight-color-focused: #{$secondary-color};
     margin-bottom: 16px;
@@ -97,6 +97,10 @@ $error-color: #e74c3c;        // Warna error
     transition: all 0.3s ease;
     position: relative;
     overflow: visible !important;
+
+    &.password-item {
+      --padding-end: 46px;
+    }
     
     &.ion-focused {
       --background: #ffffff;
@@ -235,6 +239,81 @@ $error-color: #e74c3c;        // Warna error
   
   ion-spinner {
     --color: #ffffff;
+  }
+}
+
+// ====================================
+// DIVIDER
+// ====================================
+.login-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 18px 0 14px;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  span {
+    padding: 0 12px;
+    font-size: 13px;
+    color: #94a3b8;
+    text-transform: lowercase;
+    font-weight: 500;
+  }
+}
+
+// ====================================
+// GOOGLE LOGIN BUTTON
+// ====================================
+.google-login-btn {
+  width: 100%;
+  height: 52px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover:not([disabled]) {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+  }
+
+  &:active:not([disabled]) {
+    transform: translateY(0);
+    background: #f1f5f9;
+  }
+
+  &[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .google-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .google-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    letter-spacing: 0.2px;
   }
 }
 

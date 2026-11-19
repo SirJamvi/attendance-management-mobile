@@ -6,6 +6,7 @@ import {
   IonHeader,
   IonTitle,
   IonToolbar,
+  IonButtons,
   IonCard,
   IonCardContent,
   IonButton,
@@ -17,8 +18,9 @@ import {
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth';
 import { User } from 'src/app/types/api.types';
+import { BranchBadgeComponent } from 'src/app/components/branch-badge/branch-badge.component';
 import { addIcons } from 'ionicons';
-import { person, mail, briefcase, logOut } from 'ionicons/icons';
+import { person, mail, briefcase, logOut, storefrontOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-profile',
@@ -30,12 +32,14 @@ import { person, mail, briefcase, logOut } from 'ionicons/icons';
     IonHeader,
     IonTitle,
     IonToolbar,
+    IonButtons,
     IonCard,
     IonCardContent,
     IonButton,
     IonIcon,
     IonAvatar,
     IonText,
+    BranchBadgeComponent,
     CommonModule,
     FormsModule
   ]
@@ -48,7 +52,7 @@ export class ProfilePage implements OnInit {
     private router: Router,
     private alertController: AlertController
   ) {
-    addIcons({ person, mail, briefcase, logOut });
+    addIcons({ person, mail, briefcase, logOut, storefrontOutline });
   }
 
   ngOnInit() {
@@ -61,7 +65,6 @@ export class ProfilePage implements OnInit {
 
   loadUserData() {
     this.user = this.authService.getCurrentUserValue();
-    console.log('👤 User data loaded:', this.user);
   }
 
   async confirmLogout() {
@@ -90,9 +93,7 @@ export class ProfilePage implements OnInit {
 
   async logout() {
     try {
-      console.log('🚪 Logging out...');
       await this.authService.logout();
-      console.log('✅ Logout berhasil');
       this.router.navigate(['/login'], { replaceUrl: true });
     } catch (error) {
       console.error('❌ Error logout:', error);
@@ -102,27 +103,31 @@ export class ProfilePage implements OnInit {
 
   getRoleName(): string {
     if (!this.user?.role) return 'User';
-    
-    // ✅ PERBAIKAN: role adalah string langsung
-    // Mapping untuk menampilkan nama role yang lebih bagus
-    const roleMap: { [key: string]: string } = {
-      'driver': 'Driver',
-      'sales': 'Sales',
-      'admin': 'Administrator'
+    const roleMap: Record<string, string> = {
+      ko: 'Kepala Operasional (KO)',
+      kasir: 'Kasir / Operasional',
+      driver: 'Driver',
+      sales: 'Sales',
+      admin: 'Administrator',
+      owner: 'Owner',
     };
-    
-    return roleMap[this.user.role] || this.user.role || 'User';
+    return roleMap[this.user.role] || this.user.role;
   }
 
   getRoleColor(): string {
-    // ✅ PERBAIKAN: role adalah string langsung
-    const role = this.user?.role || '';
-    
-    switch(role) {
-      case 'driver': return 'primary';
-      case 'sales': return 'success';
-      case 'admin': return 'danger';
-      default: return 'medium';
+    switch (this.user?.role) {
+      case 'ko':
+      case 'kasir':
+        return 'tertiary';
+      case 'driver':
+        return 'primary';
+      case 'sales':
+        return 'success';
+      case 'admin':
+      case 'owner':
+        return 'danger';
+      default:
+        return 'medium';
     }
   }
 }

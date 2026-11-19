@@ -96,7 +96,7 @@ export class DriverHistoryPage implements OnInit {
   }
 
   loadHistory(event?: any) {
-    this.isLoading = true;
+    if (!event && this.historyData.length === 0) this.isLoading = true;
     this.attendanceService.getHistory(this.startDate, this.endDate).subscribe({
       next: (response) => {
         this.historyData = response.data.data || response.data || [];

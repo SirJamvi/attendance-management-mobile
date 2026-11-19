@@ -1,0 +1,366 @@
+ion-content {
+  --background: #f4f6f9;
+}
+
+.info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  color: #1e3a8a;
+
+  ion-icon {
+    font-size: 1.6rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.94rem;
+    margin-bottom: 2px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+}
+
+.slot-card {
+  margin: 0 0 12px;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  &.gatekeeper-slot {
+    border-left: 4px solid var(--ion-color-warning);
+  }
+
+  ion-card-title {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+.slot-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.gatekeeper-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-bottom: 5px;
+}
+
+.vehicle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 8px;
+
+  &.done {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+  }
+}
+
+.vehicle-info {
+  flex: 1;
+}
+
+.vehicle-name-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  strong {
+    font-size: 0.92rem;
+    color: #0f172a;
+  }
+
+  .plate-tag {
+    font-size: 11px;
+    background: #e2e8f0;
+    color: #334155;
+    padding: 2px 6px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+}
+
+.done-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 5px;
+  font-size: 12px;
+  color: #15803d;
+  font-weight: 500;
+
+  ion-icon {
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+}
+
+.pending-note {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 3px;
+}
+
+.center-state {
+  text-align: center;
+  padding: 40px 16px;
+  color: #64748b;
+}
+
+// ==========================================
+// STYLES MODAL INSPEKSI SIMPEL & CEPAT
+// ==========================================
+
+.modal-content {
+  --background: #f8fafc;
+}
+
+.section-box {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+
+  &.evidence-box {
+    border-color: #cbd5e1;
+  }
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+
+  ion-icon {
+    font-size: 1.3rem;
+  }
+
+  strong {
+    font-size: 0.96rem;
+    color: #0f172a;
+  }
+}
+
+.section-hint {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.field-label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 6px;
+}
+
+.modal-input-item {
+  --background: #f8fafc;
+  --border-radius: 10px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.chips-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.chip-button {
+  flex: 1 1 calc(33.333% - 6px);
+  min-width: 80px;
+  padding: 10px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+
+  &.selected {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+  }
+}
+
+.tarp-toggle-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 12px;
+  cursor: pointer;
+  margin-bottom: 12px;
+
+  ion-checkbox {
+    margin-top: 2px;
+    --size: 22px;
+  }
+
+  .tarp-desc {
+    strong {
+      display: block;
+      font-size: 13px;
+      color: #0f172a;
+    }
+    p {
+      margin: 2px 0 0;
+      font-size: 11.5px;
+      color: #64748b;
+      line-height: 1.35;
+    }
+  }
+}
+
+.cond-grid {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.cond-button {
+  flex: 1;
+  padding: 10px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+
+  &.selected {
+    background: #059669;
+    border-color: #059669;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(5, 150, 105, 0.3);
+  }
+}
+
+.camera-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  border: 2px dashed #3b82f6;
+  background: #eff6ff;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+
+  ion-icon {
+    font-size: 40px;
+    color: #2563eb;
+    margin-bottom: 6px;
+  }
+
+  strong {
+    font-size: 14px;
+    color: #1d4ed8;
+  }
+
+  span {
+    font-size: 11.5px;
+    color: #64748b;
+    margin-top: 2px;
+  }
+}
+
+.preview-container {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+
+  img {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .preview-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #f8fafc;
+
+    .badge-success {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #166534;
+      background: #dcfce7;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .btn-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+  }
+}
+
+.submit-footer {
+  margin-top: 8px;
+  text-align: center;
+
+  .submit-action-btn {
+    --border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    margin: 0;
+  }
+
+  .lock-hint {
+    margin: 8px 0 0;
+    font-size: 11.5px;
+    color: #dc2626;
+    font-weight: 500;
+  }
+}

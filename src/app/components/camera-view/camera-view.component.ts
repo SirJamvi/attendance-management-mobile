@@ -1,15 +1,16 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { 
-  IonButton, 
-  IonIcon, 
+import {
+  IonButton,
+  IonIcon,
   IonText,
   Platform,
-  AlertController 
+  AlertController
 } from '@ionic/angular/standalone';
-import { Camera, CameraResultType, CameraSource, Photo, CameraDirection } from '@capacitor/camera';
+import { CameraDirection } from '@capacitor/camera';
 import { addIcons } from 'ionicons';
 import { camera, refreshOutline } from 'ionicons/icons';
+import { captureCompressedPhoto } from 'src/app/utils/image-compressor';
 
 @Component({
   selector: 'app-camera-view',
@@ -19,7 +20,11 @@ import { camera, refreshOutline } from 'ionicons/icons';
   imports: [CommonModule, IonButton, IonIcon, IonText]
 })
 export class CameraViewComponent {
-  
+  @Input() direction: 'front' | 'rear' = 'front';
+  @Input() promptHeader = 'Ambil Foto Kehadiran';
+  @Input() maxWidth = 720;
+  @Input() quality = 0.5;
+
   public photoPreview: string | null = null;
   @Output() photoTaken = new EventEmitter<string | null>();
 
@@ -28,102 +33,68 @@ export class CameraViewComponent {
     private platform: Platform
   ) {
     addIcons({ camera, refreshOutline });
-    console.log('✅ CameraViewComponent initialized');
   }
 
-  // ✅ Handle click event
   async takePicture() {
-    console.log('🎥 takePicture() called - Click detected!');
     await this.openCamera();
   }
 
-  // ✅ Handle touch event (untuk mobile)
   onTouchStart(event: TouchEvent) {
-    console.log('👆 Touch detected!');
     event.preventDefault();
     this.openCamera();
   }
 
-  // ✅ Handle mouse event (untuk desktop)
   onMouseDown(event: MouseEvent) {
-    console.log('🖱️ Mouse down detected!');
+    // Kept for template compatibility
   }
 
-  // ✅ Fungsi utama untuk membuka kamera - LANGSUNG TANPA PILIHAN
   private async openCamera() {
     try {
-      console.log('📸 Opening camera directly...');
-      
-      const image: Photo = await Camera.getPhoto({
-        quality: 70, // Compress foto agar tidak terlalu besar
-        allowEditing: false,
-        resultType: CameraResultType.DataUrl,
-        
-        // ✅ UBAH INI: Gunakan CameraSource.Camera untuk langsung buka kamera
-        source: CameraSource.Camera, // Langsung buka kamera (BUKAN Prompt)
-        
-        saveToGallery: false,
-        
-        // ✅ Gunakan kamera depan (front) untuk selfie
-        direction: CameraDirection.Front,
-        
-        // ✅ Batasi ukuran foto
-        width: 800,
-        height: 800,
-        
-        // ✅ Labels untuk PWA (web)
-        promptLabelHeader: 'Ambil Foto Kehadiran',
-        promptLabelCancel: 'Batal',
-        promptLabelPicture: 'Ambil Foto',
-        
-        // ✅ Fullscreen untuk pengalaman lebih baik
-        presentationStyle: 'fullscreen'
+      const compressedDataUrl = await captureCompressedPhoto({
+        direction: this.direction === 'rear' ? CameraDirection.Rear : CameraDirection.Front,
+        maxWidth: this.maxWidth,
+        quality: this.quality,
+        promptHeader: this.promptHeader,
       });
 
-      if (image.dataUrl) {
-        console.log('✅ Foto berhasil diambil');
-        console.log('📊 Ukuran foto:', image.dataUrl.length, 'characters');
-        this.photoPreview = image.dataUrl;
-        this.photoTaken.emit(image.dataUrl);
+      if (compressedDataUrl) {
+        this.photoPreview = compressedDataUrl;
+        this.photoTaken.emit(compressedDataUrl);
       }
-
     } catch (error: any) {
       console.error('❌ Camera Error:', error);
-      
-      // Abaikan jika user cancel
-      if (error.message?.toLowerCase().includes('cancel') || 
-          error.message?.toLowerCase().includes('user denied')) {
-        console.log('User cancelled camera');
+
+      if (
+        error?.message?.toLowerCase().includes('cancel') ||
+        error?.message?.toLowerCase().includes('user denied')
+      ) {
         return;
       }
-      
-      // Tampilkan error yang lebih informatif
+
       let errorMsg = 'Gagal membuka kamera';
-      
-      if (error.message?.includes('permission')) {
+      if (error?.message?.includes('permission')) {
         errorMsg = 'Izin kamera ditolak. Mohon berikan izin akses kamera.';
-      } else if (error.message?.includes('not available')) {
+      } else if (error?.message?.includes('not available')) {
         errorMsg = 'Kamera tidak tersedia atau sedang digunakan aplikasi lain.';
-      } else if (error.message) {
+      } else if (error?.message) {
         errorMsg = error.message;
       }
-      
+
       this.showAlert('Error Kamera', errorMsg);
     }
   }
 
   retakePicture() {
-    console.log('🔄 Retake photo');
     this.photoPreview = null;
     this.photoTaken.emit(null);
   }
 
   async showAlert(header: string, message: string) {
-    const alert = await this.alertCtrl.create({ 
-      header, 
-      message, 
-      buttons: ['OK'] 
+    const alert = await this.alertCtrl.create({
+      header,
+      message,
+      buttons: ['OK']
     });
     await alert.present();
   }
-} 
+}

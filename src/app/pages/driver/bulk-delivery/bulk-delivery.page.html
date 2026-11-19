@@ -1,0 +1,430 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Laporan Delivery</ion-title>
+    <ion-buttons slot="end">
+      <app-branch-badge></app-branch-badge>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Mini Progres Bar Target Harian (Selalu Terlihat di Atas) -->
+  <ion-card *ngIf="todayData" class="mini-target-card">
+    <ion-card-content>
+      <div class="target-top">
+        <div>
+          <span class="target-label">
+            Target Hari Ini ({{ todayData.shift_type === 'helper' ? 'Helper · 13 bal' : 'Full Shift · ' + todayData.daily_ball_target + ' bal' }})
+          </span>
+          <h3>
+            <strong>{{ todayData.approved_balls_today }}</strong> / {{ todayData.daily_ball_target }} bal disetujui
+            <span *ngIf="todayData.pending_balls_today > 0" class="pending-pill">
+              +{{ todayData.pending_balls_today }} pending
+            </span>
+          </h3>
+        </div>
+        <div class="target-pct">{{ todayData.target_achievement_pct | number:'1.0-0' }}%</div>
+      </div>
+      <ion-progress-bar
+        [value]="(todayData.target_achievement_pct || 0) / 100"
+        [color]="todayData.target_achievement_pct >= 100 ? 'success' : 'primary'">
+      </ion-progress-bar>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- 3 Mode Segment -->
+  <ion-segment [(ngModel)]="activeTab" class="mode-segment">
+    <ion-segment-button value="magic_paste">
+      <ion-label>Magic Paste WA</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="manual">
+      <ion-label>Input Manual</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="progress">
+      <ion-label>Hari Ini & Riwayat</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- ========================================================= -->
+  <!-- TAB 1: MAGIC PASTE WA                                      -->
+  <!-- ========================================================= -->
+  <div *ngIf="activeTab === 'magic_paste'">
+    <ion-card class="form-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon name="sparkles-outline" color="primary" style="vertical-align: middle;"></ion-icon>
+          Tempel Teks Laporan WA
+        </ion-card-title>
+        <ion-card-subtitle>Paste format laporan pengiriman multi-baris dari grup WhatsApp</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-textarea
+          [(ngModel)]="rawWaText"
+          rows="6"
+          fill="outline"
+          placeholder="Contoh:&#10;Warung Bu Siti 20kg 2 cash 40000&#10;Es Teh Jaya 10kg 5 qris&#10;Angkringan Mas Bro 5kg 4 transfer">
+        </ion-textarea>
+
+        <ion-button
+          expand="block"
+          color="tertiary"
+          class="ion-margin-top"
+          [disabled]="isParsing"
+          (click)="parseWaText()">
+          <ion-icon name="sparkles-outline" slot="start"></ion-icon>
+          Preview / Parse Teks WA
+        </ion-button>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Hasil Parsing Editable -->
+    <div *ngIf="parsedItems.length > 0">
+      <div class="section-row">
+        <strong>Hasil Parse ({{ parsedItems.length }} baris — bisa diedit)</strong>
+        <ion-button size="small" fill="clear" (click)="addParsedRow()">
+          <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+          Tambah
+        </ion-button>
+      </div>
+
+      <ion-card *ngFor="let item of parsedItems; let i = index" class="row-card">
+        <ion-card-content>
+          <div class="row-header">
+            <span class="row-num">#{{ i + 1 }}</span>
+            <span class="row-subtotal">{{ getItemBalls(item) }} bal · {{ getItemWeightKg(item) }} kg</span>
+            <ion-button fill="clear" color="danger" size="small" (click)="removeParsedRow(i)">
+              <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+
+          <ion-item lines="full" class="compact-item">
+            <ion-input
+              label="Nama Customer *"
+              labelPlacement="stacked"
+              placeholder="Nama warung / pelanggan"
+              [(ngModel)]="item.customer_name">
+            </ion-input>
+          </ion-item>
+
+          <div class="qty-grid">
+            <div class="qty-box">
+              <label>20 kg</label>
+              <input type="number" min="0" [(ngModel)]="item.qty_20kg" />
+            </div>
+            <div class="qty-box">
+              <label>15 kg</label>
+              <input type="number" min="0" [(ngModel)]="item.qty_15kg" />
+            </div>
+            <div class="qty-box">
+              <label>10 kg</label>
+              <input type="number" min="0" [(ngModel)]="item.qty_10kg" />
+            </div>
+            <div class="qty-box">
+              <label>5 kg</label>
+              <input type="number" min="0" [(ngModel)]="item.qty_5kg" />
+            </div>
+          </div>
+
+          <div class="payment-grid">
+            <ion-item lines="full" class="compact-item">
+              <ion-select
+                label="Pembayaran"
+                labelPlacement="stacked"
+                interface="popover"
+                [(ngModel)]="item.payment_method">
+                <ion-select-option value="cash">Cash</ion-select-option>
+                <ion-select-option value="transfer">Transfer</ion-select-option>
+                <ion-select-option value="qris">QRIS</ion-select-option>
+                <ion-select-option value="kasbon">Kasbon</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <ion-item lines="full" class="compact-item">
+              <ion-input
+                type="number"
+                inputmode="numeric"
+                label="Nominal Cash (Rp)"
+                labelPlacement="stacked"
+                [(ngModel)]="item.cash_collected">
+              </ion-input>
+            </ion-item>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Armada & Bukti Foto Opsional -->
+      <ion-card class="form-card">
+        <ion-card-content>
+          <ion-item lines="full" *ngIf="vehicles.length > 0">
+            <ion-icon name="car-outline" slot="start" color="primary"></ion-icon>
+            <ion-select
+              label="Armada (Opsional)"
+              labelPlacement="stacked"
+              interface="action-sheet"
+              placeholder="Pilih motor yang digunakan"
+              [(ngModel)]="selectedVehicleId">
+              <ion-select-option *ngFor="let v of vehicles" [value]="v.id">
+                {{ v.name }} {{ v.plate_number ? '(' + v.plate_number + ')' : '' }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <div class="photo-opt-box">
+            <ion-button *ngIf="!proofPhoto" expand="block" fill="outline" size="small" (click)="takeProofPhoto()">
+              <ion-icon name="camera-outline" slot="start"></ion-icon>
+              Lampirkan Foto Bukti (Opsional)
+            </ion-button>
+            <div *ngIf="proofPhoto" class="photo-preview">
+              <img [src]="proofPhoto" alt="Bukti Delivery" />
+              <ion-button fill="clear" color="danger" size="small" (click)="clearProofPhoto()">
+                <ion-icon name="trash-outline" slot="start"></ion-icon>
+                Hapus Foto
+              </ion-button>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Ringkasan Total & Submit -->
+      <div class="summary-bar" *ngIf="getSummary(parsedItems) as sum">
+        <div>
+          <span>Total: <strong>{{ sum.totalBalls }} bal</strong> ({{ sum.totalWeight }} kg)</span>
+          <small>Total Cash: {{ sum.totalCash | currency:'IDR':'Rp ':'1.0-0' }}</small>
+        </div>
+        <ion-badge color="light">{{ sum.count }} baris</ion-badge>
+      </div>
+
+      <ion-button
+        expand="block"
+        size="large"
+        color="primary"
+        class="submit-btn"
+        [disabled]="isSubmitting"
+        (click)="submitDeliveries('magic_paste')">
+        <ion-icon name="send-outline" slot="start"></ion-icon>
+        Kirim Laporan Delivery
+      </ion-button>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- TAB 2: INPUT MANUAL MULTI-BARIS                            -->
+  <!-- ========================================================= -->
+  <div *ngIf="activeTab === 'manual'">
+    <div class="section-row">
+      <strong>Daftar Pengiriman Manual ({{ manualItems.length }} baris)</strong>
+      <ion-button size="small" fill="outline" color="primary" (click)="addManualRow()">
+        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+        Tambah Baris
+      </ion-button>
+    </div>
+
+    <ion-card *ngFor="let item of manualItems; let i = index" class="row-card">
+      <ion-card-content>
+        <div class="row-header">
+          <span class="row-num">#{{ i + 1 }}</span>
+          <span class="row-subtotal">{{ getItemBalls(item) }} bal · {{ getItemWeightKg(item) }} kg</span>
+          <ion-button fill="clear" color="danger" size="small" (click)="removeManualRow(i)">
+            <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+          </ion-button>
+        </div>
+
+        <ion-item lines="full" class="compact-item">
+          <ion-input
+            label="Nama Customer *"
+            labelPlacement="stacked"
+            placeholder="Nama warung / pelanggan"
+            [(ngModel)]="item.customer_name">
+          </ion-input>
+        </ion-item>
+
+        <div class="qty-grid">
+          <div class="qty-box">
+            <label>20 kg</label>
+            <input type="number" min="0" [(ngModel)]="item.qty_20kg" />
+          </div>
+          <div class="qty-box">
+            <label>15 kg</label>
+            <input type="number" min="0" [(ngModel)]="item.qty_15kg" />
+          </div>
+          <div class="qty-box">
+            <label>10 kg</label>
+            <input type="number" min="0" [(ngModel)]="item.qty_10kg" />
+          </div>
+          <div class="qty-box">
+            <label>5 kg</label>
+            <input type="number" min="0" [(ngModel)]="item.qty_5kg" />
+          </div>
+        </div>
+
+        <div class="payment-grid">
+          <ion-item lines="full" class="compact-item">
+            <ion-select
+              label="Pembayaran"
+              labelPlacement="stacked"
+              interface="popover"
+              [(ngModel)]="item.payment_method">
+              <ion-select-option value="cash">Cash</ion-select-option>
+              <ion-select-option value="transfer">Transfer</ion-select-option>
+              <ion-select-option value="qris">QRIS</ion-select-option>
+              <ion-select-option value="kasbon">Kasbon</ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <ion-item lines="full" class="compact-item">
+            <ion-input
+              type="number"
+              inputmode="numeric"
+              label="Nominal Cash (Rp)"
+              labelPlacement="stacked"
+              [(ngModel)]="item.cash_collected">
+            </ion-input>
+          </ion-item>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Armada & Foto Bukti Opsional -->
+    <ion-card class="form-card">
+      <ion-card-content>
+        <ion-item lines="full" *ngIf="vehicles.length > 0">
+          <ion-icon name="car-outline" slot="start" color="primary"></ion-icon>
+          <ion-select
+            label="Armada (Opsional)"
+            labelPlacement="stacked"
+            interface="action-sheet"
+            placeholder="Pilih motor yang digunakan"
+            [(ngModel)]="selectedVehicleId">
+            <ion-select-option *ngFor="let v of vehicles" [value]="v.id">
+              {{ v.name }} {{ v.plate_number ? '(' + v.plate_number + ')' : '' }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <div class="photo-opt-box">
+          <ion-button *ngIf="!proofPhoto" expand="block" fill="outline" size="small" (click)="takeProofPhoto()">
+            <ion-icon name="camera-outline" slot="start"></ion-icon>
+            Lampirkan Foto Bukti (Opsional)
+          </ion-button>
+          <div *ngIf="proofPhoto" class="photo-preview">
+            <img [src]="proofPhoto" alt="Bukti Delivery" />
+            <ion-button fill="clear" color="danger" size="small" (click)="clearProofPhoto()">
+              <ion-icon name="trash-outline" slot="start"></ion-icon>
+              Hapus Foto
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div class="summary-bar" *ngIf="getSummary(manualItems) as sum">
+      <div>
+        <span>Total: <strong>{{ sum.totalBalls }} bal</strong> ({{ sum.totalWeight }} kg)</span>
+        <small>Total Cash: {{ sum.totalCash | currency:'IDR':'Rp ':'1.0-0' }}</small>
+      </div>
+      <ion-badge color="light">{{ sum.count }} baris</ion-badge>
+    </div>
+
+    <ion-button
+      expand="block"
+      size="large"
+      color="primary"
+      class="submit-btn"
+      [disabled]="isSubmitting"
+      (click)="submitDeliveries('manual')">
+      <ion-icon name="send-outline" slot="start"></ion-icon>
+      Kirim Laporan Delivery
+    </ion-button>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- TAB 3: PROGRES HARI INI & RIWAYAT                          -->
+  <!-- ========================================================= -->
+  <div *ngIf="activeTab === 'progress'">
+    <div *ngIf="isLoadingProgress" class="center-state">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Memuat progres hari ini...</p>
+    </div>
+
+    <!-- Laporan Hari Ini -->
+    <div class="section-row">
+      <strong>Laporan Hari Ini ({{ todayData?.deliveries?.length || 0 }})</strong>
+    </div>
+
+    <div *ngIf="!todayData?.deliveries?.length" class="empty-state">
+      <p>Belum ada laporan delivery hari ini.</p>
+    </div>
+
+    <ion-card *ngFor="let d of todayData?.deliveries || []" class="history-item-card">
+      <ion-card-content>
+        <div class="h-top">
+          <strong>{{ d.customer_name }}</strong>
+          <ion-badge [color]="getStatusColor(d.status)">{{ getStatusLabel(d.status) }}</ion-badge>
+        </div>
+        <div class="h-meta">
+          <span>{{ d.total_balls }} bal ({{ d.total_weight_kg }} kg)</span>
+          <span>{{ d.payment_method | uppercase }} · {{ d.cash_collected | currency:'IDR':'Rp ':'1.0-0' }}</span>
+        </div>
+        <div *ngIf="d.status === 'rejected' && d.rejection_reason" class="reject-box">
+          Alasan ditolak KO: {{ d.rejection_reason }}
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Riwayat Bulanan -->
+    <div class="section-row ion-margin-top">
+      <strong>Riwayat & Ringkasan Bulanan</strong>
+      <div class="month-picker">
+        <input type="month" [(ngModel)]="historyMonth" (change)="loadDeliveryHistory()" />
+      </div>
+    </div>
+
+    <ion-card *ngIf="historyData?.summary" class="monthly-summary-card">
+      <ion-card-content>
+        <div class="monthly-grid">
+          <div>
+            <span>Total Trip</span>
+            <strong>{{ historyData!.summary!.total_trips || 0 }}</strong>
+          </div>
+          <div>
+            <span>Total Bal</span>
+            <strong>{{ historyData!.summary!.total_balls || 0 }}</strong>
+          </div>
+          <div>
+            <span>Total Berat</span>
+            <strong>{{ historyData!.summary!.total_weight_kg || 0 }} kg</strong>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <div *ngIf="!historyData?.deliveries?.length" class="empty-state">
+      <p>Belum ada riwayat delivery untuk bulan ini.</p>
+    </div>
+
+    <ion-card *ngFor="let h of historyData?.deliveries || []" class="history-item-card">
+      <ion-card-content>
+        <div class="h-top">
+          <div>
+            <strong>{{ h.customer_name }}</strong>
+            <div class="h-date">{{ h.delivery_date || (h.created_at | date:'dd MMM yyyy') }}</div>
+          </div>
+          <ion-badge [color]="getStatusColor(h.status)">{{ getStatusLabel(h.status) }}</ion-badge>
+        </div>
+        <div class="h-meta">
+          <span>{{ h.total_balls }} bal ({{ h.total_weight_kg }} kg)</span>
+          <span>{{ h.payment_method | uppercase }} · {{ h.cash_collected | currency:'IDR':'Rp ':'1.0-0' }}</span>
+        </div>
+        <div *ngIf="h.status === 'rejected' && h.rejection_reason" class="reject-box">
+          Ditolak: {{ h.rejection_reason }}
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div style="height: 84px;"></div>
+</ion-content>

@@ -31,15 +31,17 @@ export class CashAdvancePage implements OnInit {
     this.loadHistory();
   }
 
-  loadHistory() {
-    this.isLoading = true;
+  loadHistory(event?: any) {
+    if (!event && this.history.length === 0) this.isLoading = true;
     this.cashAdvanceService.getHistory().subscribe({
       next: (res: any) => {
         this.history = res.data;
         this.isLoading = false;
+        if (event) event.target.complete();
       },
       error: (err) => {
         this.isLoading = false;
+        if (event) event.target.complete();
         this.showToast('Gagal memuat riwayat kasbon.', 'danger');
       }
     });

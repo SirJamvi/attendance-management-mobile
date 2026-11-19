@@ -3,12 +3,15 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/driver"></ion-back-button>
     </ion-buttons>
-    <ion-title>Gaji & Insentif</ion-title>
+    <ion-title>Gaji & Target Bal</ion-title>
+    <ion-buttons slot="end">
+      <app-branch-badge></app-branch-badge>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding-bottom bg-light">
-  
+
   <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
@@ -25,7 +28,7 @@
   </div>
 
   <div *ngIf="!isLoading && !errorMsg && salaryData">
-    
+
     <div *ngIf="salaryData.severe_warning" class="ion-padding-horizontal ion-padding-top">
       <ion-card color="danger" class="ion-no-margin shadow-sm">
         <ion-card-content class="d-flex align-items-start">
@@ -39,6 +42,7 @@
         </ion-card-content>
       </ion-card>
     </div>
+
     <div class="ion-padding-start ion-padding-top mb-2">
       <ion-text color="medium">
         <small class="text-uppercase fw-bold">Periode Berjalan</small>
@@ -52,10 +56,49 @@
         <h1 class="fw-bold display-amount">
           {{ salaryData.final_salary | currency:'IDR':'Rp ':'1.0-0' }}
         </h1>
-        
+
         <div class="shift-badge">
           <ion-icon name="time-outline" class="me-1"></ion-icon>
           {{ salaryData.shift_info }}
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- KARTU BARU: KPI PENGIRIMAN BULAN INI (delivery_kpi) -->
+    <ion-card *ngIf="salaryData.delivery_kpi as kpi" style="margin: 12px 16px; border-radius: 14px; border-left: 4px solid var(--ion-color-primary);">
+      <ion-card-header style="padding-bottom: 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <div>
+            <ion-card-subtitle color="primary" style="font-weight: 700;">KPI PENGIRIMAN BULAN INI</ion-card-subtitle>
+            <ion-card-title style="font-size: 1.05rem; margin-top: 2px;">
+              {{ kpi.total_balls }} / {{ kpi.target_balls_period }} Bal
+            </ion-card-title>
+          </div>
+          <ion-badge [color]="kpi.target_achievement_percent >= 100 ? 'success' : 'primary'" style="font-size: 0.9rem; padding: 6px 10px;">
+            {{ kpi.target_achievement_percent | number:'1.0-1' }}%
+          </ion-badge>
+        </div>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-progress-bar
+          [value]="deliveryKpiProgress"
+          [color]="kpi.target_achievement_percent >= 100 ? 'success' : 'primary'"
+          style="height: 8px; border-radius: 999px; margin-bottom: 12px;">
+        </ion-progress-bar>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center;">
+          <div style="background: #f8fafc; padding: 8px 6px; border-radius: 10px;">
+            <div style="font-size: 11px; color: #64748b;">Total Trip</div>
+            <strong style="font-size: 1rem; color: #0f172a;">{{ kpi.total_trips }}</strong>
+          </div>
+          <div style="background: #f8fafc; padding: 8px 6px; border-radius: 10px;">
+            <div style="font-size: 11px; color: #64748b;">Total Bal</div>
+            <strong style="font-size: 1rem; color: #0f172a;">{{ kpi.total_balls }}</strong>
+          </div>
+          <div style="background: #f8fafc; padding: 8px 6px; border-radius: 10px;">
+            <div style="font-size: 11px; color: #64748b;">Hari Capai Target</div>
+            <strong style="font-size: 1rem; color: #16a34a;">{{ kpi.days_hit_target }} hari</strong>
+          </div>
         </div>
       </ion-card-content>
     </ion-card>
@@ -90,7 +133,7 @@
           {{ salaryData.total_attendance }} Hari
         </ion-note>
       </ion-item>
-      
+
       <ion-item *ngIf="salaryData.total_overtime > 0">
         <div slot="start" class="icon-box bg-primary-light">
           <ion-icon name="cash-outline" color="primary"></ion-icon>
@@ -168,5 +211,6 @@
       </p>
     </div>
 
+    <div style="height: 80px;"></div>
   </div>
 </ion-content>

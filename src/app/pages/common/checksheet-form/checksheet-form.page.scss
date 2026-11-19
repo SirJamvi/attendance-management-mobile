@@ -1,0 +1,206 @@
+ion-content {
+  --background: #f4f6f9;
+}
+
+.center-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 48px 20px;
+  color: #64748b;
+  gap: 12px;
+}
+
+.form-container {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.info-card {
+  margin: 0 0 12px;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  ion-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+}
+
+.gps-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8fafc;
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+
+.gps-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #475569;
+}
+
+.blind-count-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  color: #1e3a8a;
+
+  ion-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.92rem;
+    margin-bottom: 2px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+}
+
+.field-card {
+  margin: 0 0 10px;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+
+  ion-card-content {
+    padding: 10px 12px;
+  }
+}
+
+.field-label-wrap {
+  white-space: normal;
+
+  strong {
+    font-size: 0.94rem;
+    color: #1e293b;
+  }
+}
+
+.req-star {
+  color: #ef4444;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.help-text {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.currency-preview {
+  padding: 6px 14px 2px;
+  font-size: 13px;
+  color: #0f766e;
+}
+
+.photo-field {
+  padding: 4px;
+}
+
+.photo-header {
+  margin-bottom: 10px;
+
+  strong {
+    font-size: 0.94rem;
+    color: #1e293b;
+  }
+}
+
+.photo-preview-box {
+  text-align: center;
+
+  img {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+  }
+}
+
+.photo-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.submit-btn {
+  margin-top: 16px;
+  --border-radius: 12px;
+  font-weight: 700;
+}
+
+.recon-hero {
+  text-align: center;
+  padding: 12px 0 16px;
+
+  h2 {
+    margin: 8px 0 8px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+}
+
+.recon-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  color: #991b1b;
+
+  ion-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.85rem;
+  }
+}
+
+.recon-card {
+  margin: 0;
+  border-radius: 14px;
+}
+
+.recon-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 0.92rem;
+  color: #334155;
+
+  &.divider {
+    border-top: 1px dashed #cbd5e1;
+    margin-top: 4px;
+    padding-top: 14px;
+  }
+}

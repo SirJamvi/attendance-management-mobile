@@ -62,7 +62,9 @@ export class SalesHistoryPage implements OnInit {
    * Load Data dari API
    */
   loadHistory(event?: any) {
-    this.isLoading = true;
+    if (!event && this.attendanceHistory.length === 0 && this.visitHistory.length === 0) {
+      this.isLoading = true;
+    }
 
     // Format YYYY-MM-DD
     const start = this.startDate.split('T')[0];

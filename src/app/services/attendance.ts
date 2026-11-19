@@ -1,47 +1,72 @@
 import { Injectable } from '@angular/core';
+import { BehaviorSubject, tap } from 'rxjs';
 import { ApiClient } from './api-client';
-import { Attendance as AttendanceData, ApiResponse } from '../types/api.types';
+import {
+  Attendance as AttendanceData,
+  ApiResponse,
+  AttendanceStatusMeta,
+  CheckoutEligibility,
+} from '../types/api.types';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AttendanceService {
+  private checkoutEligibilitySubject = new BehaviorSubject<CheckoutEligibility | null>(null);
+  public readonly checkoutEligibility$ = this.checkoutEligibilitySubject.asObservable();
+
   constructor(private apiClient: ApiClient) {}
 
   getStatus() {
-    return this.apiClient.get<ApiResponse<AttendanceData | null>>('attendance/status');
+    return this.apiClient
+      .get<ApiResponse<AttendanceData | null, AttendanceStatusMeta>>('attendance/status')
+      .pipe(
+        tap((response) => {
+          if (response?.meta && 'checkout_eligibility' in response.meta) {
+            this.checkoutEligibilitySubject.next(response.meta.checkout_eligibility ?? null);
+          }
+        })
+      );
   }
 
-  checkIn(photoBase64: string, latitude: number, longitude: number) {
-    const body = {
+  updateCheckoutEligibility(eligibility: CheckoutEligibility | null | undefined) {
+    if (eligibility !== undefined) {
+      this.checkoutEligibilitySubject.next(eligibility);
+    }
+  }
+
+  getCheckoutEligibilityValue(): CheckoutEligibility | null {
+    return this.checkoutEligibilitySubject.value;
+  }
+
+  checkIn(photoBase64: string, latitude: number, longitude: number, emergencyNote?: string) {
+    const body: Record<string, any> = {
       photo: photoBase64,
-      latitude: latitude,
-      longitude: longitude,
+      latitude,
+      longitude,
     };
+    if (emergencyNote && emergencyNote.trim()) {
+      body['emergency_note'] = emergencyNote.trim();
+    }
     return this.apiClient.post<ApiResponse<AttendanceData>>('attendance/check-in', body);
   }
 
   checkOut(photoBase64: string, latitude: number, longitude: number) {
     const body = {
       photo: photoBase64,
-      latitude: latitude,
-      longitude: longitude,
+      latitude,
+      longitude,
     };
     return this.apiClient.post<ApiResponse<AttendanceData>>('attendance/check-out', body);
   }
 
   getHistory(startDate?: string, endDate?: string) {
-    let url = 'driver/history';
-    const params: string[] = [];
-    if (startDate) params.push(`start_date=${startDate}`);
-    if (endDate) params.push(`end_date=${endDate}`);
-    if (params.length > 0) {
-      url += '?' + params.join('&');
-    }
-    return this.apiClient.get<any>(url);
+    return this.apiClient.get<any>('driver/history', {
+      start_date: startDate,
+      end_date: endDate,
+    });
   }
 
-  // ✅ FUNGSI BARU: Ambil daftar misi aktif beserta klasemennya
   getActiveMissions() {
     return this.apiClient.get<any>('driver/missions');
   }

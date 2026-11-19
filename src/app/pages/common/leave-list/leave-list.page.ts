@@ -61,6 +61,7 @@ export class LeaveListPage implements OnInit {
    * Mengambil data cuti dari API
    */
   async loadLeaveData(event?: any) {
+    if (!event && !this.leaveData) this.isLoading = true;
     this.leaveService.getLeaveData().subscribe({
       next: (response) => {
         this.leaveData = response.data;

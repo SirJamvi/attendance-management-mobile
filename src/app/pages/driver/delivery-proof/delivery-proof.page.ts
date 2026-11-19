@@ -5,8 +5,9 @@ import { IonicModule, LoadingController, ToastController, NavController } from '
 import { DeliveryService } from 'src/app/services/delivery';
 
 // Plugin Capacitor untuk Kamera & GPS
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { CameraDirection } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
+import { captureCompressedPhoto } from 'src/app/utils/image-compressor';
 
 @Component({
   selector: 'app-delivery-proof',
@@ -50,22 +51,23 @@ export class DeliveryProofPage {
     }
   }
 
-  // 2. Buka Kamera dan Ambil Foto Base64
+  // 2. Buka Kamera dan Ambil Foto Base64 terkompresi (max 1280px, quality 75%)
   async takePicture() {
     try {
-      const image = await Camera.getPhoto({
-        quality: 60, // Kompresi agar tidak terlalu berat saat dikirim
-        allowEditing: false,
-        resultType: CameraResultType.Base64,
-        source: CameraSource.Camera // Paksa buka kamera (bukan galeri)
+      const compressed = await captureCompressedPhoto({
+        direction: CameraDirection.Rear,
+        maxWidth: 1280,
+        quality: 0.75,
+        promptHeader: 'Ambil Bukti Pengiriman',
       });
 
-      // Backend Laravel kita membutuhkan prefix data URI
-      this.previewImage = `data:image/jpeg;base64,${image.base64String}`;
-      this.formData.proof_image = this.previewImage;
+      if (compressed) {
+        this.previewImage = compressed;
+        this.formData.proof_image = compressed;
 
-      // Ambil GPS secara diam-diam setelah foto diambil
-      this.getLocation();
+        // Ambil GPS secara diam-diam setelah foto diambil
+        this.getLocation();
+      }
     } catch (error) {
       console.error('Kamera dibatalkan / error', error);
     }

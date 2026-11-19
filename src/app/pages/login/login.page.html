@@ -1,49 +1,46 @@
 <ion-content [fullscreen]="true" class="login-bg">
-  
   <div class="login-wrapper">
-    
+
     <!-- Logo & Header -->
     <div class="login-header">
       <h1 class="company-name">Adin Crystal</h1>
-      <h2 class="app-title">Attendance Mobile</h2>
+      <h2 class="app-title">Attendance & Operasional</h2>
       <p class="app-subtitle">Silakan login untuk melanjutkan</p>
     </div>
 
     <!-- Login Card -->
     <div class="login-card">
-      
-      <!-- Form Login -->
       <div class="login-form">
-        
-        <!-- Username -->
+
+        <!-- Username / Nama / Email -->
         <ion-item lines="none" class="input-item">
-          <ion-label position="floating">Username</ion-label>
-          <ion-input 
-            type="text" 
-            [(ngModel)]="username" 
-            name="username" 
+          <ion-label position="floating">Username / Nama / Email</ion-label>
+          <ion-input
+            type="text"
+            [(ngModel)]="username"
+            name="username"
             required
             autocomplete="username"
-            placeholder="Masukkan username">
+            placeholder="Username, nama, atau email">
           </ion-input>
         </ion-item>
 
         <!-- Password -->
         <ion-item lines="none" class="input-item password-item">
           <ion-label position="floating">Password</ion-label>
-          <ion-input 
-            [type]="showPassword ? 'text' : 'password'" 
-            [(ngModel)]="password" 
-            name="password" 
+          <ion-input
+            [type]="showPassword ? 'text' : 'password'"
+            [(ngModel)]="password"
+            name="password"
             required
             autocomplete="current-password"
+            (keyup.enter)="onLogin()"
             placeholder="Masukkan password">
           </ion-input>
-          <ion-icon 
-            slot="end" 
-            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" 
-            (click)="togglePassword()"
-            (touchstart)="togglePassword()"
+          <ion-icon
+            slot="end"
+            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
+            (click)="togglePassword($event)"
             class="password-toggle"
             [attr.aria-label]="showPassword ? 'Sembunyikan password' : 'Tampilkan password'"
             style="pointer-events: auto; z-index: 999; cursor: pointer;">
@@ -58,27 +55,48 @@
         </div>
 
         <!-- Login Button -->
-        <ion-button 
-          expand="block" 
-          size="large" 
-          (click)="onLogin()" 
-          [disabled]="isSubmitting" 
+        <ion-button
+          expand="block"
+          size="large"
+          (click)="onLogin()"
+          [disabled]="isSubmitting || isGoogleSubmitting"
           class="login-button">
           <span *ngIf="!isSubmitting">MASUK</span>
           <ion-spinner *ngIf="isSubmitting" name="crescent"></ion-spinner>
         </ion-button>
 
-      </div>
+        <!-- Divider Atau -->
+        <div class="login-divider">
+          <span>atau</span>
+        </div>
 
+        <!-- Google Login Button -->
+        <button
+          type="button"
+          class="google-login-btn"
+          [disabled]="isSubmitting || isGoogleSubmitting"
+          (click)="onGoogleLogin()">
+          <span class="google-icon-wrapper" *ngIf="!isGoogleSubmitting">
+            <svg viewBox="0 0 48 48" width="22" height="22">
+              <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+              <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+              <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+              <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+            </svg>
+          </span>
+          <ion-spinner *ngIf="isGoogleSubmitting" name="crescent" color="primary"></ion-spinner>
+          <span class="google-text" *ngIf="!isGoogleSubmitting">Masuk dengan Google</span>
+        </button>
+
+      </div>
     </div>
 
     <!-- Footer -->
     <div class="login-footer">
       <ion-text color="light">
-        <small>Versi 1.0.0 | © 2025 Attendance System</small>
+        <small>Versi 2.0.0 | © 2026 Adin Crystal</small>
       </ion-text>
     </div>
 
   </div>
-
 </ion-content>

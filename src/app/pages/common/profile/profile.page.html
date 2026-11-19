@@ -1,17 +1,16 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
-    <ion-title>Profile</ion-title>
+    <ion-title>Profil</ion-title>
+    <ion-buttons slot="end">
+      <app-branch-badge></app-branch-badge>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  
   <div class="profile-container">
-    
-    <!-- Profile Card -->
+
     <ion-card class="profile-card">
-      
-      <!-- Header with Avatar -->
       <div class="profile-header">
         <ion-avatar class="profile-avatar">
           <ion-icon name="person"></ion-icon>
@@ -22,10 +21,7 @@
         </ion-text>
       </div>
 
-      <!-- User Info -->
       <ion-card-content class="profile-content">
-        
-        <!-- Username -->
         <div class="info-row">
           <ion-icon name="person" color="primary"></ion-icon>
           <div class="info-text">
@@ -34,16 +30,22 @@
           </div>
         </div>
 
-        <!-- Email (if exists) - FIXED NULL CHECK -->
         <div class="info-row" *ngIf="user && user.email">
           <ion-icon name="mail" color="primary"></ion-icon>
           <div class="info-text">
             <p class="info-label">EMAIL</p>
-            <h3 class="info-value">{{ user?.email || '-' }}</h3>
+            <h3 class="info-value">{{ user.email }}</h3>
           </div>
         </div>
 
-        <!-- Role -->
+        <div class="info-row" *ngIf="user && user.branch_name">
+          <ion-icon name="storefront-outline" color="primary"></ion-icon>
+          <div class="info-text">
+            <p class="info-label">CABANG</p>
+            <h3 class="info-value">{{ user.branch_name }}</h3>
+          </div>
+        </div>
+
         <div class="info-row">
           <ion-icon name="briefcase" color="primary"></ion-icon>
           <div class="info-text">
@@ -51,15 +53,12 @@
             <h3 class="info-value">{{ getRoleName() }}</h3>
           </div>
         </div>
-
       </ion-card-content>
-
     </ion-card>
 
-    <!-- Logout Button -->
-    <ion-button 
-      expand="block" 
-      color="danger" 
+    <ion-button
+      expand="block"
+      color="danger"
       size="large"
       class="logout-btn"
       (click)="confirmLogout()">
@@ -68,5 +67,4 @@
     </ion-button>
 
   </div>
-
 </ion-content>

@@ -2,15 +2,20 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { 
-  IonContent, IonItem, IonLabel, 
-  IonInput, IonButton, IonIcon, IonText, IonSpinner, ToastController 
+import {
+  IonContent, IonItem, IonLabel,
+  IonInput, IonButton, IonIcon, IonText, IonSpinner,
+  ToastController, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { eye, eyeOff, eyeOutline, eyeOffOutline, logIn } from 'ionicons/icons';
+import { eye, eyeOff, eyeOutline, eyeOffOutline, logIn, logoGoogle } from 'ionicons/icons';
 
 import { AuthService } from 'src/app/services/auth';
 import { Storage } from 'src/app/services/storage';
+import { User } from 'src/app/types/api.types';
+import { environment } from 'src/environments/environment';
+
+declare const google: any;
 
 @Component({
   selector: 'app-login',
@@ -18,18 +23,20 @@ import { Storage } from 'src/app/services/storage';
   styleUrls: ['./login.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
+    CommonModule,
+    FormsModule,
     IonContent,
     IonItem, IonLabel, IonInput, IonButton, IonIcon, IonText, IonSpinner
   ]
 })
 export class LoginPage implements OnInit {
   private storage = inject(Storage);
-  
+  private alertCtrl = inject(AlertController);
+
   username = '';
   password = '';
   isSubmitting = false;
+  isGoogleSubmitting = false;
   showPassword = false;
   errorMessage = '';
 
@@ -37,108 +44,236 @@ export class LoginPage implements OnInit {
     private authService: AuthService,
     private router: Router,
     private toastCtrl: ToastController
-  ) { 
-    // Menambahkan icon outline juga
-    addIcons({ eye, eyeOff, eyeOutline, eyeOffOutline, logIn });
+  ) {
+    addIcons({ eye, eyeOff, eyeOutline, eyeOffOutline, logIn, logoGoogle });
   }
 
-  ngOnInit() {
-    console.log('🔐 Login page initialized');
-  }
+  ngOnInit() {}
 
-  /**
-   * Toggle visibility password
-   */
   togglePassword(event?: Event) {
-    // Prevent event bubbling
     if (event) {
       event.stopPropagation();
       event.preventDefault();
     }
-    
     this.showPassword = !this.showPassword;
-    console.log('👁️ Password visibility toggled:', this.showPassword ? 'VISIBLE' : 'HIDDEN');
-    console.log('👁️ Current showPassword value:', this.showPassword);
   }
 
   async onLogin() {
-    // Validasi input
     if (!this.username || !this.password) {
-      this.errorMessage = 'Username dan Password wajib diisi.';
+      this.errorMessage = 'Username/Nama/Email dan Password wajib diisi.';
       return;
     }
 
-    // Trim whitespace
     this.username = this.username.trim();
     this.password = this.password.trim();
 
     this.isSubmitting = true;
     this.errorMessage = '';
 
-    console.log('🔐 Attempting login...');
-
     this.authService.login(this.username, this.password).subscribe({
       next: async (response) => {
-        console.log('📥 Login response received:', response);
         this.isSubmitting = false;
-        
-        if (response.success) {
-          console.log('✅ Login successful!');
-          
-          // Double check: Apakah token benar-benar tersimpan?
-          setTimeout(async () => {
-            const savedToken = await this.storage.getToken();
-            console.log('🔍 Double check - Token tersimpan?', savedToken ? 'YES' : 'NO');
-            
-            if (!savedToken) {
-              console.error('❌ CRITICAL: Token tidak tersimpan setelah login!');
-              await this.showToast('Error: Token tidak tersimpan. Coba login lagi.', 'danger');
-              return;
-            }
-            
-            console.log('✅ Token verified, redirecting...');
-            await this.showToast('Login Berhasil!', 'success');
-            this.redirectUser(response.data.user);
-          }, 500);
+
+        if (response.success && response.data?.user) {
+          const savedToken = await this.storage.getToken();
+          if (!savedToken) {
+            await this.showToast('Error: Token tidak tersimpan. Coba login lagi.', 'danger');
+            return;
+          }
+
+          await this.showToast(
+            `Login Berhasil!${response.data.user.branch_name ? ' (' + response.data.user.branch_name + ')' : ''}`,
+            'success'
+          );
+          await this.redirectUser(response.data.user);
+        } else {
+          this.errorMessage = response.message || 'Login gagal.';
         }
       },
-      error: (err) => {
+      error: async (err) => {
         this.isSubmitting = false;
         console.error('❌ Login error:', err);
-        
-        const apiMsg = err.error?.message || err.error?.data?.error || 'Login gagal. Periksa koneksi atau kredensial Anda.';
+
+        // Role Guard: HTTP 403 WEB_ONLY_ROLE (Owner / Admin)
+        if (err.status === 403 && err.error?.data?.code === 'WEB_ONLY_ROLE') {
+          const webOnlyMsg = 'Akun Owner/Admin hanya dapat diakses melalui Website Monitoring.';
+          this.errorMessage = webOnlyMsg;
+          await this.showRoleGuardAlert(webOnlyMsg);
+          return;
+        }
+
+        if (err.status === 403) {
+          const forbiddenMsg =
+            err.error?.message || 'Akun Owner/Admin hanya dapat diakses melalui Website Monitoring.';
+          this.errorMessage = forbiddenMsg;
+          await this.showRoleGuardAlert(forbiddenMsg);
+          return;
+        }
+
+        const apiMsg =
+          err.error?.message ||
+          err.error?.data?.error ||
+          'Login gagal. Periksa koneksi atau kredensial Anda.';
         this.errorMessage = apiMsg;
-        this.showToast(apiMsg, 'danger');
+        await this.showToast(apiMsg, 'danger');
       }
     });
   }
 
-  /**
-   * Redirect user berdasarkan role
-   */
-  redirectUser(user: any) {
-    console.log('🚀 Redirecting user with role:', user.role);
-    
-    // Cek langsung string role karena DB Buku Digital mengirimkan string, bukan objek
-    if (user.role === 'driver') {
-      this.router.navigate(['/tabs/driver'], { replaceUrl: true });
-    } else if (user.role === 'sales') {
-      this.router.navigate(['/tabs/sales'], { replaceUrl: true });
+  async onGoogleLogin() {
+    this.errorMessage = '';
+    const clientId = environment.googleClientId;
+
+    if (clientId && typeof window !== 'undefined') {
+      await this.triggerGoogleOneTap(clientId);
     } else {
-      console.error('❌ Unknown role:', user.role);
-      this.errorMessage = 'Role akun tidak dikenali untuk aplikasi mobile.';
-      this.authService.logout();
+      // Tampilkan dialog Google ID Token atau panduan jika belum di-set
+      await this.showGoogleTokenPrompt();
     }
   }
 
-  /**
-   * Menampilkan toast message
-   */
+  private async triggerGoogleOneTap(clientId: string) {
+    this.isGoogleSubmitting = true;
+    try {
+      await this.loadGoogleScript();
+
+      if (typeof google !== 'undefined' && google.accounts?.id) {
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response: any) => {
+            if (response?.credential) {
+              this.processGoogleLogin(response.credential);
+            } else {
+              this.isGoogleSubmitting = false;
+            }
+          },
+        });
+        google.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            this.isGoogleSubmitting = false;
+            this.showGoogleTokenPrompt();
+          }
+        });
+      } else {
+        this.isGoogleSubmitting = false;
+        await this.showGoogleTokenPrompt();
+      }
+    } catch (e) {
+      this.isGoogleSubmitting = false;
+      await this.showGoogleTokenPrompt();
+    }
+  }
+
+  private loadGoogleScript(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (typeof google !== 'undefined' && google.accounts) {
+        resolve();
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve();
+      script.onerror = (err) => reject(err);
+      document.body.appendChild(script);
+    });
+  }
+
+  private async showGoogleTokenPrompt() {
+    const alert = await this.alertCtrl.create({
+      header: 'Masuk dengan Google',
+      message: 'Masukkan ID Token Google akun Anda untuk otentikasi ke server staging:',
+      inputs: [
+        {
+          name: 'id_token',
+          type: 'textarea',
+          placeholder: 'Tempel Google id_token di sini...',
+        },
+      ],
+      buttons: [
+        { text: 'Batal', role: 'cancel' },
+        {
+          text: 'Masuk',
+          handler: (data) => {
+            const token = (data?.id_token || '').trim();
+            if (token) {
+              this.processGoogleLogin(token);
+              return true;
+            }
+            this.showToast('ID Token Google tidak boleh kosong.', 'warning');
+            return false;
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private processGoogleLogin(idToken: string) {
+    this.isGoogleSubmitting = true;
+    this.errorMessage = '';
+
+    this.authService.loginWithGoogle(idToken).subscribe({
+      next: async (response) => {
+        this.isGoogleSubmitting = false;
+        if (response.success && response.data?.user) {
+          await this.showToast('Login Google Berhasil!', 'success');
+          await this.redirectUser(response.data.user);
+        } else {
+          this.errorMessage = response.message || 'Login Google gagal.';
+        }
+      },
+      error: async (err) => {
+        this.isGoogleSubmitting = false;
+        console.error('❌ Google Login error:', err);
+
+        if (err.status === 403 && err.error?.data?.code === 'WEB_ONLY_ROLE') {
+          const webOnlyMsg = 'Akun Owner/Admin hanya dapat diakses melalui Website Monitoring.';
+          this.errorMessage = webOnlyMsg;
+          await this.showRoleGuardAlert(webOnlyMsg);
+          return;
+        }
+
+        const msg = err.error?.message || err.error?.data?.error || 'Login Google gagal diverifikasi di server.';
+        this.errorMessage = msg;
+        await this.showToast(msg, 'danger');
+      }
+    });
+  }
+
+  async redirectUser(user: User) {
+    if (this.authService.isWebOnlyRole(user.role)) {
+      const msg = 'Akun Owner/Admin hanya dapat diakses melalui Website Monitoring.';
+      this.errorMessage = msg;
+      await this.authService.logout();
+      await this.showRoleGuardAlert(msg);
+      return;
+    }
+
+    const targetRoute = this.authService.getDefaultRouteForRole(user.role);
+    if (targetRoute !== '/login') {
+      this.router.navigate([targetRoute], { replaceUrl: true });
+    } else {
+      this.errorMessage = 'Role akun tidak dikenali untuk aplikasi mobile.';
+      await this.authService.logout();
+    }
+  }
+
+  async showRoleGuardAlert(message: string) {
+    const alert = await this.alertCtrl.create({
+      header: 'Akses Dibatasi',
+      message,
+      buttons: ['Mengerti']
+    });
+    await alert.present();
+  }
+
   async showToast(message: string, color: 'success' | 'danger' | 'warning') {
     const toast = await this.toastCtrl.create({
-      message: message,
-      duration: 2000,
-      color: color,
+      message,
+      duration: 2500,
+      color,
       position: 'bottom'
     });
     await toast.present();

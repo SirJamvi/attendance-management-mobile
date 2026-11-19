@@ -1,0 +1,119 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/ko/deliveries"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Detail Delivery</ion-title>
+    <ion-buttons slot="end">
+      <app-branch-badge></app-branch-badge>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <div *ngIf="isLoading" class="center-state">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Memuat detail...</p>
+  </div>
+
+  <div *ngIf="!isLoading && errorMsg" class="center-state">
+    <ion-icon name="alert-circle-outline" color="danger" style="font-size: 44px;"></ion-icon>
+    <p>{{ errorMsg }}</p>
+    <ion-button fill="outline" size="small" (click)="loadDetail()">Coba Lagi</ion-button>
+  </div>
+
+  <div *ngIf="!isLoading && !errorMsg && item">
+    <ion-card class="detail-card">
+      <ion-card-header>
+        <div class="header-row">
+          <div>
+            <ion-card-title>{{ item.customer_name }}</ion-card-title>
+            <ion-card-subtitle>Driver: {{ item.driver_name }}</ion-card-subtitle>
+          </div>
+          <ion-badge [color]="getStatusColor(item.status)">
+            {{ item.status | uppercase }}
+          </ion-badge>
+        </div>
+      </ion-card-header>
+      <ion-card-content class="ion-no-padding">
+        <ion-list lines="full">
+          <ion-item>
+            <ion-label>Tanggal</ion-label>
+            <ion-note slot="end">{{ item.delivery_date || (item.created_at | date:'dd MMM yyyy HH:mm') }}</ion-note>
+          </ion-item>
+          <ion-item *ngIf="item.vehicle_name">
+            <ion-label>Armada</ion-label>
+            <ion-note slot="end">{{ item.vehicle_name }}</ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label>Bal 20 kg / 15 kg / 10 kg / 5 kg</ion-label>
+            <ion-note slot="end">
+              {{ item.qty_20kg }} / {{ item.qty_15kg }} / {{ item.qty_10kg }} / {{ item.qty_5kg }}
+            </ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label>Total Bal & Berat</ion-label>
+            <ion-note slot="end" color="dark">
+              <strong>{{ item.total_balls }} bal ({{ item.total_weight_kg }} kg)</strong>
+            </ion-note>
+          </ion-item>
+          <ion-item>
+            <ion-label>Metode Pembayaran</ion-label>
+            <ion-note slot="end" color="primary"><strong>{{ item.payment_method | uppercase }}</strong></ion-note>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Cash Diterima</ion-label>
+            <ion-note slot="end" color="success">
+              <strong>{{ item.cash_collected | currency:'IDR':'Rp ':'1.0-0' }}</strong>
+            </ion-note>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card *ngIf="item.rejection_reason" color="danger" class="detail-card">
+      <ion-card-content>
+        <strong>Alasan Penolakan:</strong>
+        <p style="margin: 4px 0 0;">{{ item.rejection_reason }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Teks WA Asli -->
+    <ion-card *ngIf="item.raw_wa_text" class="detail-card">
+      <ion-card-header>
+        <ion-card-title style="font-size: 0.95rem;">
+          <ion-icon name="chatbubble-ellipses-outline" style="vertical-align: middle;"></ion-icon>
+          Teks Asli WhatsApp (Magic Paste)
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <pre class="raw-wa-box">{{ item.raw_wa_text }}</pre>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Foto Bukti -->
+    <ion-card *ngIf="proofImageSrc" class="detail-card">
+      <ion-card-header>
+        <ion-card-title style="font-size: 0.95rem;">
+          <ion-icon name="image-outline" style="vertical-align: middle;"></ion-icon>
+          Foto Bukti Pengiriman
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <img [src]="proofImageSrc" alt="Bukti Pengiriman" class="proof-img" />
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Action Buttons if Pending -->
+    <div *ngIf="item.status === 'pending'" class="action-bar">
+      <ion-button expand="block" fill="outline" color="danger" (click)="reject()">
+        <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+        Tolak (Reject)
+      </ion-button>
+      <ion-button expand="block" color="success" (click)="approve()">
+        <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+        Setujui (Approve)
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

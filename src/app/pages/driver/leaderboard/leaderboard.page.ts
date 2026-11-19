@@ -27,7 +27,7 @@ export class LeaderboardPage implements OnInit {
 
   // Fungsi untuk hit API
   fetchLeaderboard() {
-    this.isLoading = true;
+    if (!this.leaderboardData) this.isLoading = true;
     this.errorMessage = '';
 
     this.deliveryService.getLeaderboard().subscribe({

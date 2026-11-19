@@ -4,11 +4,18 @@
       <ion-back-button defaultHref="/tabs"></ion-back-button>
     </ion-buttons>
     <ion-title>Presensi Harian</ion-title>
+    <ion-buttons slot="end">
+      <app-branch-badge></app-branch-badge>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true" class="ion-padding-bottom">
-  
+
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
   <div *ngIf="isLoading" class="loading-overlay">
     <app-loading-spinner message="Memuat data..."></app-loading-spinner>
   </div>
@@ -16,7 +23,7 @@
   <div *ngIf="!isLoading" class="content-wrapper ion-padding">
 
     <!-- PERINGATAN EVALUASI -->
-    <ion-card *ngIf="hasSevereWarning" color="danger" class="ion-margin-bottom animate__animated animate__pulse">
+    <ion-card *ngIf="hasSevereWarning" color="danger" class="ion-margin-bottom">
       <ion-card-content class="d-flex align-items-center">
         <ion-icon name="warning-outline" style="font-size: 2.5rem; margin-right: 15px;"></ion-icon>
         <div>
@@ -31,7 +38,7 @@
     <!-- INFO SHIFT -->
     <ion-card *ngIf="shiftInfo" [color]="isDayOff ? 'medium' : 'primary'" class="ion-margin-bottom">
       <ion-card-content class="ion-text-center">
-        
+
         <div *ngIf="isDayOff">
           <ion-icon name="alert-circle-outline" style="font-size: 40px;"></ion-icon>
           <h2 style="font-weight: bold; font-size: 1.5rem; margin-top: 5px;">HARI LIBUR</h2>
@@ -55,6 +62,60 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- DRIVER GATEKEEPER: CHECKLIST SYARAT ABSEN PULANG -->
+    <ion-card *ngIf="isDriver && checkoutEligibility" class="gatekeeper-card ion-margin-bottom">
+      <ion-card-header class="gatekeeper-header">
+        <div class="gatekeeper-title-row">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <ion-icon
+              [name]="isCheckoutLocked ? 'lock-closed-outline' : 'lock-open-outline'"
+              [color]="isCheckoutLocked ? 'warning' : 'success'"
+              style="font-size: 1.35rem;">
+            </ion-icon>
+            <ion-card-title style="font-size: 1rem; font-weight: 700;">
+              Syarat Absen Pulang
+            </ion-card-title>
+          </div>
+          <ion-badge *ngIf="checkoutEligibility.bypass_applied" color="success">
+            <ion-icon name="shield-checkmark-outline" style="vertical-align: middle; margin-right: 3px;"></ion-icon>
+            Bypass Disetujui KO
+          </ion-badge>
+          <ion-badge *ngIf="!checkoutEligibility.bypass_applied" [color]="checkoutEligibility.can_checkout ? 'success' : 'warning'">
+            {{ checkoutEligibility.can_checkout ? 'Siap Pulang' : 'Belum Lengkap' }}
+          </ion-badge>
+        </div>
+        <ion-card-subtitle *ngIf="checkoutEligibility.bypass_applied && checkoutEligibility.bypass_reason" style="margin-top: 4px;">
+          Alasan bypass: {{ checkoutEligibility.bypass_reason }}
+        </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content class="ion-no-padding">
+        <ion-list lines="full">
+          <ion-item
+            *ngFor="let req of checkoutEligibility.requirements"
+            [button]="!req.completed"
+            [detail]="!req.completed"
+            (click)="!req.completed && navigateToRequirement(req)">
+            <ion-icon
+              slot="start"
+              [name]="req.completed ? 'checkmark-circle' : 'alert-circle-outline'"
+              [color]="req.completed ? 'success' : 'warning'"
+              style="font-size: 1.5rem;">
+            </ion-icon>
+            <ion-label class="ion-text-wrap">
+              <h3 style="font-weight: 600; font-size: 0.95rem;">{{ req.title }}</h3>
+              <p style="font-size: 0.8rem; color: #64748b;">
+                {{ req.message || (req.completed ? 'Sudah terpenuhi' : 'Ketuk untuk mengisi sekarang') }}
+              </p>
+            </ion-label>
+            <ion-badge slot="end" [color]="req.completed ? 'success' : 'warning'">
+              {{ req.completed ? 'Selesai' : 'Wajib' }}
+            </ion-badge>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
     <!-- BELUM ABSEN MASUK -->
     <div *ngIf="!attendanceToday">
       <ion-card>
@@ -63,15 +124,26 @@
             {{ isDayOff ? 'Presensi Darurat (Hari Libur)' : 'Presensi Masuk' }}
           </ion-card-title>
           <ion-card-subtitle>
-            {{ isDayOff ? 'Foto selfie untuk pengajuan darurat.' : 'Foto selfie untuk kehadiran.' }}
+            {{ isKoOrKasir
+              ? 'Check-in otomatis menyelesaikan Checksheet Buka Depot Pagi.'
+              : (isDayOff ? 'Foto selfie untuk pengajuan darurat.' : 'Foto selfie untuk kehadiran.') }}
           </ion-card-subtitle>
         </ion-card-header>
         <ion-card-content>
-          
+
           <div *ngIf="isDayOff" class="ion-text-center ion-padding-bottom">
             <p class="text-danger" style="font-weight: bold;">
               <ion-icon name="warning"></ion-icon> Absen Anda akan memerlukan validasi Admin.
             </p>
+            <ion-item lines="outline" style="margin-top: 8px; --border-radius: 10px;">
+              <ion-textarea
+                [(ngModel)]="emergencyNote"
+                label="Catatan Darurat (Opsional)"
+                labelPlacement="stacked"
+                placeholder="Contoh: Masuk menggantikan shift / pengiriman mendadak"
+                rows="2">
+              </ion-textarea>
+            </ion-item>
           </div>
 
           <div>
@@ -83,16 +155,16 @@
               <ion-spinner name="crescent" color="primary"></ion-spinner>
               <p class="ion-text-wrap small-text">Mencari koordinat GPS...</p>
             </div>
-            
+
             <div *ngIf="photoData" class="ion-text-center ion-margin-vertical">
               <img [src]="photoData" style="max-height: 300px; border-radius: 10px; border: 2px solid #ddd;">
             </div>
 
-            <ion-button 
-              expand="block" 
-              class="ion-margin-top" 
+            <ion-button
+              expand="block"
+              class="ion-margin-top"
               [color]="isDayOff ? 'danger' : 'primary'"
-              [disabled]="isSubmitDisabled" 
+              [disabled]="isSubmitDisabled"
               (click)="submitCheckIn()">
               <ion-icon slot="start" name="camera-outline"></ion-icon>
               {{ isDayOff ? 'Ajukan Presensi Darurat' : 'Submit Masuk' }}
@@ -118,7 +190,15 @@
               <p>{{ attendanceToday.check_in_time | date: 'HH:mm' }} WIB</p>
             </ion-label>
           </ion-item>
-          
+
+          <div *ngIf="isCheckoutLocked" class="checkout-locked-banner">
+            <ion-icon name="lock-closed-outline" color="warning"></ion-icon>
+            <div>
+              <strong>Absen Pulang Terkunci</strong>
+              <p>Selesaikan seluruh Syarat Absen Pulang di atas terlebih dahulu (atau minta Bypass KO jika kondisi darurat).</p>
+            </div>
+          </div>
+
           <div class="spacer"></div>
 
           <div style="position: relative; z-index: 1;">
@@ -138,14 +218,14 @@
             <p class="ion-text-wrap small-text">Mencari koordinat GPS...</p>
           </div>
 
-          <ion-button 
-            expand="block" 
-            class="ion-margin-top" 
-            color="warning"
-            [disabled]="isSubmitDisabled" 
+          <ion-button
+            expand="block"
+            class="ion-margin-top"
+            [color]="isCheckoutLocked ? 'medium' : 'warning'"
+            [disabled]="isSubmitDisabled || isCheckoutLocked"
             (click)="submitCheckOut()">
-            <ion-icon slot="start" name="camera-outline"></ion-icon>
-            Submit Pulang
+            <ion-icon slot="start" [name]="isCheckoutLocked ? 'lock-closed-outline' : 'camera-outline'"></ion-icon>
+            {{ isCheckoutLocked ? 'Absen Pulang Terkunci' : 'Submit Pulang' }}
           </ion-button>
         </ion-card-content>
       </ion-card>
@@ -156,7 +236,7 @@
       <ion-icon name="checkmark-done-circle" color="success" style="font-size: 80px;"></ion-icon>
       <h2 class="ion-margin-top">Selesai!</h2>
       <p class="ion-text-wrap" color="medium">Presensi hari ini telah tuntas.</p>
-      
+
       <ion-card>
         <ion-list lines="full">
           <ion-item>
@@ -171,15 +251,10 @@
       </ion-card>
     </div>
 
-    <!-- DEBUG SEMENTARA — hapus setelah confirmed working -->
-<!-- <div style="background: #fff3cd; padding: 8px; margin-top: 8px; border-radius: 8px; font-size: 12px;">
-  DEBUG: activeMissions.length = {{ activeMissions.length }}
-</div> -->
-
-    <!-- ✅ MISI AKTIF — di atas tombol navigasi agar selalu terlihat -->
-    <div *ngIf="activeMissions && activeMissions.length > 0" class="ion-margin-top ion-margin-bottom">
+    <!-- MISI AKTIF (DRIVER) -->
+    <div *ngIf="isDriver && activeMissions && activeMissions.length > 0" class="ion-margin-top ion-margin-bottom">
       <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-left: 5px;">
-        <ion-icon name="flame" color="danger" style="font-size: 1.5rem;" class="animate__animated animate__pulse animate__infinite"></ion-icon>
+        <ion-icon name="flame" color="danger" style="font-size: 1.5rem;"></ion-icon>
         <h3 style="margin: 0; font-weight: bold; font-size: 1.1rem; color: var(--ion-color-dark);">Misi Sedang Berjalan</h3>
       </div>
 
@@ -215,26 +290,48 @@
       </ion-card>
     </div>
 
-    <!-- TOMBOL NAVIGASI BAWAH: Kirim Bukti & Klasemen -->
-    <div class="ion-margin-top">
+    <!-- SHORTCUT OPERASIONAL DRIVER -->
+    <div *ngIf="isDriver" class="ion-margin-top">
       <ion-grid class="ion-no-padding">
         <ion-row>
           <ion-col size="6">
-            <ion-card color="secondary" button="true" routerLink="/tabs/driver/delivery-proof" class="ion-margin-end" style="margin-left: 0; margin-bottom: 0;">
+            <ion-card color="primary" button="true" routerLink="/tabs/driver/inspection" class="shortcut-card ion-margin-end">
               <ion-card-content class="ion-text-center">
-                <ion-icon name="cube-outline" style="font-size: 2.5rem;"></ion-icon>
-                <h2 style="font-weight: bold; margin-top: 10px; font-size: 1.1rem;">Kirim Bukti</h2>
-                <p class="ion-no-margin"><small>Laporan Es Kristal</small></p>
+                <ion-icon name="speedometer-outline" style="font-size: 2.2rem;"></ion-icon>
+                <h2>Inspeksi Armada</h2>
+                <p><small>Bensin & Kondisi</small></p>
               </ion-card-content>
             </ion-card>
           </ion-col>
 
           <ion-col size="6">
-            <ion-card color="warning" button="true" routerLink="/tabs/driver/leaderboard" class="ion-margin-start" style="margin-right: 0; margin-bottom: 0;">
+            <ion-card color="tertiary" button="true" routerLink="/tabs/driver/bulk-delivery" class="shortcut-card ion-margin-start">
               <ion-card-content class="ion-text-center">
-                <ion-icon name="podium-outline" style="font-size: 2.5rem;"></ion-icon>
-                <h2 style="font-weight: bold; margin-top: 10px; font-size: 1.1rem;">Klasemen</h2>
-                <p class="ion-no-margin"><small>Poin & Bonus</small></p>
+                <ion-icon name="clipboard-outline" style="font-size: 2.2rem;"></ion-icon>
+                <h2>Bulk Delivery</h2>
+                <p><small>Magic Paste WA</small></p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+
+        <ion-row class="ion-margin-top">
+          <ion-col size="6">
+            <ion-card color="secondary" button="true" routerLink="/tabs/driver/delivery-proof" class="shortcut-card ion-margin-end">
+              <ion-card-content class="ion-text-center">
+                <ion-icon name="cube-outline" style="font-size: 2.2rem;"></ion-icon>
+                <h2>Order / Bukti</h2>
+                <p><small>Laporan Es Kristal</small></p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="6">
+            <ion-card color="warning" button="true" routerLink="/tabs/driver/leaderboard" class="shortcut-card ion-margin-start">
+              <ion-card-content class="ion-text-center">
+                <ion-icon name="podium-outline" style="font-size: 2.2rem;"></ion-icon>
+                <h2>Klasemen</h2>
+                <p><small>Poin & Bonus</small></p>
               </ion-card-content>
             </ion-card>
           </ion-col>
@@ -242,8 +339,92 @@
       </ion-grid>
     </div>
 
-    <!-- ✅ BUFFER AKHIR: Pastikan konten terakhir tidak terhalang tab bar -->
+    <!-- SHORTCUT OPERASIONAL KO / KASIR -->
+    <div *ngIf="isKoOrKasir" class="ion-margin-top">
+      <ion-grid class="ion-no-padding">
+        <ion-row>
+          <ion-col size="6">
+            <ion-card color="primary" button="true" routerLink="/tabs/ko/checksheets" class="shortcut-card ion-margin-end">
+              <ion-card-content class="ion-text-center">
+                <ion-icon name="clipboard-outline" style="font-size: 2.2rem;"></ion-icon>
+                <h2>Checksheet</h2>
+                <p><small>3 Fase & Insidental</small></p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
+          <ion-col size="6">
+            <ion-card color="tertiary" button="true" routerLink="/tabs/ko/deliveries" class="shortcut-card ion-margin-start">
+              <ion-card-content class="ion-text-center">
+                <ion-icon name="checkmark-done-outline" style="font-size: 2.2rem;"></ion-icon>
+                <h2>Approval</h2>
+                <p><small>Delivery & POS</small></p>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+
+        <ion-row class="ion-margin-top">
+          <ion-col size="12">
+            <ion-card color="success" button="true" routerLink="/tabs/ko/kpi" class="shortcut-card" style="margin-left: 0; margin-right: 0;">
+              <ion-card-content style="display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <ion-icon name="stats-chart-outline" style="font-size: 2rem;"></ion-icon>
+                  <div>
+                    <h2 style="margin: 0; text-align: left;">Estimasi KPI Bulanan</h2>
+                    <p style="margin: 2px 0 0; text-align: left;"><small>Bonus Disiplin Checksheet & Akurasi Kas</small></p>
+                  </div>
+                </div>
+                <ion-icon name="chevron-forward-outline" style="font-size: 1.4rem;"></ion-icon>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+
     <div style="height: 16px;"></div>
 
   </div>
+
+  <!-- MODAL HTTP 422 DRIVER_CHECKOUT_BLOCKED -->
+  <ion-modal [isOpen]="isBlockedModalOpen" (didDismiss)="isBlockedModalOpen = false">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar color="warning">
+          <ion-title>Absen Pulang Terkunci</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="isBlockedModalOpen = false">
+              <ion-icon name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <div class="blocked-modal-header">
+          <ion-icon name="lock-closed-outline" color="warning" style="font-size: 3rem;"></ion-icon>
+          <h3>Syarat Harian Belum Terpenuhi</h3>
+          <p>{{ blockedModalMessage }}</p>
+        </div>
+
+        <ion-list lines="full" class="ion-margin-top">
+          <ion-item *ngFor="let req of blockedRequirements">
+            <ion-icon name="alert-circle-outline" color="danger" slot="start"></ion-icon>
+            <ion-label class="ion-text-wrap">
+              <h3 style="font-weight: 700;">{{ req.title }}</h3>
+              <p>{{ req.message || 'Belum diselesaikan hari ini.' }}</p>
+            </ion-label>
+            <ion-button slot="end" size="small" color="primary" (click)="navigateToRequirement(req)">
+              Isi Sekarang
+            </ion-button>
+          </ion-item>
+        </ion-list>
+
+        <ion-button expand="block" fill="outline" color="medium" class="ion-margin-top" (click)="isBlockedModalOpen = false">
+          Tutup
+        </ion-button>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
 </ion-content>

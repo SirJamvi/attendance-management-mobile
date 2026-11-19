@@ -2,21 +2,21 @@
 
   <ion-router-outlet></ion-router-outlet>
 
-  <!-- TAB BAR UNTUK DRIVER -->
-  <ion-tab-bar slot="bottom" *ngIf="userRole === 'driver'" class="custom-tab-bar">
+  <!-- TAB BAR UNTUK KO / KASIR -->
+  <ion-tab-bar slot="bottom" *ngIf="isKoRole" class="custom-tab-bar">
 
-    <ion-tab-button tab="driver/attendance" class="tab-btn">
+    <ion-tab-button tab="ko/attendance" class="tab-btn">
       <div class="icon-wrapper">
-        <ion-icon name="home-outline" class="tab-icon"></ion-icon>
+        <ion-icon name="location-outline" class="tab-icon"></ion-icon>
       </div>
-      <ion-label class="tab-label">Beranda</ion-label>
+      <ion-label class="tab-label">Presensi</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button tab="driver/customers" class="tab-btn">
+    <ion-tab-button tab="ko/checksheets" class="tab-btn">
       <div class="icon-wrapper">
-        <ion-icon name="people-outline" class="tab-icon"></ion-icon>
+        <ion-icon name="clipboard-outline" class="tab-icon"></ion-icon>
       </div>
-      <ion-label class="tab-label">Cust</ion-label>
+      <ion-label class="tab-label">Checksheet</ion-label>
     </ion-tab-button>
 
     <!-- MAIN MENU BUTTON -->
@@ -37,18 +37,69 @@
       </button>
     </div>
 
+    <ion-tab-button tab="ko/deliveries" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="checkmark-done-outline" class="tab-icon"></ion-icon>
+      </div>
+      <ion-label class="tab-label">Approval</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="ko/kpi" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="stats-chart-outline" class="tab-icon"></ion-icon>
+      </div>
+      <ion-label class="tab-label">KPI</ion-label>
+    </ion-tab-button>
+
+  </ion-tab-bar>
+
+  <!-- TAB BAR UNTUK DRIVER -->
+  <ion-tab-bar slot="bottom" *ngIf="userRole === 'driver'" class="custom-tab-bar">
+
+    <ion-tab-button tab="driver/attendance" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="home-outline" class="tab-icon"></ion-icon>
+      </div>
+      <ion-label class="tab-label">Presensi</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button tab="driver/inspection" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="speedometer-outline" class="tab-icon"></ion-icon>
+      </div>
+      <ion-label class="tab-label">Inspeksi</ion-label>
+    </ion-tab-button>
+
+    <!-- MAIN MENU BUTTON -->
+    <div class="main-menu-slot">
+      <button
+        class="main-menu-btn"
+        [class.holding]="isHolding"
+        (mousedown)="onHoldStart($event)"
+        (touchstart)="onHoldStart($event)"
+        (mouseup)="onHoldEnd($event)"
+        (touchend)="onHoldEnd($event)"
+        (mouseleave)="cancelHold()"
+      >
+        <div class="main-menu-circle">
+          <ion-icon name="grid-outline" class="main-icon"></ion-icon>
+        </div>
+        <span class="main-label">Menu</span>
+      </button>
+    </div>
+
+    <ion-tab-button tab="driver/bulk-delivery" class="tab-btn">
+      <div class="icon-wrapper">
+        <ion-icon name="clipboard-outline" class="tab-icon"></ion-icon>
+      </div>
+      <ion-label class="tab-label">Delivery</ion-label>
+    </ion-tab-button>
+
     <ion-tab-button tab="driver/salary" class="tab-btn">
       <div class="icon-wrapper">
         <ion-icon name="wallet-outline" class="tab-icon"></ion-icon>
       </div>
       <ion-label class="tab-label">Gaji</ion-label>
-    </ion-tab-button>
-
-    <ion-tab-button tab="driver/leave" class="tab-btn">
-      <div class="icon-wrapper">
-        <ion-icon name="calendar-outline" class="tab-icon"></ion-icon>
-      </div>
-      <ion-label class="tab-label">Cuti</ion-label>
     </ion-tab-button>
 
   </ion-tab-bar>

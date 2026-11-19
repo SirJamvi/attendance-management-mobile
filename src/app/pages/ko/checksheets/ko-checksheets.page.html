@@ -1,0 +1,252 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Checksheet KO</ion-title>
+    <ion-buttons slot="end">
+      <app-branch-badge></app-branch-badge>
+      <ion-button (click)="openHistory()" title="Riwayat Checksheet">
+        <ion-icon name="time-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Date Picker Bar -->
+  <div class="date-bar">
+    <div class="date-input-wrap">
+      <ion-icon name="calendar-outline" color="primary"></ion-icon>
+      <input type="date" [(ngModel)]="selectedDate" (change)="onDateChange()" />
+    </div>
+    <ion-button fill="clear" size="small" (click)="openHistory()">
+      Riwayat
+      <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+    </ion-button>
+  </div>
+
+  <!-- Progress Card -->
+  <ion-card *ngIf="todayData" class="progress-card">
+    <ion-card-content>
+      <div class="progress-top">
+        <div>
+          <p class="progress-subtitle">Progres Checksheet Harian</p>
+          <h2 class="progress-count">
+            {{ todayData.completed_slots }} / {{ todayData.total_slots }} Slot Selesai
+          </h2>
+        </div>
+        <div class="progress-pct">{{ todayData.progress_percent }}%</div>
+      </div>
+      <ion-progress-bar
+        [value]="(todayData.progress_percent || 0) / 100"
+        [color]="todayData.progress_percent >= 100 ? 'success' : 'primary'">
+      </ion-progress-bar>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Segment 3 Fase + Insidental -->
+  <ion-segment [(ngModel)]="selectedTab" class="phase-segment">
+    <ion-segment-button value="pagi">
+      <ion-label>Pagi</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="siang">
+      <ion-label>Siang</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="sore">
+      <ion-label>Sore</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="insidental">
+      <ion-label>Insidental</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- Loading / Error -->
+  <div *ngIf="isLoading" class="center-state">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Memuat jadwal checksheet...</p>
+  </div>
+
+  <div *ngIf="!isLoading && errorMsg" class="center-state">
+    <ion-icon name="alert-circle-outline" color="danger" style="font-size: 44px;"></ion-icon>
+    <p>{{ errorMsg }}</p>
+    <ion-button fill="outline" size="small" (click)="loadAll()">Muat Ulang</ion-button>
+  </div>
+
+  <!-- TAB 3 FASE (PAGI / SIANG / SORE) -->
+  <div *ngIf="!isLoading && !errorMsg && selectedTab !== 'insidental'">
+    <div *ngIf="currentPhaseSlots.length === 0" class="empty-state">
+      <p>Tidak ada jadwal checksheet pada fase ini.</p>
+    </div>
+
+    <ion-card *ngFor="let slot of currentPhaseSlots" class="slot-card">
+      <ion-card-header>
+        <div class="slot-header-row">
+          <div class="slot-title-col">
+            <ion-card-title>{{ slot.title }}</ion-card-title>
+            <ion-card-subtitle *ngIf="slot.time_window || slot.window_start">
+              <ion-icon name="time-outline" style="vertical-align: middle;"></ion-icon>
+              {{ slot.time_window || (slot.window_start + ' - ' + slot.window_end + ' WIB') }}
+            </ion-card-subtitle>
+          </div>
+          <ion-badge [color]="getStatusColor(slot.status)">
+            {{ getStatusLabel(slot.status) }}
+          </ion-badge>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content>
+        <p *ngIf="slot.description" class="slot-desc">{{ slot.description }}</p>
+
+        <!-- Badge Otomatis dari Presensi -->
+        <div *ngIf="isAutoAttendanceSlot(slot)" class="auto-badge-row">
+          <ion-badge color="tertiary">
+            <ion-icon name="sparkles-outline" style="vertical-align: middle; margin-right: 4px;"></ion-icon>
+            Otomatis dari Presensi
+          </ion-badge>
+          <span *ngIf="slot.submitted_at" class="submitted-meta">
+            Selesai pukul {{ slot.submitted_at }}
+          </span>
+        </div>
+
+        <!-- Khusus Inspeksi Motor Kolaboratif (requires_vehicle === true) -->
+        <div *ngIf="slot.requires_vehicle && slot.vehicles && slot.vehicles.length > 0" class="vehicle-list">
+          <p class="vehicle-list-title">
+            <ion-icon name="bicycle-outline"></ion-icon>
+            Daftar Armada Cabang (Kolaboratif KO & Driver)
+          </p>
+
+          <div *ngFor="let v of slot.vehicles" class="vehicle-row" [class.done]="v.completed">
+            <div class="vehicle-info">
+              <strong>{{ v.name }}</strong>
+              <span *ngIf="v.plate_number" class="plate-tag">{{ v.plate_number }}</span>
+              <div *ngIf="v.completed" class="vehicle-done-badge">
+                <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+                <span>
+                  Sudah dicek oleh {{ v.submitted_by || 'Petugas' }}
+                  <ng-container *ngIf="v.submitted_by_role">({{ v.submitted_by_role }})</ng-container>
+                  <ng-container *ngIf="v.submitted_at"> pukul {{ v.submitted_at }}</ng-container>
+                </span>
+              </div>
+              <div *ngIf="!v.completed" class="vehicle-pending-text">
+                Belum dicek pada slot ini
+              </div>
+            </div>
+
+            <ion-button
+              *ngIf="!v.completed"
+              size="small"
+              color="primary"
+              (click)="openVehicleInspection(slot, v)">
+              Cek Armada Ini
+            </ion-button>
+          </div>
+        </div>
+
+        <!-- Slot Normal -->
+        <div *ngIf="!slot.requires_vehicle">
+          <div *ngIf="slot.status === 'done' && !isAutoAttendanceSlot(slot)" class="done-meta">
+            <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+            <span>
+              Sudah diselesaikan
+              <ng-container *ngIf="slot.submitted_by"> oleh {{ slot.submitted_by }}</ng-container>
+              <ng-container *ngIf="slot.submitted_at"> pukul {{ slot.submitted_at }}</ng-container>
+            </span>
+          </div>
+
+          <ion-button
+            *ngIf="canFillSlot(slot)"
+            expand="block"
+            size="small"
+            [color]="slot.status === 'late' ? 'warning' : 'primary'"
+            class="ion-margin-top"
+            (click)="openSlotForm(slot)">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon>
+            {{ slot.status === 'late' ? 'Isi Checksheet (Terlambat)' : 'Isi Checksheet' }}
+          </ion-button>
+        </div>
+
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- TAB INSIDENTAL -->
+  <div *ngIf="!isLoading && selectedTab === 'insidental'">
+    <div class="section-heading">
+      <ion-icon name="flash-outline" color="warning"></ion-icon>
+      <span>Formulir Insidental</span>
+    </div>
+
+    <ng-container *ngIf="incidentalData?.forms?.length; else defaultIncidental">
+      <ion-card *ngFor="let form of incidentalData!.forms" class="slot-card" button="true" (click)="openIncidentalForm(form.slug)">
+        <ion-card-header>
+          <div class="slot-header-row">
+            <div>
+              <ion-card-title>{{ form.title }}</ion-card-title>
+              <ion-card-subtitle>{{ form.description || form.slug }}</ion-card-subtitle>
+            </div>
+            <ion-icon name="chevron-forward-outline" color="medium"></ion-icon>
+          </div>
+        </ion-card-header>
+      </ion-card>
+    </ng-container>
+
+    <ng-template #defaultIncidental>
+      <ion-card class="slot-card" button="true" (click)="openIncidentalForm('ko-gatepass-rute-jauh')">
+        <ion-card-header>
+          <div class="slot-header-row">
+            <div>
+              <ion-card-title>Gatepass Rute Jauh</ion-card-title>
+              <ion-card-subtitle>Izin keluar armada & uang jalan rute jauh</ion-card-subtitle>
+            </div>
+            <ion-icon name="chevron-forward-outline" color="medium"></ion-icon>
+          </div>
+        </ion-card-header>
+      </ion-card>
+
+      <ion-card class="slot-card" button="true" (click)="openIncidentalForm('ko-mutasi-cabang')">
+        <ion-card-header>
+          <div class="slot-header-row">
+            <div>
+              <ion-card-title>Mutasi Stok / Kas Cabang</ion-card-title>
+              <ion-card-subtitle>Pencatatan mutasi antar cabang depot</ion-card-subtitle>
+            </div>
+            <ion-icon name="chevron-forward-outline" color="medium"></ion-icon>
+          </div>
+        </ion-card-header>
+      </ion-card>
+    </ng-template>
+
+    <!-- Daftar Pengajuan Insidental Hari Ini -->
+    <div class="section-heading ion-margin-top">
+      <ion-icon name="document-text-outline" color="primary"></ion-icon>
+      <span>Laporan Insidental Hari Ini</span>
+    </div>
+
+    <div *ngIf="!incidentalData?.today_submissions?.length" class="empty-state">
+      <p>Belum ada laporan insidental hari ini.</p>
+    </div>
+
+    <ion-card *ngIf="incidentalData?.today_submissions?.length" class="slot-card">
+      <ion-list lines="full">
+        <ion-item *ngFor="let sub of incidentalData!.today_submissions">
+          <ion-label class="ion-text-wrap">
+            <h3><strong>{{ sub.form_title || sub.title || sub.slug }}</strong></h3>
+            <p>
+              <span *ngIf="sub.driver_name">Driver: {{ sub.driver_name }} · </span>
+              <span *ngIf="sub.vehicle_name">{{ sub.vehicle_name }} · </span>
+              {{ sub.submitted_at }}
+            </p>
+          </ion-label>
+          <ion-badge slot="end" [color]="getStatusColor(sub.status || 'done')">
+            {{ getStatusLabel(sub.status || 'done') }}
+          </ion-badge>
+        </ion-item>
+      </ion-list>
+    </ion-card>
+  </div>
+
+  <div style="height: 84px;"></div>
+</ion-content>

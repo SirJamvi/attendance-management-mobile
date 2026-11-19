@@ -47,6 +47,7 @@ export class CustomerListPage implements OnInit {
    * Mengambil data dari API
    */
   loadData(event?: any) {
+    if (!event && this.customers.length === 0) this.isLoading = true;
     this.customerService.getCustomers().subscribe({
       next: (response) => {
         this.customers = response.data || [];

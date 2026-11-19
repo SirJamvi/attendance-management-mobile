@@ -112,7 +112,7 @@ export class SalesDashboardPage implements OnInit {
    * Mengambil data dashboard dari API Laravel
    */
   loadDashboardData(event?: any) {
-    this.isLoading = true;
+    if (!event && !this.dashboardData) this.isLoading = true;
     this.salesService.getDashboard().subscribe({
       next: (response) => {
         this.dashboardData = response.data;
