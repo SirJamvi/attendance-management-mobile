@@ -15,7 +15,8 @@ import {
   addCircle, addCircleOutline, wallet, walletOutline,
   people, peopleOutline, cashOutline, cash,
   gridOutline, close, closeOutline, clipboardOutline,
-  checkmarkDoneOutline, statsChartOutline, cubeOutline
+  checkmarkDoneOutline, statsChartOutline, cubeOutline,
+  cardOutline
 } from 'ionicons/icons';
 import { AuthService } from 'src/app/services/auth';
 import { RadialMenuService, MenuItem } from 'src/app/services/radial-menu.service';
@@ -47,12 +48,12 @@ export class TabsPage implements OnInit, OnDestroy {
   ];
 
   driverMenuItems: MenuItem[] = [
-    { label: 'Pelanggan', icon: 'people-outline',   route: '/tabs/driver/customers'      },
-    { label: 'Order',     icon: 'cube-outline',     route: '/tabs/driver/delivery-proof' },
-    { label: 'Riwayat',   icon: 'time-outline',     route: '/tabs/driver/history'        },
-    { label: 'Cuti',      icon: 'calendar-outline', route: '/tabs/driver/leave'          },
-    { label: 'Kasbon',    icon: 'cash-outline',     route: '/cash-advance'               },
-    { label: 'Profil',    icon: 'person-outline',   route: '/tabs/profile'               },
+    { label: 'Pelanggan',  icon: 'people-outline',   route: '/tabs/driver/customers'      },
+    { label: 'Kartu Nama', icon: 'card-outline',     route: '/tabs/driver/delivery-proof' },
+    { label: 'Riwayat',    icon: 'time-outline',     route: '/tabs/driver/history'        },
+    { label: 'Cuti',       icon: 'calendar-outline', route: '/tabs/driver/leave'          },
+    { label: 'Kasbon',     icon: 'cash-outline',     route: '/cash-advance'               },
+    { label: 'Profil',     icon: 'person-outline',   route: '/tabs/profile'               },
   ];
 
   salesMenuItems: MenuItem[] = [
@@ -82,7 +83,8 @@ export class TabsPage implements OnInit, OnDestroy {
       addCircle, addCircleOutline, wallet, walletOutline,
       people, peopleOutline, cashOutline, cash,
       gridOutline, close, closeOutline, clipboardOutline,
-      checkmarkDoneOutline, statsChartOutline, cubeOutline
+      checkmarkDoneOutline, statsChartOutline, cubeOutline,
+      cardOutline
     });
   }
 

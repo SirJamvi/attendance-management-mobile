@@ -1,123 +1,304 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, LoadingController, ToastController, NavController } from '@ionic/angular';
-import { DeliveryService } from 'src/app/services/delivery';
+import {
+  IonHeader,
+  IonToolbar,
+  IonButtons,
+  IonBackButton,
+  IonTitle,
+  IonContent,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonTextarea,
+  IonText,
+  IonButton,
+  IonIcon,
+  IonProgressBar,
+  IonBadge,
+  IonSpinner,
+  LoadingController,
+  ToastController,
+  NavController
+} from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  cameraOutline,
+  locationOutline,
+  sendOutline,
+  informationCircleOutline,
+  checkmarkCircle,
+  sparklesOutline,
+  cardOutline,
+  trophyOutline,
+  refreshOutline
+} from 'ionicons/icons';
 
-// Plugin Capacitor untuk Kamera & GPS
+// Plugin Capacitor & Kompresi Foto Ultra-Ringan
 import { CameraDirection } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
 import { captureCompressedPhoto } from 'src/app/utils/image-compressor';
+import { BusinessCardService, BusinessCardKpiData } from 'src/app/services/business-card.service';
 
 @Component({
   selector: 'app-delivery-proof',
   templateUrl: './delivery-proof.page.html',
   styleUrls: ['./delivery-proof.page.scss'],
   standalone: true,
-  imports: [IonicModule, CommonModule, FormsModule]
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonHeader,
+    IonToolbar,
+    IonButtons,
+    IonBackButton,
+    IonTitle,
+    IonContent,
+    IonList,
+    IonItem,
+    IonLabel,
+    IonInput,
+    IonTextarea,
+    IonText,
+    IonButton,
+    IonIcon,
+    IonProgressBar,
+    IonBadge,
+    IonSpinner
+  ]
 })
-export class DeliveryProofPage {
-  private deliveryService = inject(DeliveryService);
+export class DeliveryProofPage implements OnInit {
+  private businessCardService = inject(BusinessCardService);
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
   private navCtrl = inject(NavController);
 
-  // Model Data sesuai parameter Backend
+  // Model Form Penyerahan Kartu Nama (Prospek Baru)
   formData = {
-    butterfly_customer_name: '',
-    qty_20kg: 0,
-    qty_b_half: 0,
-    qty_half: 0, // Prioritas penjualan bal 10-12kg
-    payment_method: 'Cash',
-    payment_note: '',
+    customer_name: '',
+    customer_phone: '',
+    address: '',
+    notes: '',
     latitude: '',
     longitude: '',
-    proof_image: ''
+    photo: ''
   };
 
   previewImage: string | undefined;
+  isSubmitting = false;
+  isLoadingKpi = false;
 
-  constructor() {}
+  // Data KPI Mingguan & Bulanan
+  kpi: BusinessCardKpiData = {
+    week_target: 7,
+    week_achieved: 0,
+    week_progress_percent: 0,
+    month_target: 28,
+    month_achieved: 0,
+    month_progress_percent: 0,
+    is_weekly_target_reached: false,
+    is_monthly_target_reached: false
+  };
 
-  // 1. Ambil Titik Koordinat Lokasi
+  constructor() {
+    addIcons({
+      cameraOutline,
+      locationOutline,
+      sendOutline,
+      informationCircleOutline,
+      checkmarkCircle,
+      sparklesOutline,
+      cardOutline,
+      trophyOutline,
+      refreshOutline
+    });
+  }
+
+  ngOnInit() {
+    this.loadKpi();
+  }
+
+  ionViewWillEnter() {
+    this.loadKpi();
+  }
+
+  /**
+   * Muat ringkasan KPI dari backend
+   */
+  loadKpi() {
+    this.isLoadingKpi = true;
+    this.businessCardService.getKpi().subscribe({
+      next: (res) => {
+        this.isLoadingKpi = false;
+        if (res?.data) {
+          this.kpi = res.data;
+        }
+      },
+      error: (err) => {
+        this.isLoadingKpi = false;
+        console.warn('Gagal memuat KPI kartu nama:', err);
+      }
+    });
+  }
+
+  /**
+   * Mengambil koordinat GPS saat ini
+   */
   async getLocation() {
     try {
-      const position = await Geolocation.getCurrentPosition();
-      this.formData.latitude = position.coords.latitude.toString();
-      this.formData.longitude = position.coords.longitude.toString();
-    } catch (error) {
-      console.error('Gagal mengambil lokasi GPS', error);
-      this.showToast('Gagal mendapatkan lokasi GPS. Pastikan izin lokasi aktif.', 'danger');
+      const position: any = await Promise.race([
+        Geolocation.getCurrentPosition({
+          enableHighAccuracy: true,
+          timeout: 2500
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('GPS_TIMEOUT')), 3000))
+      ]);
+      if (position?.coords) {
+        this.formData.latitude = position.coords.latitude.toString();
+        this.formData.longitude = position.coords.longitude.toString();
+      }
+    } catch {
+      try {
+        const coarsePos: any = await Promise.race([
+          Geolocation.getCurrentPosition({
+            enableHighAccuracy: false,
+            timeout: 1500
+          }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('GPS_COARSE_TIMEOUT')), 2000))
+        ]);
+        if (coarsePos?.coords) {
+          this.formData.latitude = coarsePos.coords.latitude.toString();
+          this.formData.longitude = coarsePos.coords.longitude.toString();
+        }
+      } catch (e2) {
+        console.warn('GPS tidak tersedia:', e2);
+      }
     }
   }
 
-  // 2. Buka Kamera dan Ambil Foto Base64 terkompresi (max 1280px, quality 75%)
+  /**
+   * Ambil foto bukti penyerahan kartu nama (Kompresi otomatis 720px, quality 0.50)
+   */
   async takePicture() {
     try {
       const compressed = await captureCompressedPhoto({
         direction: CameraDirection.Rear,
-        maxWidth: 1280,
-        quality: 0.75,
-        promptHeader: 'Ambil Bukti Pengiriman',
+        maxWidth: 720,
+        quality: 0.50,
+        promptHeader: 'Foto Bukti Kartu Nama'
       });
 
       if (compressed) {
         this.previewImage = compressed;
-        this.formData.proof_image = compressed;
+        this.formData.photo = compressed;
 
-        // Ambil GPS secara diam-diam setelah foto diambil
+        // Ambil titik koordinat otomatis saat foto berhasil diambil
         this.getLocation();
       }
     } catch (error) {
-      console.error('Kamera dibatalkan / error', error);
+      console.error('Kamera dibatalkan atau terjadi error:', error);
     }
   }
 
-  // 3. Kirim Data ke Backend
-  async submitDelivery() {
-    // Validasi Sederhana
-    if (!this.formData.butterfly_customer_name) {
-      return this.showToast('Nama warung/pelanggan wajib diisi!', 'warning');
-    }
-    if (this.formData.qty_half === 0 && this.formData.qty_20kg === 0 && this.formData.qty_b_half === 0) {
-      return this.showToast('Masukkan minimal 1 bal es yang dikirim!', 'warning');
-    }
-    if (!this.formData.proof_image) {
-      return this.showToast('Bukti foto wajib dilampirkan!', 'warning');
+  /**
+   * Validasi kelengkapan form
+   */
+  get isFormValid(): boolean {
+    const nameValid = !!(this.formData.customer_name && this.formData.customer_name.trim().length >= 2);
+    const phoneValid = !!(this.formData.customer_phone && this.formData.customer_phone.trim().length >= 8);
+    const photoValid = !!this.formData.photo;
+
+    return nameValid && phoneValid && photoValid && !this.isSubmitting;
+  }
+
+  /**
+   * Kirim bukti penyerahan kartu nama ke backend
+   */
+  async submitCard() {
+    if (!this.formData.customer_name?.trim()) {
+      return this.showToast('Nama warung / calon pelanggan wajib diisi!', 'warning');
     }
 
+    const cleanedPhone = this.formData.customer_phone.replace(/[^0-9+]/g, '');
+    const phoneRegex = /^(^\+62|62|^08)(\d{8,13})$/;
+    if (!phoneRegex.test(cleanedPhone)) {
+      return this.showToast('Format nomor HP harus standar Indonesia (contoh: 081234567890)', 'warning');
+    }
+
+    if (!this.formData.photo) {
+      return this.showToast('Foto bukti penyerahan kartu nama wajib dilampirkan!', 'warning');
+    }
+
+    this.isSubmitting = true;
     const loading = await this.loadingCtrl.create({
-      message: 'Mengirim bukti pengiriman...',
+      message: 'Mengirim data prospek...',
       spinner: 'crescent'
     });
     await loading.present();
 
-    this.deliveryService.submitDeliveryProof(this.formData).subscribe({
-      next: async (res: any) => {
+    const payload = {
+      customer_name: this.formData.customer_name.trim(),
+      customer_phone: cleanedPhone,
+      address: this.formData.address?.trim() || undefined,
+      notes: this.formData.notes?.trim() || undefined,
+      photo: this.formData.photo,
+      latitude: this.formData.latitude ? parseFloat(this.formData.latitude) : undefined,
+      longitude: this.formData.longitude ? parseFloat(this.formData.longitude) : undefined
+    };
+
+    this.businessCardService.submitBusinessCard(payload).subscribe({
+      next: async (res) => {
         await loading.dismiss();
-        if (res.status === 'success') {
-          this.showToast('Bukti berhasil dikirim! Menunggu validasi admin.', 'success');
-          // Kembali ke halaman sebelumnya setelah sukses
-          this.navCtrl.back();
-        } else {
-          this.showToast(res.message || 'Terjadi kesalahan sistem', 'danger');
-        }
+        this.isSubmitting = false;
+
+        const currentWeek = res?.data?.current_week_count ?? (this.kpi.week_achieved + 1);
+        this.showToast(`Sukses! Kartu nama tercatat (${currentWeek}/7 minggu ini).`, 'success');
+
+        // Reset form agar driver bisa input lagi
+        this.resetForm();
+
+        // Refresh KPI
+        this.loadKpi();
       },
-      error: async (err: any) => {
+      error: async (err) => {
         await loading.dismiss();
-        console.error('Error submit:', err);
-        this.showToast('Gagal terhubung ke server', 'danger');
+        this.isSubmitting = false;
+        console.error('Error submit kartu nama:', err);
+
+        let errorMsg = 'Gagal menyimpan bukti kartu nama.';
+        if (err?.error?.message) {
+          errorMsg = err.error.message;
+        } else if (err?.message) {
+          errorMsg = err.message;
+        }
+
+        this.showToast(errorMsg, 'danger');
       }
     });
   }
 
-  async showToast(message: string, color: string) {
+  resetForm() {
+    this.formData = {
+      customer_name: '',
+      customer_phone: '',
+      address: '',
+      notes: '',
+      latitude: '',
+      longitude: '',
+      photo: ''
+    };
+    this.previewImage = undefined;
+  }
+
+  async showToast(message: string, color: 'success' | 'warning' | 'danger') {
     const toast = await this.toastCtrl.create({
       message,
-      duration: 3000,
+      duration: 3500,
       color,
       position: 'bottom'
     });
-    toast.present();
+    await toast.present();
   }
 }

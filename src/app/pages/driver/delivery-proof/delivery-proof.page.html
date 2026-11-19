@@ -3,85 +3,156 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/driver"></ion-back-button>
     </ion-buttons>
-    <ion-title>Laporan Pengiriman</ion-title>
+    <ion-title>Penyerahan Kartu Nama Bisnis</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="loadKpi()" [disabled]="isLoadingKpi" title="Refresh KPI">
+        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="delivery-content">
 
-  <div class="info-banner">
-    <ion-icon name="information-circle-outline"></ion-icon>
-    <p>Pastikan foto dan lokasi akurat agar poin masuk ke klasemen.</p>
-  </div>
+  <!-- 1. WIDGET KPI MINGGUAN & BULANAN -->
+  <div class="kpi-widget-container">
+    <div class="kpi-card weekly-card">
+      <div class="kpi-header">
+        <div class="kpi-title-box">
+          <ion-icon name="trophy-outline" class="kpi-icon text-warning"></ion-icon>
+          <span class="kpi-label">Target Minggu Ini</span>
+        </div>
+        <ion-badge [color]="kpi.is_weekly_target_reached ? 'success' : 'warning'" class="kpi-badge">
+          {{ kpi.week_achieved }} / {{ kpi.week_target }} Kartu
+        </ion-badge>
+      </div>
 
-  <ion-list lines="full" class="form-list">
+      <div class="kpi-progress-bar">
+        <ion-progress-bar
+          [value]="kpi.week_progress_percent / 100"
+          [color]="kpi.is_weekly_target_reached ? 'success' : 'primary'">
+        </ion-progress-bar>
+      </div>
 
-    <ion-item>
-      <ion-label position="stacked">
-        Nama Warung / Pelanggan <ion-text color="danger">*</ion-text>
-      </ion-label>
-      <ion-input
-        [(ngModel)]="formData.butterfly_customer_name"
-        placeholder="Cth: Warung Dadakan Pak Budi"
-        type="text">
-      </ion-input>
-    </ion-item>
+      <div class="kpi-footer">
+        <span class="kpi-percent">{{ kpi.week_progress_percent }}% tercapai</span>
+        <span class="kpi-status" *ngIf="kpi.is_weekly_target_reached">
+          <ion-icon name="checkmark-circle" color="success"></ion-icon> Target Terpenuhi!
+        </span>
+        <span class="kpi-status text-muted" *ngIf="!kpi.is_weekly_target_reached">
+          Kurang {{ kpi.week_target - kpi.week_achieved }} kartu lagi
+        </span>
+      </div>
+    </div>
 
-    <ion-item>
-      <ion-label position="stacked">
-        Jumlah Bal (10-12kg) <ion-text color="danger">*</ion-text>
-      </ion-label>
-      <ion-input
-        [(ngModel)]="formData.qty_half"
-        placeholder="0"
-        type="number"
-        min="0">
-      </ion-input>
-    </ion-item>
+    <div class="kpi-card monthly-card">
+      <div class="kpi-header">
+        <div class="kpi-title-box">
+          <ion-icon name="card-outline" class="kpi-icon text-primary"></ion-icon>
+          <span class="kpi-label">Target Bulan Ini</span>
+        </div>
+        <ion-badge color="primary" class="kpi-badge">
+          {{ kpi.month_achieved }} / {{ kpi.month_target }} Kartu
+        </ion-badge>
+      </div>
 
-    <ion-item>
-      <ion-label position="stacked">Metode Pembayaran</ion-label>
-      <ion-select [(ngModel)]="formData.payment_method" interface="action-sheet">
-        <ion-select-option value="Cash">Tunai (Cash)</ion-select-option>
-        <ion-select-option value="Transfer Bank">Transfer Bank</ion-select-option>
-        <ion-select-option value="Dana">DANA</ion-select-option>
-        <ion-select-option value="QRIS">QRIS</ion-select-option>
-      </ion-select>
-    </ion-item>
+      <div class="kpi-progress-bar">
+        <ion-progress-bar
+          [value]="kpi.month_progress_percent / 100"
+          color="primary">
+        </ion-progress-bar>
+      </div>
 
-    <ion-item>
-      <ion-label position="stacked">Catatan Tambahan (Opsional)</ion-label>
-      <ion-input
-        [(ngModel)]="formData.payment_note"
-        placeholder="Cth: Titip di warung sebelah / TF"
-        type="text">
-      </ion-input>
-    </ion-item>
-
-  </ion-list>
-
-  <!-- Section Foto Bukti -->
-  <div class="photo-section">
-    <ion-button expand="block" color="secondary" (click)="takePicture()">
-      <ion-icon slot="start" name="camera-outline"></ion-icon>
-      {{ previewImage ? 'Ambil Ulang Foto' : 'Ambil Foto Bukti' }}
-    </ion-button>
-
-    <div *ngIf="previewImage" class="preview-container">
-      <img [src]="previewImage" alt="Preview Bukti" class="preview-image" />
-      <div *ngIf="formData.latitude" class="gps-badge">
-        <ion-icon name="location-outline"></ion-icon>
-        <span>GPS Terkunci</span>
+      <div class="kpi-footer">
+        <span class="kpi-percent">{{ kpi.month_progress_percent }}% tercapai</span>
+        <span class="kpi-subtext">Akumulasi Bulan Ini</span>
       </div>
     </div>
   </div>
 
-  <!-- Submit Button di dalam konten agar tidak tertutup footer -->
-  <div class="submit-section">
-    <ion-button expand="block" color="primary" (click)="submitDelivery()">
-      <ion-icon slot="start" name="send-outline"></ion-icon>
-      Kirim Laporan
+  <!-- 2. INFO BANNER -->
+  <div class="info-banner">
+    <ion-icon name="information-circle-outline"></ion-icon>
+    <p>Bagikan kartu nama ke warung/kafe baru di rute Anda. Ambil foto bukti penyerahan & pastikan no HP valid.</p>
+  </div>
+
+  <!-- 3. FORM INPUT PROSPEK BARU -->
+  <ion-list lines="full" class="form-list">
+
+    <ion-item>
+      <ion-label position="stacked">
+        Nama Warung / Calon Pelanggan <ion-text color="danger">*</ion-text>
+      </ion-label>
+      <ion-input
+        [(ngModel)]="formData.customer_name"
+        placeholder="Cth: Warung Makan Barokah / Bu Siti"
+        type="text">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">
+        Nomor WhatsApp / HP Toko <ion-text color="danger">*</ion-text>
+      </ion-label>
+      <ion-input
+        [(ngModel)]="formData.customer_phone"
+        placeholder="08xxxxxxxxxx"
+        type="tel"
+        inputmode="tel">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Alamat / Patokan Toko (Opsional)</ion-label>
+      <ion-input
+        [(ngModel)]="formData.address"
+        placeholder="Cth: Sebelah Alfamart Jl. Merdeka No. 4"
+        type="text">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Catatan Kebutuhan / Minat (Opsional)</ion-label>
+      <ion-textarea
+        [(ngModel)]="formData.notes"
+        placeholder="Cth: Minat es kristal 10 bal/hari, minta dihubungi besok sore"
+        rows="2"
+        [autoGrow]="true">
+      </ion-textarea>
+    </ion-item>
+
+  </ion-list>
+
+  <!-- 4. SECTION FOTO BUKTI PENYERAHAN -->
+  <div class="photo-section">
+    <ion-button expand="block" color="secondary" (click)="takePicture()" class="camera-btn">
+      <ion-icon slot="start" name="camera-outline"></ion-icon>
+      {{ previewImage ? 'Ganti / Ambil Ulang Foto' : 'Ambil Foto Bukti Kartu Nama' }}
     </ion-button>
+
+    <div *ngIf="previewImage" class="preview-container">
+      <img [src]="previewImage" alt="Preview Kartu Nama" class="preview-image" />
+      <div *ngIf="formData.latitude" class="gps-badge">
+        <ion-icon name="location-outline"></ion-icon>
+        <span>GPS Terkunci ({{ formData.latitude | number:'1.2-4' }}, {{ formData.longitude | number:'1.2-4' }})</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. TOMBOL SUBMIT -->
+  <div class="submit-section">
+    <ion-button
+      expand="block"
+      color="primary"
+      (click)="submitCard()"
+      [disabled]="!isFormValid">
+      <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+      <ion-icon *ngIf="!isSubmitting" slot="start" name="send-outline"></ion-icon>
+      Kirim Bukti Kartu Nama
+    </ion-button>
+    <div class="validation-hint" *ngIf="!isFormValid && !isSubmitting">
+      <small class="text-muted">Lengkapi Nama, Nomor HP (08...), dan Foto Bukti untuk mengirim.</small>
+    </div>
   </div>
 
 </ion-content>

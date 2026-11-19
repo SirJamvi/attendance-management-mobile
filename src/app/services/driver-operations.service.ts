@@ -81,4 +81,20 @@ export class DriverOperationsService {
       params
     );
   }
+
+  // ==========================================
+  // C. BUSINESS CARD LEADS & KPI MINGGUAN
+  // ==========================================
+
+  submitBusinessCard(payload: any): Observable<ApiResponse<any>> {
+    return this.apiClient.post<ApiResponse<any>>('driver/business-cards', payload);
+  }
+
+  getBusinessCardKpi(): Observable<ApiResponse<any>> {
+    return this.apiClient.get<ApiResponse<any>>('driver/business-cards/kpi');
+  }
+
+  getBusinessCardHistory(page = 1): Observable<ApiResponse<any>> {
+    return this.apiClient.get<ApiResponse<any>>('driver/business-cards/history', { page });
+  }
 }

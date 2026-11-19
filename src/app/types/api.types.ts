@@ -382,3 +382,46 @@ export interface DeliveryKpiSummary {
   target_achievement_percent: number;
   days_hit_target: number;
 }
+
+// ==========================================
+// BUSINESS CARD LEADS & KPI MINGGUAN DRIVER
+// ==========================================
+
+export interface BusinessCardPayload {
+  customer_name: string;
+  customer_phone: string;
+  address?: string;
+  notes?: string;
+  photo: string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+}
+
+export interface BusinessCardKpiData {
+  week_target: number;
+  week_achieved: number;
+  week_progress_percent: number;
+  month_target: number;
+  month_achieved: number;
+  month_progress_percent: number;
+  is_weekly_target_reached: boolean;
+  is_monthly_target_reached: boolean;
+  current_week_count?: number;
+  monthly_count?: number;
+}
+
+export interface BusinessCardSubmission {
+  id: number;
+  user_id: number;
+  branch_id?: number;
+  customer_name: string;
+  customer_phone: string;
+  address?: string | null;
+  notes?: string | null;
+  photo_path?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  submission_date: string;
+  created_at: string;
+  status?: 'valid' | 'flagged_duplicate' | 'rejected' | string;
+}
