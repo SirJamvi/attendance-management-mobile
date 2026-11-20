@@ -1,44 +1,48 @@
 <!-- app.component.html -->
-<!-- Tambahkan radial-overlay DI SINI, bukan di tabs.page.html -->
-
 <ion-app>
   <ion-router-outlet></ion-router-outlet>
 </ion-app>
 
 <!-- ═══════════════════════════════════════════════════
-     RADIAL OVERLAY — dirender di luar ion-app
-     agar z-index tidak dibatasi stacking context Ionic
+     BOTTOM SHEET MENU OVERLAY
+     Dirender di luar ion-app agar z-index tidak
+     dibatasi oleh stacking context internal Ionic
      ═══════════════════════════════════════════════════ -->
 <div
   *ngIf="radialMenu.isOpen"
-  class="radial-overlay"
-  (mousemove)="onSwipeMove($event)"
-  (touchmove)="onSwipeMove($event)"
-  (mouseup)="onRelease($event)"
-  (touchend)="onRelease($event)"
+  class="menu-sheet-overlay"
+  [class.closing]="radialMenu.isClosing"
 >
-  <!-- Backdrop: tap untuk tutup -->
-  <div class="overlay-backdrop" (click)="radialMenu.close()"></div>
+  <!-- Backdrop gelap: klik untuk menutup sheet -->
+  <div class="menu-backdrop" (click)="closeMenu()"></div>
 
-  <!-- Container item-item radial, terpusat di atas tombol menu -->
-  <div class="radial-container" [style.left.px]="radialMenu.centerX">
+  <!-- Bottom Sheet Container tepat di atas tab bar -->
+  <div
+    class="menu-sheet-container"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Menu navigasi"
+  >
+    <!-- Handle bar (36x4px, #D1D5DB) -->
+    <div class="sheet-handle" aria-hidden="true"></div>
 
-    <div
-      *ngFor="let item of radialMenu.items; let i = index"
-      class="radial-item"
-      [class.hovered]="hoveredIndex === i"
-      [style.transform]="getItemTransform(i)"
-    >
-      <ion-icon [name]="item.icon"></ion-icon>
-      <span>{{ item.label }}</span>
+    <!-- Judul Menu (14px, medium) -->
+    <div class="sheet-title">Menu</div>
+
+    <!-- Grid 3 kolom untuk item menu -->
+    <div class="sheet-grid">
+      <button
+        *ngFor="let item of radialMenu.items"
+        type="button"
+        class="sheet-item"
+        (click)="selectItem(item)"
+        [attr.aria-label]="item.label"
+      >
+        <div class="sheet-icon-box">
+          <ion-icon [name]="item.icon"></ion-icon>
+        </div>
+        <span class="sheet-label">{{ item.label }}</span>
+      </button>
     </div>
-
-    <!-- Tombol close di tengah -->
-    <div class="radial-close-btn" (click)="radialMenu.close()">
-      <ion-icon name="close"></ion-icon>
-    </div>
-
-    <div class="swipe-hint">Geser ke menu · lepas untuk masuk</div>
-
   </div>
 </div>

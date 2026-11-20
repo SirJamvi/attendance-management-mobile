@@ -8,6 +8,13 @@ export interface Role {
   slug: UserRole;
 }
 
+export interface Branch {
+  id: number;
+  name: string;
+  address?: string | null;
+  phone?: string | null;
+}
+
 export interface User {
   id: number;
   name: string;
@@ -62,11 +69,14 @@ export interface AttendanceStatusMeta {
   severe_warning?: boolean;
   warning_message?: string;
   checkout_eligibility?: CheckoutEligibility | null;
+  duty_branch_id?: number | null;
+  duty_branch_name?: string | null;
 }
 
 export interface Attendance {
   id: number;
   user_id: number;
+  branch_id?: number | null;
   date: string;
   check_in_time: string;
   check_in_photo: string;

@@ -64,6 +64,116 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- ======================================================== -->
+    <!-- KARTU RAPOR KINERJA & KPI TERPADU DRIVER (100%)          -->
+    <!-- Kehadiran (40%) + Operasional (40%) + Pelanggan (20%)    -->
+    <!-- ======================================================== -->
+    <ion-card *ngIf="salaryData.kpi_summary as kpi" style="margin: 12px 16px; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+      <ion-card-header style="padding: 16px 16px 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <ion-icon name="ribbon-outline" color="primary" style="font-size: 1.2rem;"></ion-icon>
+              <ion-card-subtitle color="primary" style="font-weight: 800; font-size: 0.8rem; letter-spacing: 0.5px;">
+                RAPOR KINERJA KPI BULAN INI
+              </ion-card-subtitle>
+            </div>
+            <ion-card-title style="font-size: 1.35rem; font-weight: 800; margin-top: 4px; color: #0f172a;">
+              {{ kpi.total_score | number:'1.0-1' }}%
+            </ion-card-title>
+          </div>
+          <div style="text-align: right;">
+            <ion-badge [color]="getGradeColor(kpi.grade)" style="font-size: 0.95rem; font-weight: 800; padding: 6px 12px; border-radius: 8px;">
+              Grade {{ kpi.grade }}
+            </ion-badge>
+            <div style="font-size: 11px; color: #64748b; margin-top: 4px; font-weight: 600;">
+              {{ kpi.grade_label }}
+            </div>
+          </div>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content style="padding: 0 16px 16px;">
+        <!-- Progress Bar Utama -->
+        <ion-progress-bar
+          [value]="driverKpiProgress"
+          [color]="getGradeColor(kpi.grade)"
+          style="height: 10px; border-radius: 999px; margin-bottom: 14px;">
+        </ion-progress-bar>
+
+        <!-- Banner Bonus Insentif jika ada (Saat Periode Tutup Buku) -->
+        <div *ngIf="kpi.kpi_bonus > 0" style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <ion-icon name="medal-outline" color="success" style="font-size: 1.2rem;"></ion-icon>
+            <span style="font-size: 12px; color: #166534; font-weight: 600;">Bonus KPI Cair (Tutup Buku {{ kpi.bonus_percentage }}%)</span>
+          </div>
+          <strong style="color: #15803d; font-size: 0.95rem;">+ {{ kpi.kpi_bonus | currency:'IDR':'Rp ':'1.0-0' }}</strong>
+        </div>
+
+        <!-- Banner Info Jika Masih Periode 1 (Belum Tutup Buku) -->
+        <div *ngIf="!salaryData.is_closing_period" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #1e40af;">
+          <ion-icon name="sparkles-outline" style="font-size: 1.1rem; flex-shrink: 0;"></ion-icon>
+          <span>Pencairan bonus KPI bulanan dijadwalkan pada tutup buku tanggal 30 (Periode 16–30).</span>
+        </div>
+
+        <!-- 3 PILAR KPI GRID -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Pilar 1: Kehadiran & Keterlambatan (40%) -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <ion-icon name="calendar-outline" color="primary"></ion-icon>
+                <strong style="font-size: 12.5px; color: #1e293b;">1. Kehadiran & Ketepatan (40%)</strong>
+              </div>
+              <ion-badge color="primary" style="font-size: 0.8rem; font-weight: 700;">
+                {{ kpi.pillar_attendance.score | number:'1.0-1' }} / 40 Poin
+              </ion-badge>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 11.5px; color: #475569;">
+              <div>• Hadir: <strong>{{ kpi.pillar_attendance.working_days_present }}/{{ kpi.pillar_attendance.scheduled_days }} hari</strong> ({{ kpi.pillar_attendance.attendance_score }} poin)</div>
+              <div>• Tepat waktu: <strong>{{ kpi.pillar_attendance.on_time_days }} hari</strong> ({{ kpi.pillar_attendance.on_time_score }} poin)</div>
+            </div>
+            <div *ngIf="kpi.pillar_attendance.late_days > 0" style="font-size: 11px; color: #d97706; margin-top: 4px;">
+              <ion-icon name="warning-outline" style="vertical-align: -1px;"></ion-icon> Terlambat: {{ kpi.pillar_attendance.late_days }} kali
+            </div>
+          </div>
+
+          <!-- Pilar 2: Operasional (Inspeksi & Bal) (40%) -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <ion-icon name="cube-outline" color="secondary"></ion-icon>
+                <strong style="font-size: 12.5px; color: #1e293b;">2. Operasional Inspeksi & Bal (40%)</strong>
+              </div>
+              <ion-badge color="secondary" style="font-size: 0.8rem; font-weight: 700;">
+                {{ kpi.pillar_operations.score | number:'1.0-1' }} / 40 Poin
+              </ion-badge>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; font-size: 11.5px; color: #475569;">
+              <div>• Cek Motor: <strong>{{ kpi.pillar_operations.days_hit_2_inspections }} hari</strong> ({{ kpi.pillar_operations.inspection_score }} poin)</div>
+              <div>• Bal: <strong>{{ kpi.pillar_operations.total_balls }}/{{ kpi.pillar_operations.target_balls }} bal</strong> ({{ kpi.pillar_operations.delivery_score }} poin)</div>
+            </div>
+          </div>
+
+          <!-- Pilar 3: Pelanggan (Kartu Nama) (20%) -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <ion-icon name="people-outline" color="tertiary"></ion-icon>
+                <strong style="font-size: 12.5px; color: #1e293b;">3. Pelanggan / Kartu Nama (20%)</strong>
+              </div>
+              <ion-badge color="tertiary" style="font-size: 0.8rem; font-weight: 700;">
+                {{ kpi.pillar_customers.score | number:'1.0-1' }} / 20 Poin
+              </ion-badge>
+            </div>
+            <div style="font-size: 11.5px; color: #475569;">
+              • Sebar Kartu: <strong>{{ kpi.pillar_customers.cards_achieved }} / {{ kpi.pillar_customers.cards_target }} warung baru</strong> ({{ kpi.pillar_customers.customer_score }} poin)
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
     <!-- KARTU BARU: KPI PENGIRIMAN BULAN INI (delivery_kpi) -->
     <ion-card *ngIf="salaryData.delivery_kpi as kpi" style="margin: 12px 16px; border-radius: 14px; border-left: 4px solid var(--ion-color-primary);">
       <ion-card-header style="padding-bottom: 8px;">
@@ -99,6 +209,48 @@
             <div style="font-size: 11px; color: #64748b;">Hari Capai Target</div>
             <strong style="font-size: 1rem; color: #16a34a;">{{ kpi.days_hit_target }} hari</strong>
           </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- KARTU: KPI OPERASIONAL INSPEKSI ARMADA (inspection_kpi) -->
+    <ion-card *ngIf="salaryData.inspection_kpi as iKpi" style="margin: 12px 16px; border-radius: 14px; border-left: 4px solid var(--ui-action, #0284c7);">
+      <ion-card-header style="padding-bottom: 8px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <div>
+            <ion-card-subtitle color="primary" style="font-weight: 700;">KPI OPERASIONAL INSPEKSI</ion-card-subtitle>
+            <ion-card-title style="font-size: 1.05rem; margin-top: 2px;">
+              {{ iKpi.days_completed_target }} / {{ iKpi.working_days }} Hari Kerja
+            </ion-card-title>
+          </div>
+          <ion-badge [color]="iKpi.target_achievement_percent >= 100 ? 'success' : 'primary'" style="font-size: 0.9rem; padding: 6px 10px;">
+            {{ iKpi.target_achievement_percent | number:'1.0-1' }}%
+          </ion-badge>
+        </div>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-progress-bar
+          [value]="inspectionKpiProgress"
+          [color]="iKpi.target_achievement_percent >= 100 ? 'success' : 'primary'"
+          style="height: 8px; border-radius: 999px; margin-bottom: 12px;">
+        </ion-progress-bar>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; text-align: center;">
+          <div style="background: #f8fafc; padding: 8px 6px; border-radius: 10px;">
+            <div style="font-size: 11px; color: #64748b;">Hari Masuk</div>
+            <strong style="font-size: 1rem; color: #0f172a;">{{ iKpi.working_days }}</strong>
+          </div>
+          <div style="background: #f8fafc; padding: 8px 6px; border-radius: 10px;">
+            <div style="font-size: 11px; color: #64748b;">Total Cek</div>
+            <strong style="font-size: 1rem; color: #0f172a;">{{ iKpi.total_inspections }}</strong>
+          </div>
+          <div style="background: #f8fafc; padding: 8px 6px; border-radius: 10px;">
+            <div style="font-size: 11px; color: #64748b;">Tuntas (2x/Hari)</div>
+            <strong style="font-size: 1rem; color: #16a34a;">{{ iKpi.days_completed_target }} hari</strong>
+          </div>
+        </div>
+        <div style="margin-top: 10px; font-size: 11.5px; color: #64748b; line-height: 1.4;">
+          Target harian: minimal 2x inspeksi di waktu berbeda (awal & akhir shift) agar syarat pulang terpenuhi dan KPI 100%.
         </div>
       </ion-card-content>
     </ion-card>
@@ -157,6 +309,19 @@
         </ion-label>
         <ion-note slot="end" color="success" class="fw-bold">
           + {{ salaryData.gamification_bonus | currency:'IDR':'Rp ':'1.0-0' }}
+        </ion-note>
+      </ion-item>
+
+      <ion-item *ngIf="(salaryData.kpi_bonus || 0) > 0">
+        <div slot="start" class="icon-box bg-success-light">
+          <ion-icon name="medal-outline" color="success"></ion-icon>
+        </div>
+        <ion-label>
+          <h3>Bonus KPI Kinerja</h3>
+          <p class="text-wrap">Grade {{ salaryData.kpi_summary?.grade }} ({{ salaryData.kpi_summary?.grade_label }})</p>
+        </ion-label>
+        <ion-note slot="end" color="success" class="fw-bold">
+          + {{ salaryData.kpi_bonus | currency:'IDR':'Rp ':'1.0-0' }}
         </ion-note>
       </ion-item>
 

@@ -12,7 +12,8 @@ import { addIcons } from 'ionicons';
 import {
   walletOutline, timeOutline, warningOutline, calendarOutline,
   cashOutline, alertCircleOutline, trophyOutline, cubeOutline,
-  checkmarkDoneOutline, flameOutline
+  checkmarkDoneOutline, flameOutline, medalOutline, ribbonOutline,
+  peopleOutline, sparklesOutline
 } from 'ionicons/icons';
 import { SalaryService, SalaryData } from 'src/app/services/salary.service';
 import { BranchBadgeComponent } from 'src/app/components/branch-badge/branch-badge.component';
@@ -44,7 +45,8 @@ export class DriverSalaryPage implements OnInit {
     addIcons({
       walletOutline, timeOutline, warningOutline, calendarOutline,
       cashOutline, alertCircleOutline, trophyOutline, cubeOutline,
-      checkmarkDoneOutline, flameOutline
+      checkmarkDoneOutline, flameOutline, medalOutline, ribbonOutline,
+      peopleOutline, sparklesOutline
     });
   }
 
@@ -93,6 +95,25 @@ export class DriverSalaryPage implements OnInit {
   get deliveryKpiProgress(): number {
     const pct = this.salaryData?.delivery_kpi?.target_achievement_percent || 0;
     return Math.min(1, Math.max(0, pct / 100));
+  }
+
+  get inspectionKpiProgress(): number {
+    const pct = this.salaryData?.inspection_kpi?.target_achievement_percent || 0;
+    return Math.min(1, Math.max(0, pct / 100));
+  }
+
+  get driverKpiProgress(): number {
+    const pct = this.salaryData?.kpi_summary?.total_score || 0;
+    return Math.min(1, Math.max(0, pct / 100));
+  }
+
+  getGradeColor(grade?: string): string {
+    switch (grade) {
+      case 'A': return 'success';
+      case 'B': return 'primary';
+      case 'C': return 'warning';
+      default: return 'danger';
+    }
   }
 
   doRefresh(event: any) {

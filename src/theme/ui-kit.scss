@@ -1,0 +1,619 @@
+// ============================================
+// UI KIT - REUSABLE SHARED DESIGN SYSTEM
+// ============================================
+
+.ui-content {
+  --background: var(--ui-bg);
+}
+
+.ui-wrap {
+  padding: 12px;
+}
+
+// Cards
+.ui-card {
+  background: var(--ui-card-bg);
+  border: 0.5px solid var(--ui-border);
+  border-radius: 16px;
+  padding: 14px;
+  margin: 0 0 10px;
+  box-shadow: none;
+}
+
+.ui-card-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ui-text);
+  margin: 0;
+}
+
+.ui-sub {
+  font-size: 13px;
+  color: var(--ui-text-2);
+  margin: 2px 0 0;
+}
+
+.ui-sub-sm {
+  font-size: 12px;
+  color: var(--ui-text-2);
+  margin: 2px 0 0;
+}
+
+.ui-section-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ui-text-2);
+  margin: 16px 2px 8px;
+}
+
+.ui-field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  margin: 0 0 4px;
+}
+
+// Form Inputs
+ion-input.ui-input,
+ion-textarea.ui-input {
+  --border-color: var(--ui-input-border);
+  --border-radius: 10px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  min-height: 44px;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+// Badges
+.ui-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  background: var(--ui-off-bg);
+  color: var(--ui-off-text);
+
+  &.ok {
+    background: var(--ui-ok-bg);
+    color: var(--ui-ok-text);
+  }
+
+  &.warn {
+    background: var(--ui-warn-bg);
+    color: var(--ui-warn-text);
+  }
+
+  &.bad {
+    background: var(--ui-bad-bg);
+    color: var(--ui-bad-text);
+  }
+
+  &.info {
+    background: var(--ui-action-soft);
+    color: var(--ui-action-strong);
+  }
+}
+
+// Segmented Controls
+.ui-seg {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.ui-seg-btn {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid var(--ui-input-border);
+  border-radius: 10px;
+  background: #ffffff;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 150ms ease;
+
+  &.selected {
+    background: var(--ui-action);
+    color: #ffffff;
+    font-weight: 500;
+    border-color: var(--ui-action);
+
+    &.ok {
+      background: var(--ui-ok);
+      border-color: var(--ui-ok);
+      color: #ffffff;
+    }
+
+    &.warn {
+      background: var(--ui-warn-bg);
+      border-color: var(--ui-warn);
+      color: var(--ui-warn-text);
+    }
+
+    &.bad {
+      background: var(--ui-bad-bg);
+      border-color: var(--ui-bad);
+      color: var(--ui-bad-text);
+    }
+  }
+}
+
+// Upload / Photo Box
+.ui-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 140px;
+  border: 1.5px dashed var(--ui-dashed);
+  border-radius: 12px;
+  background: var(--ui-upload-bg);
+  color: var(--ui-action-strong);
+  cursor: pointer;
+  text-align: center;
+  padding: 16px;
+  transition: background 150ms ease;
+
+  ion-icon {
+    font-size: 32px;
+    margin-bottom: 4px;
+  }
+
+  .t {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ui-action-strong);
+  }
+
+  .s {
+    font-size: 12px;
+    color: var(--ui-text-2);
+  }
+
+  &:active {
+    background: var(--ui-action-soft);
+  }
+
+  &.row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    gap: 12px;
+    min-height: 76px;
+    padding: 0 14px;
+
+    ion-icon {
+      font-size: 30px;
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Action Bar (ion-footer)
+.ui-action-bar {
+  background: #ffffff;
+  border-top: 0.5px solid var(--ui-border);
+  padding: 10px 12px 8px;
+
+  &.no-tabs {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+}
+
+// Helper Text
+.ui-help {
+  font-size: 12px;
+  text-align: center;
+  margin-top: 6px;
+  color: var(--ui-text-2);
+
+  &.bad {
+    color: var(--ui-bad);
+  }
+}
+
+// Primary Action Button
+ion-button.ui-btn {
+  --border-radius: 12px;
+  --background: var(--ui-action);
+  --color: #ffffff;
+  --box-shadow: none;
+  height: 48px;
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+
+  &.danger {
+    --background: var(--ui-bad);
+  }
+
+  &.button-disabled,
+  &[disabled] {
+    opacity: 1 !important;
+    --background: var(--ui-off-bg) !important;
+    --color: var(--ui-off-text) !important;
+    color: var(--ui-off-text) !important;
+  }
+}
+
+// Shortcut Tiles
+.ui-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.ui-tile {
+  background: #ffffff;
+  border: 0.5px solid var(--ui-border);
+  border-radius: 16px;
+  padding: 14px;
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 150ms ease;
+
+  &:active {
+    background: #F1F9FE;
+  }
+
+  .ic {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--ui-action-soft);
+    color: var(--ui-action-strong);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+
+    ion-icon {
+      font-size: 24px;
+    }
+  }
+
+  b {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ui-text);
+    line-height: 1.3;
+  }
+
+  small {
+    font-size: 12px;
+    color: var(--ui-text-2);
+    margin-top: 2px;
+    line-height: 1.3;
+  }
+
+  &.wide {
+    grid-column: span 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    min-height: auto;
+
+    .ic {
+      margin-bottom: 0;
+      margin-right: 12px;
+      flex-shrink: 0;
+    }
+
+    .tile-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chevron-ic {
+      font-size: 20px;
+      color: var(--ui-text-muted);
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Select Outline Wrapper
+.ui-select-wrap {
+  min-height: 44px;
+  border: 1px solid var(--ui-input-border);
+  border-radius: 10px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  margin-bottom: 12px;
+
+  ion-select {
+    width: 100%;
+    --padding-top: 0;
+    --padding-bottom: 0;
+    --padding-start: 0;
+    --padding-end: 0;
+    font-size: 15px;
+  }
+}
+
+// Progress Bar
+ion-progress-bar.ui-progress {
+  --background: var(--ui-action-soft);
+  --progress-background: var(--ui-action);
+  height: 8px;
+  border-radius: 4px;
+
+  &.reached {
+    --progress-background: var(--ui-ok);
+  }
+}
+
+// 3-Step Indicator Bar
+.ui-step-bar {
+  background: #ffffff;
+  border-bottom: 0.5px solid var(--ui-border);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .ui-step {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ui-step-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
+    background: var(--ui-off-bg);
+    color: var(--ui-off-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
+    flex-shrink: 0;
+
+    ion-icon {
+      font-size: 14px;
+      color: #ffffff;
+    }
+
+    &.done {
+      background: var(--ui-action);
+      color: #ffffff;
+    }
+
+    &.active {
+      background: #ffffff;
+      border: 2px solid var(--ui-action);
+      color: var(--ui-action-strong);
+    }
+  }
+
+  .ui-step-label {
+    font-size: 12px;
+    color: var(--ui-text-muted);
+
+    &.active {
+      color: var(--ui-action-strong);
+      font-weight: 500;
+    }
+
+    &.done {
+      color: var(--ui-text);
+      font-weight: 500;
+    }
+  }
+
+  .ui-step-line {
+    height: 2px;
+    flex: 1;
+    margin: 0 8px;
+    background: var(--ui-border);
+
+    &.done {
+      background: var(--ui-action);
+    }
+  }
+}
+
+// Spacing Utilities
+.mb-6 { margin-bottom: 6px; }
+.mb-12 { margin-bottom: 12px; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.ui-bottom-spacer {
+  height: calc(60px + env(safe-area-inset-bottom) + 24px);
+
+  &.sm {
+    height: 16px;
+  }
+}
+
+// ==========================================
+// USER GREETING BANNER
+// ==========================================
+.user-greeting-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ui-card-bg, #FFFFFF);
+  border: 1px solid var(--ui-border, #E5E7EB);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+
+  .greeting-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .greeting-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ui-text, #111827);
+    margin: 0 0 3px 0;
+    line-height: 1.25;
+  }
+
+  .greeting-subtitle {
+    font-size: 13px;
+    color: var(--ui-text-2, #4B5563);
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .greeting-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--ui-action-soft, #E1F5FE);
+    color: var(--ui-action, #0277BD);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+}
+
+// ==========================================
+// INTERACTIVE SELECT TRIGGER CARD (POPUP TRIGGER)
+// ==========================================
+.ui-select-trigger-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ui-select-trigger-btn {
+  background: var(--ui-action-soft, #E1F5FE);
+  color: var(--ui-action, #0277BD);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:active {
+    opacity: 0.75;
+  }
+}
+
+.ui-select-trigger-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1.5px solid var(--ui-border, #E5E7EB);
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 48px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+
+  &:active {
+    border-color: var(--ui-action, #0277BD);
+    background: var(--ui-action-soft, #E1F5FE);
+  }
+
+  .trigger-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .trigger-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ui-text, #111827);
+  }
+
+  .trigger-caption {
+    font-size: 12px;
+    color: var(--ui-text-muted, #6B7280);
+  }
+
+  .trigger-arrow {
+    font-size: 16px;
+    color: var(--ui-text-muted, #6B7280);
+    flex-shrink: 0;
+  }
+}
+
+// ==========================================
+// USER DONE NOTICE (INSPECTION / CHECKSHEET)
+// ==========================================
+.user-inspected-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-top: 10px;
+  margin-bottom: 8px;
+  background: var(--ui-ok-bg, #D1FAE5);
+  border: 1px solid rgba(5, 150, 105, 0.25);
+  color: var(--ui-ok-text, #065F46);
+  border-radius: 10px;
+
+  ion-icon {
+    font-size: 20px;
+    color: var(--ui-ok, #059669);
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .banner-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .banner-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--ui-ok-text, #065F46);
+  }
+
+  .banner-sub {
+    font-size: 12px;
+    color: #065F46;
+    line-height: 1.35;
+  }
+}
+
+.badge-driver-other {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ui-text-muted, #6B7280);
+  background: var(--ui-off-bg, #F3F4F6);
+  padding: 4px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+}

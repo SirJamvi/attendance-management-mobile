@@ -3,15 +3,14 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs"></ion-back-button>
     </ion-buttons>
-    <ion-title>Presensi Harian</ion-title>
+    <ion-title>Presensi harian</ion-title>
     <ion-buttons slot="end">
-      <app-branch-badge></app-branch-badge>
+      <app-branch-badge [clickable]="true" (clicked)="openBranchModal()"></app-branch-badge>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding-bottom">
-
+<ion-content class="ui-content" [fullscreen]="true">
   <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
@@ -20,370 +19,343 @@
     <app-loading-spinner message="Memuat data..."></app-loading-spinner>
   </div>
 
-  <div *ngIf="!isLoading" class="content-wrapper ion-padding">
+  <div *ngIf="!isLoading" class="ui-wrap">
 
-    <!-- PERINGATAN EVALUASI -->
-    <ion-card *ngIf="hasSevereWarning" color="danger" class="ion-margin-bottom">
-      <ion-card-content class="d-flex align-items-center">
-        <ion-icon name="warning-outline" style="font-size: 2.5rem; margin-right: 15px;"></ion-icon>
-        <div>
-          <h2 style="font-weight: bold; font-size: 1.1rem; margin-top: 0; margin-bottom: 5px;">PERINGATAN EVALUASI</h2>
-          <p class="ion-no-margin small" style="opacity: 0.95;">
+    <!-- USER GREETING BANNER -->
+    <div class="user-greeting-card">
+      <div class="greeting-content">
+        <h2 class="greeting-title">Hi, {{ userDisplayName }}!</h2>
+        <p class="greeting-subtitle">Selamat bekerja dan tetap semangat.</p>
+      </div>
+      <div class="greeting-badge">
+        <ion-icon name="person-circle-outline"></ion-icon>
+      </div>
+    </div>
+
+    <!-- SECTION A: PERINGATAN EVALUASI -->
+    <div *ngIf="hasSevereWarning" class="ui-card warning-card">
+      <div class="warning-card-inner">
+        <ion-icon name="warning-outline" class="warning-icon"></ion-icon>
+        <div class="warning-card-text">
+          <div class="warning-title">Peringatan evaluasi</div>
+          <div class="warning-message">
             {{ warningMessage || 'Keterlambatan mingguan melampaui batas.' }}
-          </p>
+          </div>
         </div>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- INFO SHIFT -->
-    <ion-card *ngIf="shiftInfo" [color]="isDayOff ? 'medium' : 'primary'" class="ion-margin-bottom">
-      <ion-card-content class="ion-text-center">
-
-        <div *ngIf="isDayOff">
-          <ion-icon name="alert-circle-outline" style="font-size: 40px;"></ion-icon>
-          <h2 style="font-weight: bold; font-size: 1.5rem; margin-top: 5px;">HARI LIBUR</h2>
-          <p class="ion-no-margin">Hari ini ({{ currentDayName }}) jadwal Anda libur.</p>
-        </div>
-
-        <div *ngIf="!isDayOff">
-          <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
-            <ion-icon name="calendar-outline" style="font-size: 1.2rem;"></ion-icon>
-            <h3 style="font-weight: bold; font-size: 1.2rem; margin: 0;">{{ shiftInfo.name }}</h3>
-          </div>
-          <div style="margin-top: 8px; font-size: 0.95rem; opacity: 0.9;">
-            <ion-icon name="time-outline" style="vertical-align: middle;"></ion-icon>
-            <span style="vertical-align: middle;"> {{ shiftInfo.start }} - {{ shiftInfo.end }} WIB</span>
-          </div>
-          <ion-badge color="light" class="ion-margin-top" style="color: var(--ion-color-primary);">
-            {{ currentDayName }}
-          </ion-badge>
-        </div>
-
-      </ion-card-content>
-    </ion-card>
-
-    <!-- DRIVER GATEKEEPER: CHECKLIST SYARAT ABSEN PULANG -->
-    <ion-card *ngIf="isDriver && checkoutEligibility" class="gatekeeper-card ion-margin-bottom">
-      <ion-card-header class="gatekeeper-header">
-        <div class="gatekeeper-title-row">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <ion-icon
-              [name]="isCheckoutLocked ? 'lock-closed-outline' : 'lock-open-outline'"
-              [color]="isCheckoutLocked ? 'warning' : 'success'"
-              style="font-size: 1.35rem;">
-            </ion-icon>
-            <ion-card-title style="font-size: 1rem; font-weight: 700;">
-              Syarat Absen Pulang
-            </ion-card-title>
-          </div>
-          <ion-badge *ngIf="checkoutEligibility.bypass_applied" color="success">
-            <ion-icon name="shield-checkmark-outline" style="vertical-align: middle; margin-right: 3px;"></ion-icon>
-            Bypass Disetujui KO
-          </ion-badge>
-          <ion-badge *ngIf="!checkoutEligibility.bypass_applied" [color]="checkoutEligibility.can_checkout ? 'success' : 'warning'">
-            {{ checkoutEligibility.can_checkout ? 'Siap Pulang' : 'Belum Lengkap' }}
-          </ion-badge>
-        </div>
-        <ion-card-subtitle *ngIf="checkoutEligibility.bypass_applied && checkoutEligibility.bypass_reason" style="margin-top: 4px;">
-          Alasan bypass: {{ checkoutEligibility.bypass_reason }}
-        </ion-card-subtitle>
-      </ion-card-header>
-
-      <ion-card-content class="ion-no-padding">
-        <ion-list lines="full">
-          <ion-item
-            *ngFor="let req of checkoutEligibility.requirements"
-            [button]="!req.completed"
-            [detail]="!req.completed"
-            (click)="!req.completed && navigateToRequirement(req)">
-            <ion-icon
-              slot="start"
-              [name]="req.completed ? 'checkmark-circle' : 'alert-circle-outline'"
-              [color]="req.completed ? 'success' : 'warning'"
-              style="font-size: 1.5rem;">
-            </ion-icon>
-            <ion-label class="ion-text-wrap">
-              <h3 style="font-weight: 600; font-size: 0.95rem;">{{ req.title }}</h3>
-              <p style="font-size: 0.8rem; color: #64748b;">
-                {{ req.message || (req.completed ? 'Sudah terpenuhi' : 'Ketuk untuk mengisi sekarang') }}
-              </p>
-            </ion-label>
-            <ion-badge slot="end" [color]="req.completed ? 'success' : 'warning'">
-              {{ req.completed ? 'Selesai' : 'Wajib' }}
-            </ion-badge>
-          </ion-item>
-        </ion-list>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- BELUM ABSEN MASUK -->
-    <div *ngIf="!attendanceToday">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title [color]="isDayOff ? 'danger' : ''">
-            {{ isDayOff ? 'Presensi Darurat (Hari Libur)' : 'Presensi Masuk' }}
-          </ion-card-title>
-          <ion-card-subtitle>
-            {{ isKoOrKasir
-              ? 'Check-in otomatis menyelesaikan Checksheet Buka Depot Pagi.'
-              : (isDayOff ? 'Foto selfie untuk pengajuan darurat.' : 'Foto selfie untuk kehadiran.') }}
-          </ion-card-subtitle>
-        </ion-card-header>
-        <ion-card-content>
-
-          <div *ngIf="isDayOff" class="ion-text-center ion-padding-bottom">
-            <p class="text-danger" style="font-weight: bold;">
-              <ion-icon name="warning"></ion-icon> Absen Anda akan memerlukan validasi Admin.
-            </p>
-            <ion-item lines="outline" style="margin-top: 8px; --border-radius: 10px;">
-              <ion-textarea
-                [(ngModel)]="emergencyNote"
-                label="Catatan Darurat (Opsional)"
-                labelPlacement="stacked"
-                placeholder="Contoh: Masuk menggantikan shift / pengiriman mendadak"
-                rows="2">
-              </ion-textarea>
-            </ion-item>
-          </div>
-
-          <div>
-            <div style="position: relative; z-index: 1;">
-              <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
-            </div>
-
-            <div *ngIf="photoData && !locationData" class="ion-text-center ion-padding-top">
-              <ion-spinner name="crescent" color="primary"></ion-spinner>
-              <p class="ion-text-wrap small-text">Mencari koordinat GPS...</p>
-            </div>
-
-            <div *ngIf="photoData" class="ion-text-center ion-margin-vertical">
-              <img [src]="photoData" style="max-height: 300px; border-radius: 10px; border: 2px solid #ddd;">
-            </div>
-
-            <ion-button
-              expand="block"
-              class="ion-margin-top"
-              [color]="isDayOff ? 'danger' : 'primary'"
-              [disabled]="isSubmitDisabled"
-              (click)="submitCheckIn()">
-              <ion-icon slot="start" name="camera-outline"></ion-icon>
-              {{ isDayOff ? 'Ajukan Presensi Darurat' : 'Submit Masuk' }}
-            </ion-button>
-          </div>
-
-        </ion-card-content>
-      </ion-card>
+      </div>
     </div>
 
-    <!-- SUDAH MASUK, BELUM PULANG -->
-    <div *ngIf="attendanceToday && !attendanceToday.check_out_time">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-title>Presensi Pulang</ion-card-title>
-          <ion-card-subtitle>Foto selfie untuk pulang.</ion-card-subtitle>
-        </ion-card-header>
-        <ion-card-content>
-          <ion-item lines="none" color="light" class="info-box">
-            <ion-icon name="checkmark-circle" color="success" slot="start"></ion-icon>
-            <ion-label>
-              <h2>Sudah Masuk</h2>
-              <p>{{ attendanceToday.check_in_time | date: 'HH:mm' }} WIB</p>
-            </ion-label>
-          </ion-item>
-
-          <div *ngIf="isCheckoutLocked" class="checkout-locked-banner">
-            <ion-icon name="lock-closed-outline" color="warning"></ion-icon>
-            <div>
-              <strong>Absen Pulang Terkunci</strong>
-              <p>Selesaikan seluruh Syarat Absen Pulang di atas terlebih dahulu (atau minta Bypass KO jika kondisi darurat).</p>
-            </div>
-          </div>
-
-          <div class="spacer"></div>
-
-          <div style="position: relative; z-index: 1;">
-            <app-camera-view (photoTaken)="handlePhoto($event)"></app-camera-view>
-          </div>
-
-          <div *ngIf="photoData" class="ion-text-center ion-margin-top">
-            <img [src]="photoData" style="max-height: 400px; border-radius: 12px; border: 2px solid var(--ion-color-primary);">
-            <ion-button fill="clear" color="danger" (click)="resetForm()">
-              <ion-icon name="trash-outline" slot="start"></ion-icon>
-              Hapus Foto
-            </ion-button>
-          </div>
-
-          <div *ngIf="photoData && !locationData" class="ion-text-center ion-padding-top">
-            <ion-spinner name="crescent" color="primary"></ion-spinner>
-            <p class="ion-text-wrap small-text">Mencari koordinat GPS...</p>
-          </div>
-
-          <ion-button
-            expand="block"
-            class="ion-margin-top"
-            [color]="isCheckoutLocked ? 'medium' : 'warning'"
-            [disabled]="isSubmitDisabled || isCheckoutLocked"
-            (click)="submitCheckOut()">
-            <ion-icon slot="start" [name]="isCheckoutLocked ? 'lock-closed-outline' : 'camera-outline'"></ion-icon>
-            {{ isCheckoutLocked ? 'Absen Pulang Terkunci' : 'Submit Pulang' }}
-          </ion-button>
-        </ion-card-content>
-      </ion-card>
-    </div>
-
-    <!-- SUDAH MASUK DAN PULANG -->
-    <div *ngIf="attendanceToday && attendanceToday.check_out_time" class="ion-text-center ion-padding top-margin">
-      <ion-icon name="checkmark-done-circle" color="success" style="font-size: 80px;"></ion-icon>
-      <h2 class="ion-margin-top">Selesai!</h2>
-      <p class="ion-text-wrap" color="medium">Presensi hari ini telah tuntas.</p>
-
-      <ion-card>
-        <ion-list lines="full">
-          <ion-item>
-            <ion-label>Jam Masuk</ion-label>
-            <ion-note slot="end" color="dark">{{ attendanceToday.check_in_time | date: 'HH:mm' }}</ion-note>
-          </ion-item>
-          <ion-item lines="none">
-            <ion-label>Jam Pulang</ion-label>
-            <ion-note slot="end" color="dark">{{ attendanceToday.check_out_time | date: 'HH:mm' }}</ion-note>
-          </ion-item>
-        </ion-list>
-      </ion-card>
-    </div>
-
-    <!-- MISI AKTIF (DRIVER) -->
-    <div *ngIf="isDriver && activeMissions && activeMissions.length > 0" class="ion-margin-top ion-margin-bottom">
-      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; padding-left: 5px;">
-        <ion-icon name="flame" color="danger" style="font-size: 1.5rem;"></ion-icon>
-        <h3 style="margin: 0; font-weight: bold; font-size: 1.1rem; color: var(--ion-color-dark);">Misi Sedang Berjalan</h3>
+    <!-- SECTION B: KARTU STATUS HARI INI -->
+    <div class="ui-card">
+      <!-- Baris Atas Status -->
+      <div *ngIf="isDayOff" class="status-top">
+        <div class="status-top-row">
+          <span class="day-name">{{ currentDayName }}</span>
+          <span class="ui-badge warn">Hari libur</span>
+        </div>
+        <div class="ui-sub">Hari ini ({{ currentDayName }}) jadwal Anda libur.</div>
       </div>
 
-      <ion-card *ngFor="let mission of activeMissions" class="ion-no-margin ion-margin-bottom shadow-sm" style="border-top: 4px solid var(--ion-color-warning);">
-        <ion-card-header style="padding-bottom: 5px; background: rgba(var(--ion-color-warning-rgb), 0.1);">
-          <ion-card-subtitle color="primary" style="font-weight: bold; font-size: 0.85rem; text-transform: uppercase;">
-            {{ mission.title }}
-          </ion-card-subtitle>
-          <ion-card-title style="font-size: 1.1rem; margin-top: 2px;">
-            <ion-icon name="gift-outline" color="warning"></ion-icon> Rp {{ mission.reward_amount | number }}
-          </ion-card-title>
-        </ion-card-header>
-        <ion-card-content class="ion-no-padding">
-          <ion-list lines="full">
-            <ion-item *ngFor="let p of mission.standings" [color]="p.is_me ? 'light' : ''">
-              <div slot="start" style="width: 35px; text-align: center; font-size: 1.3rem;">
-                <span *ngIf="p.rank === 1">🥇</span>
-                <span *ngIf="p.rank === 2">🥈</span>
-                <span *ngIf="p.rank === 3">🥉</span>
-                <span *ngIf="p.rank > 3" style="font-weight: bold; font-size: 1rem; color: #888;">#{{ p.rank }}</span>
-              </div>
-              <ion-label>
-                <h3 [style.font-weight]="p.is_me ? 'bold' : 'normal'" style="font-size: 1rem;">
-                  {{ p.name }} <span *ngIf="p.is_me" class="text-primary small">(Anda)</span>
-                </h3>
-              </ion-label>
-              <ion-note slot="end" [color]="p.rank === 1 ? 'success' : 'dark'" style="font-weight: bold; font-size: 0.95rem;">
-                {{ p.score_text }}
-              </ion-note>
-            </ion-item>
-          </ion-list>
-        </ion-card-content>
-      </ion-card>
+      <div *ngIf="!isDayOff" class="status-top">
+        <div class="day-name">{{ currentDayName }}</div>
+        <div *ngIf="shiftInfo" class="shift-info-row">
+          <span class="shift-name">{{ shiftInfo.name }}</span>
+          <span class="shift-time">{{ shiftInfo.start }} – {{ shiftInfo.end }} WIB</span>
+        </div>
+      </div>
+
+      <!-- Stepper Dua Langkah Horizontal -->
+      <div class="ui-stepper">
+        <!-- Step 1: Masuk -->
+        <div class="stepper-step">
+          <div class="step-circle" [class.done]="attendanceToday" [class.active]="!attendanceToday">
+            <ion-icon *ngIf="attendanceToday" name="checkmark"></ion-icon>
+            <span *ngIf="!attendanceToday">1</span>
+          </div>
+          <div class="step-info">
+            <div class="step-title">Masuk</div>
+            <div class="step-sub">
+              {{ attendanceToday ? ((attendanceToday.check_in_time | date:'HH:mm') + ' WIB') : 'Belum presensi' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Stepper Line -->
+        <div
+          class="stepper-line"
+          [class.done]="attendanceToday?.check_out_time"
+          [class.active]="attendanceToday && !attendanceToday.check_out_time">
+        </div>
+
+        <!-- Step 2: Pulang -->
+        <div class="stepper-step">
+          <div
+            class="step-circle"
+            [class.done]="attendanceToday?.check_out_time"
+            [class.locked]="!attendanceToday?.check_out_time && isCheckoutLocked">
+            <ion-icon *ngIf="attendanceToday?.check_out_time" name="checkmark"></ion-icon>
+            <ion-icon *ngIf="!attendanceToday?.check_out_time && isCheckoutLocked" name="lock-closed-outline"></ion-icon>
+            <span *ngIf="!attendanceToday?.check_out_time && !isCheckoutLocked">2</span>
+          </div>
+          <div class="step-info">
+            <div class="step-title">Pulang</div>
+            <div class="step-sub">
+              {{ attendanceToday?.check_out_time ? ((attendanceToday?.check_out_time | date:'HH:mm') + ' WIB') : (isCheckoutLocked ? 'Terkunci' : (attendanceToday ? 'Belum pulang' : 'Belum')) }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info Cabang Tugas Hari Ini -->
+      <div *ngIf="attendanceToday && selectedBranchName" class="duty-branch-active-row">
+        <ion-icon name="storefront-outline"></ion-icon>
+        <span>Tugas Cabang: <strong>{{ selectedBranchName }}</strong></span>
+      </div>
     </div>
 
-    <!-- SHORTCUT OPERASIONAL DRIVER -->
-    <div *ngIf="isDriver" class="ion-margin-top">
-      <ion-grid class="ion-no-padding">
-        <ion-row>
-          <ion-col size="6">
-            <ion-card color="primary" button="true" routerLink="/tabs/driver/inspection" class="shortcut-card ion-margin-end">
-              <ion-card-content class="ion-text-center">
-                <ion-icon name="speedometer-outline" style="font-size: 2.2rem;"></ion-icon>
-                <h2>Inspeksi Armada</h2>
-                <p><small>Bensin & Kondisi</small></p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
+    <!-- SECTION C: SYARAT ABSEN PULANG (DRIVER) -->
+    <div *ngIf="isDriver && checkoutEligibility" class="ui-card req-card">
+      <div class="req-header">
+        <div class="ui-card-title">Syarat absen pulang</div>
+        <div class="req-header-badge">
+          <span *ngIf="checkoutEligibility.bypass_applied" class="ui-badge ok">Bypass disetujui KO</span>
+          <span *ngIf="!checkoutEligibility.bypass_applied && checkoutEligibility.can_checkout" class="ui-badge ok">Siap pulang</span>
+          <span *ngIf="!checkoutEligibility.bypass_applied && !checkoutEligibility.can_checkout" class="ui-badge warn">
+            {{ completedRequirementsCount }} dari {{ totalRequirementsCount }}
+          </span>
+        </div>
+      </div>
 
-          <ion-col size="6">
-            <ion-card color="tertiary" button="true" routerLink="/tabs/driver/bulk-delivery" class="shortcut-card ion-margin-start">
-              <ion-card-content class="ion-text-center">
-                <ion-icon name="clipboard-outline" style="font-size: 2.2rem;"></ion-icon>
-                <h2>Bulk Delivery</h2>
-                <p><small>Magic Paste WA</small></p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
+      <div *ngIf="checkoutEligibility.bypass_applied && checkoutEligibility.bypass_reason" class="ui-sub-sm bypass-note">
+        Alasan bypass: {{ checkoutEligibility.bypass_reason }}
+      </div>
 
-        <ion-row class="ion-margin-top">
-          <ion-col size="6">
-            <ion-card color="secondary" button="true" routerLink="/tabs/driver/delivery-proof" class="shortcut-card ion-margin-end">
-              <ion-card-content class="ion-text-center">
-                <ion-icon name="cube-outline" style="font-size: 2.2rem;"></ion-icon>
-                <h2>Order / Bukti</h2>
-                <p><small>Laporan Es Kristal</small></p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
+      <!-- Progress Bar Track -->
+      <div class="req-progress-track">
+        <div class="req-progress-fill" [style.width.%]="requirementsProgressPercent"></div>
+      </div>
 
-          <ion-col size="6">
-            <ion-card color="warning" button="true" routerLink="/tabs/driver/leaderboard" class="shortcut-card ion-margin-start">
-              <ion-card-content class="ion-text-center">
-                <ion-icon name="podium-outline" style="font-size: 2.2rem;"></ion-icon>
-                <h2>Klasemen</h2>
-                <p><small>Poin & Bonus</small></p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
+      <!-- Requirements List -->
+      <div class="req-list">
+        <div
+          *ngFor="let req of checkoutEligibility.requirements; let last = last"
+          class="req-row"
+          [class.hairline]="!last"
+          [class.clickable]="!req.completed"
+          (click)="!req.completed && navigateToRequirement(req)">
+          <ion-icon
+            [name]="req.completed ? 'checkmark-circle' : 'alert-circle-outline'"
+            class="req-icon"
+            [class.ok-ic]="req.completed"
+            [class.warn-ic]="!req.completed">
+          </ion-icon>
+          <div class="req-body">
+            <div class="req-title">{{ req.title }}</div>
+            <div class="req-sub">
+              {{ req.message || (req.completed ? 'Sudah terpenuhi' : 'Ketuk untuk mengisi sekarang') }}
+            </div>
+          </div>
+          <div class="req-end">
+            <span class="ui-badge" [class.ok]="req.completed" [class.warn]="!req.completed">
+              {{ req.completed ? 'Selesai' : 'Wajib' }}
+            </span>
+            <ion-icon *ngIf="!req.completed" name="chevron-forward-outline" class="req-chevron"></ion-icon>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- SHORTCUT OPERASIONAL KO / KASIR -->
-    <div *ngIf="isKoOrKasir" class="ion-margin-top">
-      <ion-grid class="ion-no-padding">
-        <ion-row>
-          <ion-col size="6">
-            <ion-card color="primary" button="true" routerLink="/tabs/ko/checksheets" class="shortcut-card ion-margin-end">
-              <ion-card-content class="ion-text-center">
-                <ion-icon name="clipboard-outline" style="font-size: 2.2rem;"></ion-icon>
-                <h2>Checksheet</h2>
-                <p><small>3 Fase & Insidental</small></p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
+    <!-- SECTION D: MODE PRESENSI MASUK -->
+    <div *ngIf="!attendanceToday" class="ui-card">
+      <div class="ui-card-title">{{ isDayOff ? 'Presensi darurat (hari libur)' : 'Presensi masuk' }}</div>
+      <div class="ui-sub">
+        {{ isKoOrKasir
+          ? 'Check-in otomatis menyelesaikan checksheet buka depot pagi.'
+          : (isDayOff ? 'Foto selfie untuk pengajuan darurat.' : 'Foto selfie untuk kehadiran.') }}
+      </div>
 
-          <ion-col size="6">
-            <ion-card color="tertiary" button="true" routerLink="/tabs/ko/deliveries" class="shortcut-card ion-margin-start">
-              <ion-card-content class="ion-text-center">
-                <ion-icon name="checkmark-done-outline" style="font-size: 2.2rem;"></ion-icon>
-                <h2>Approval</h2>
-                <p><small>Delivery & POS</small></p>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
+      <!-- Warning & Emergency Note for Day Off -->
+      <div *ngIf="isDayOff" class="emergency-box">
+        <div class="emergency-notice">
+          <ion-icon name="warning-outline"></ion-icon>
+          <span>Absen Anda akan memerlukan validasi Admin.</span>
+        </div>
+        <label class="ui-field-label">Catatan darurat (opsional)</label>
+        <ion-textarea
+          class="ui-input"
+          fill="outline"
+          [(ngModel)]="emergencyNote"
+          placeholder="Contoh: Masuk menggantikan shift / pengiriman mendadak"
+          [autoGrow]="true"
+          rows="2">
+        </ion-textarea>
+      </div>
 
-        <ion-row class="ion-margin-top">
-          <ion-col size="12">
-            <ion-card color="success" button="true" routerLink="/tabs/ko/kpi" class="shortcut-card" style="margin-left: 0; margin-right: 0;">
-              <ion-card-content style="display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <ion-icon name="stats-chart-outline" style="font-size: 2rem;"></ion-icon>
-                  <div>
-                    <h2 style="margin: 0; text-align: left;">Estimasi KPI Bulanan</h2>
-                    <p style="margin: 2px 0 0; text-align: left;"><small>Bonus Disiplin Checksheet & Akurasi Kas</small></p>
-                  </div>
-                </div>
-                <ion-icon name="chevron-forward-outline" style="font-size: 1.4rem;"></ion-icon>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
+      <!-- Camera View -->
+      <div class="camera-container">
+        <app-camera-view [photoPreview]="photoData" (photoTaken)="handlePhoto($event)"></app-camera-view>
+      </div>
+
+      <!-- GPS Spinner -->
+      <div *ngIf="photoData && !locationData" class="gps-loading">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <span class="gps-text">Mencari lokasi GPS…</span>
+      </div>
     </div>
 
-    <div style="height: 16px;"></div>
+    <!-- SECTION E: MODE PRESENSI PULANG -->
+    <div *ngIf="attendanceToday && !attendanceToday.check_out_time" class="ui-card">
+      <div class="ui-card-title">Presensi pulang</div>
+      <div class="ui-sub">Foto selfie untuk pulang.</div>
+
+      <!-- Locked Banner -->
+      <div *ngIf="isCheckoutLocked" class="locked-banner">
+        <ion-icon name="lock-closed-outline" class="locked-icon"></ion-icon>
+        <div class="locked-text">
+          <div class="locked-title">Absen pulang terkunci</div>
+          <div class="locked-desc">
+            Selesaikan semua syarat absen pulang di atas dulu, atau minta bypass KO untuk kondisi darurat.
+          </div>
+        </div>
+      </div>
+
+      <!-- Camera View -->
+      <div class="camera-container">
+        <app-camera-view [photoPreview]="photoData" (photoTaken)="handlePhoto($event)"></app-camera-view>
+      </div>
+
+      <!-- GPS Spinner -->
+      <div *ngIf="photoData && !locationData" class="gps-loading">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <span class="gps-text">Mencari lokasi GPS…</span>
+      </div>
+    </div>
+
+    <!-- SECTION F: MODE SELESAI -->
+    <div *ngIf="attendanceToday && attendanceToday.check_out_time" class="done-section">
+      <ion-icon name="checkmark-done-circle" class="done-icon"></ion-icon>
+      <div class="done-title">Presensi selesai</div>
+      <div class="done-sub">Presensi hari ini telah tuntas.</div>
+
+      <div class="ui-card done-card">
+        <div class="done-row hairline">
+          <span class="done-label">Jam masuk</span>
+          <span class="done-val">{{ attendanceToday.check_in_time | date: 'HH:mm' }} WIB</span>
+        </div>
+        <div class="done-row">
+          <span class="done-label">Jam pulang</span>
+          <span class="done-val">{{ attendanceToday.check_out_time | date: 'HH:mm' }} WIB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION G: MISI AKTIF (DRIVER) -->
+    <div *ngIf="isDriver && activeMissions && activeMissions.length > 0" class="missions-section">
+      <div class="section-header">
+        <ion-icon name="flame" class="flame-icon"></ion-icon>
+        <span class="section-title">Misi sedang berjalan</span>
+      </div>
+
+      <div *ngFor="let mission of activeMissions" class="ui-card mission-card">
+        <div class="mission-header">
+          <div class="mission-title">{{ mission.title }}</div>
+          <div class="mission-reward">Rp {{ mission.reward_amount | number }}</div>
+        </div>
+
+        <div class="mission-standings">
+          <div
+            *ngFor="let p of mission.standings; let last = last"
+            class="standing-row"
+            [class.is-me]="p.is_me"
+            [class.hairline]="!last">
+            <div class="standing-rank">
+              <span *ngIf="p.rank === 1">🥇</span>
+              <span *ngIf="p.rank === 2">🥈</span>
+              <span *ngIf="p.rank === 3">🥉</span>
+              <span *ngIf="p.rank > 3">#{{ p.rank }}</span>
+            </div>
+            <div class="standing-name">
+              <span [class.fw-500]="p.is_me">{{ p.name }}</span>
+              <span *ngIf="p.is_me" class="ui-badge info ml-1">Anda</span>
+            </div>
+            <div class="standing-score">{{ p.score_text }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION H: AKSES CEPAT (DRIVER) -->
+    <div *ngIf="isDriver" class="quick-access-section">
+      <span class="ui-section-label">Akses cepat</span>
+      <div class="ui-tile-grid">
+        <a class="ui-tile" routerLink="/tabs/driver/inspection">
+          <div class="ic">
+            <ion-icon name="speedometer-outline"></ion-icon>
+          </div>
+          <b>Inspeksi armada</b>
+          <small>Bensin dan kondisi</small>
+        </a>
+
+        <a class="ui-tile" routerLink="/tabs/driver/bulk-delivery">
+          <div class="ic">
+            <ion-icon name="clipboard-outline"></ion-icon>
+          </div>
+          <b>Rekap order</b>
+          <small>Magic paste WA</small>
+        </a>
+
+        <a class="ui-tile" routerLink="/tabs/driver/delivery-proof">
+          <div class="ic">
+            <ion-icon name="card-outline"></ion-icon>
+          </div>
+          <b>Kartu nama</b>
+          <small>Foto kartu nama toko</small>
+        </a>
+
+        <a class="ui-tile" routerLink="/tabs/driver/leaderboard">
+          <div class="ic">
+            <ion-icon name="podium-outline"></ion-icon>
+          </div>
+          <b>Klasemen</b>
+          <small>Poin dan bonus</small>
+        </a>
+      </div>
+    </div>
+
+    <!-- SECTION H: AKSES CEPAT (KO / KASIR) -->
+    <div *ngIf="isKoOrKasir" class="quick-access-section">
+      <span class="ui-section-label">Akses cepat</span>
+      <div class="ui-tile-grid">
+        <a class="ui-tile" routerLink="/tabs/ko/checksheets">
+          <div class="ic">
+            <ion-icon name="clipboard-outline"></ion-icon>
+          </div>
+          <b>Checksheet</b>
+          <small>3 fase dan insidental</small>
+        </a>
+
+        <a class="ui-tile" routerLink="/tabs/ko/deliveries">
+          <div class="ic">
+            <ion-icon name="checkmark-done-outline"></ion-icon>
+          </div>
+          <b>Approval</b>
+          <small>Delivery dan POS</small>
+        </a>
+
+        <a class="ui-tile wide" routerLink="/tabs/ko/kpi">
+          <div class="ic">
+            <ion-icon name="stats-chart-outline"></ion-icon>
+          </div>
+          <div class="tile-body">
+            <b>Estimasi KPI bulanan</b>
+            <small>Bonus disiplin checksheet dan akurasi kas</small>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="chevron-ic"></ion-icon>
+        </a>
+      </div>
+    </div>
+
+    <div class="ui-bottom-spacer"></div>
 
   </div>
 
@@ -392,35 +364,42 @@
     <ng-template>
       <ion-header>
         <ion-toolbar color="warning">
-          <ion-title>Absen Pulang Terkunci</ion-title>
+          <ion-title class="blocked-modal-title">Absen pulang terkunci</ion-title>
           <ion-buttons slot="end">
-            <ion-button (click)="isBlockedModalOpen = false">
+            <ion-button (click)="isBlockedModalOpen = false" class="blocked-modal-close" aria-label="Tutup">
               <ion-icon name="close-outline"></ion-icon>
             </ion-button>
           </ion-buttons>
         </ion-toolbar>
       </ion-header>
-      <ion-content class="ion-padding">
+      <ion-content class="ui-content ion-padding">
         <div class="blocked-modal-header">
-          <ion-icon name="lock-closed-outline" color="warning" style="font-size: 3rem;"></ion-icon>
-          <h3>Syarat Harian Belum Terpenuhi</h3>
+          <ion-icon name="lock-closed-outline" class="blocked-modal-icon"></ion-icon>
+          <h3>Syarat harian belum terpenuhi</h3>
           <p>{{ blockedModalMessage }}</p>
         </div>
 
-        <ion-list lines="full" class="ion-margin-top">
-          <ion-item *ngFor="let req of blockedRequirements">
-            <ion-icon name="alert-circle-outline" color="danger" slot="start"></ion-icon>
-            <ion-label class="ion-text-wrap">
-              <h3 style="font-weight: 700;">{{ req.title }}</h3>
-              <p>{{ req.message || 'Belum diselesaikan hari ini.' }}</p>
-            </ion-label>
-            <ion-button slot="end" size="small" color="primary" (click)="navigateToRequirement(req)">
-              Isi Sekarang
+        <div class="ui-card ion-margin-top blocked-card">
+          <div
+            *ngFor="let req of blockedRequirements; let last = last"
+            class="blocked-row"
+            [class.hairline]="!last">
+            <ion-icon name="alert-circle-outline" class="blocked-icon"></ion-icon>
+            <div class="blocked-body">
+              <div class="blocked-title">{{ req.title }}</div>
+              <div class="blocked-sub">{{ req.message || 'Belum diselesaikan hari ini.' }}</div>
+            </div>
+            <ion-button size="small" class="ui-btn blocked-btn" (click)="navigateToRequirement(req)">
+              Isi sekarang
             </ion-button>
-          </ion-item>
-        </ion-list>
+          </div>
+        </div>
 
-        <ion-button expand="block" fill="outline" color="medium" class="ion-margin-top" (click)="isBlockedModalOpen = false">
+        <ion-button
+          expand="block"
+          fill="outline"
+          class="ui-btn ion-margin-top blocked-close-btn"
+          (click)="isBlockedModalOpen = false">
           Tutup
         </ion-button>
       </ion-content>
@@ -428,3 +407,47 @@
   </ion-modal>
 
 </ion-content>
+
+<!-- SECTION I: STICKY SUBMIT FOOTER -->
+<ion-footer *ngIf="showActionBar" class="ion-no-border ui-action-bar">
+  <!-- Mode Masuk -->
+  <ion-button
+    *ngIf="!attendanceToday"
+    expand="block"
+    class="ui-btn"
+    [class.danger]="isDayOff"
+    [disabled]="isSubmitDisabled"
+    (click)="submitCheckIn()">
+    <ion-icon slot="start" name="send-outline"></ion-icon>
+    {{ isDayOff ? 'Ajukan presensi darurat' : 'Kirim presensi masuk' }}
+  </ion-button>
+
+  <!-- Mode Pulang -->
+  <ion-button
+    *ngIf="attendanceToday && !attendanceToday.check_out_time"
+    expand="block"
+    class="ui-btn"
+    [disabled]="isSubmitDisabled || isCheckoutLocked"
+    (click)="submitCheckOut()">
+    <ion-icon slot="start" [name]="isCheckoutLocked ? 'lock-closed-outline' : 'send-outline'"></ion-icon>
+    {{ isCheckoutLocked ? 'Absen pulang terkunci' : 'Kirim presensi pulang' }}
+  </ion-button>
+
+  <div *ngIf="helpText" class="ui-help" [class.bad]="attendanceToday && isCheckoutLocked">
+    {{ helpText }}
+  </div>
+</ion-footer>
+
+<!-- Pop-up Modal Pemilihan Cabang Tugas (Interactive AJAX Sheet) -->
+<app-branch-select-modal
+  [isOpen]="isBranchModalOpen"
+  [branches]="branches"
+  [selectedBranchId]="selectedBranchId"
+  [homeBranchId]="currentUser?.branch_id ?? null"
+  [canDismiss]="true"
+  title="Pilih cabang tugas"
+  subtitle="Konfirmasi cabang tempat Anda bertugas hari ini. Pilihan motor dan checksheet otomatis menyesuaikan."
+  confirmText="Simpan cabang"
+  (branchSelected)="onBranchSelectedFromModal($event)"
+  (dismiss)="closeBranchModal()"
+></app-branch-select-modal>

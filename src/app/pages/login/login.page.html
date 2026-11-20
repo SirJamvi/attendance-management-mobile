@@ -100,3 +100,17 @@
 
   </div>
 </ion-content>
+
+<!-- Pop-up Pemilihan Cabang Tugas Pasca-Login (AJAX Modal) -->
+<app-branch-select-modal
+  [isOpen]="isBranchModalOpen"
+  [branches]="branches"
+  [selectedBranchId]="selectedBranchId"
+  [homeBranchId]="pendingUser?.branch_id ?? null"
+  [canDismiss]="true"
+  title="Pilih cabang tugas"
+  subtitle="Konfirmasi cabang tempat Anda bertugas hari ini. Pilihan motor dan checksheet otomatis menyesuaikan."
+  confirmText="Konfirmasi & mulai"
+  (branchSelected)="onBranchConfirmed($event)"
+  (dismiss)="onBranchModalDismiss()"
+></app-branch-select-modal>

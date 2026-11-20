@@ -169,6 +169,19 @@ export class AuthService {
     return this.currentUser.value?.branch_name || '';
   }
 
+  async updateUserBranch(branchId: number, branchName: string): Promise<void> {
+    const current = this.currentUser.value;
+    if (current) {
+      const updated: User = {
+        ...current,
+        branch_id: branchId,
+        branch_name: branchName,
+      };
+      await this.storage.saveUser(updated);
+      this.currentUser.next(updated);
+    }
+  }
+
   isLoggedIn(): boolean {
     return this.authState.value === true;
   }

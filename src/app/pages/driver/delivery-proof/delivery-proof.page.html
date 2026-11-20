@@ -1,158 +1,185 @@
-<ion-header>
+<ion-header [translucent]="true">
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/driver"></ion-back-button>
     </ion-buttons>
-    <ion-title>Penyerahan Kartu Nama Bisnis</ion-title>
+    <ion-title>Kartu nama</ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="loadKpi()" [disabled]="isLoadingKpi" title="Refresh KPI">
+      <ion-button (click)="loadKpi()" [disabled]="isLoadingKpi" aria-label="Muat ulang">
         <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="delivery-content">
+<ion-content [fullscreen]="true" class="ui-content delivery-content">
+  <div class="ui-wrap">
 
-  <!-- 1. WIDGET KPI MINGGUAN & BULANAN -->
-  <div class="kpi-widget-container">
-    <div class="kpi-card weekly-card">
-      <div class="kpi-header">
-        <div class="kpi-title-box">
-          <ion-icon name="trophy-outline" class="kpi-icon text-warning"></ion-icon>
-          <span class="kpi-label">Target Minggu Ini</span>
+    <!-- 1. KARTU TARGET KPI -->
+    <div class="ui-card target-card">
+      <div class="target-card-header">
+        <ion-icon name="trophy-outline" class="target-trophy-icon"></ion-icon>
+        <div class="ui-card-title">Target kartu nama</div>
+      </div>
+
+      <!-- Blok Minggu Ini -->
+      <div class="kpi-block">
+        <div class="kpi-row">
+          <span class="kpi-period">Minggu ini</span>
+          <span class="kpi-count">{{ kpi.week_achieved }} / {{ kpi.week_target }} kartu</span>
         </div>
-        <ion-badge [color]="kpi.is_weekly_target_reached ? 'success' : 'warning'" class="kpi-badge">
-          {{ kpi.week_achieved }} / {{ kpi.week_target }} Kartu
-        </ion-badge>
+        <div class="kpi-progress-wrap">
+          <ion-progress-bar
+            class="ui-progress"
+            [class.reached]="kpi.is_weekly_target_reached"
+            [value]="kpi.week_progress_percent / 100">
+          </ion-progress-bar>
+        </div>
+        <div class="kpi-caption">
+          <span *ngIf="kpi.is_weekly_target_reached" class="kpi-reached-text">
+            <ion-icon name="checkmark-circle"></ion-icon> Target terpenuhi
+          </span>
+          <span *ngIf="!kpi.is_weekly_target_reached" class="kpi-pending-text">
+            Kurang {{ kpi.week_target - kpi.week_achieved }} kartu lagi
+          </span>
+        </div>
       </div>
 
-      <div class="kpi-progress-bar">
-        <ion-progress-bar
-          [value]="kpi.week_progress_percent / 100"
-          [color]="kpi.is_weekly_target_reached ? 'success' : 'primary'">
-        </ion-progress-bar>
-      </div>
+      <div class="kpi-separator"></div>
 
-      <div class="kpi-footer">
-        <span class="kpi-percent">{{ kpi.week_progress_percent }}% tercapai</span>
-        <span class="kpi-status" *ngIf="kpi.is_weekly_target_reached">
-          <ion-icon name="checkmark-circle" color="success"></ion-icon> Target Terpenuhi!
-        </span>
-        <span class="kpi-status text-muted" *ngIf="!kpi.is_weekly_target_reached">
-          Kurang {{ kpi.week_target - kpi.week_achieved }} kartu lagi
-        </span>
+      <!-- Blok Bulan Ini -->
+      <div class="kpi-block">
+        <div class="kpi-row">
+          <span class="kpi-period">Bulan ini</span>
+          <span class="kpi-count">{{ kpi.month_achieved }} / {{ kpi.month_target }} kartu</span>
+        </div>
+        <div class="kpi-progress-wrap">
+          <ion-progress-bar
+            class="ui-progress"
+            [class.reached]="kpi.is_monthly_target_reached"
+            [value]="kpi.month_progress_percent / 100">
+          </ion-progress-bar>
+        </div>
+        <div class="kpi-caption">
+          <span *ngIf="kpi.is_monthly_target_reached" class="kpi-reached-text">
+            <ion-icon name="checkmark-circle"></ion-icon> Target terpenuhi
+          </span>
+          <span *ngIf="!kpi.is_monthly_target_reached" class="kpi-pending-text">
+            Akumulasi bulan ini
+          </span>
+        </div>
       </div>
     </div>
 
-    <div class="kpi-card monthly-card">
-      <div class="kpi-header">
-        <div class="kpi-title-box">
-          <ion-icon name="card-outline" class="kpi-icon text-primary"></ion-icon>
-          <span class="kpi-label">Target Bulan Ini</span>
-        </div>
-        <ion-badge color="primary" class="kpi-badge">
-          {{ kpi.month_achieved }} / {{ kpi.month_target }} Kartu
-        </ion-badge>
+    <!-- 2. FORM DATA PELANGGAN BARU -->
+    <div class="ui-card">
+      <div class="ui-card-title">Data pelanggan baru</div>
+      <div class="ui-sub-sm mb-12">
+        Bagikan ke warung atau kafe baru di rute Anda.
       </div>
 
-      <div class="kpi-progress-bar">
-        <ion-progress-bar
-          [value]="kpi.month_progress_percent / 100"
-          color="primary">
-        </ion-progress-bar>
-      </div>
-
-      <div class="kpi-footer">
-        <span class="kpi-percent">{{ kpi.month_progress_percent }}% tercapai</span>
-        <span class="kpi-subtext">Akumulasi Bulan Ini</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. INFO BANNER -->
-  <div class="info-banner">
-    <ion-icon name="information-circle-outline"></ion-icon>
-    <p>Bagikan kartu nama ke warung/kafe baru di rute Anda. Ambil foto bukti penyerahan & pastikan no HP valid.</p>
-  </div>
-
-  <!-- 3. FORM INPUT PROSPEK BARU -->
-  <ion-list lines="full" class="form-list">
-
-    <ion-item>
-      <ion-label position="stacked">
-        Nama Warung / Calon Pelanggan <ion-text color="danger">*</ion-text>
-      </ion-label>
+      <label class="ui-field-label">Nama warung / calon pelanggan *</label>
       <ion-input
+        class="ui-input"
+        fill="outline"
         [(ngModel)]="formData.customer_name"
-        placeholder="Cth: Warung Makan Barokah / Bu Siti"
-        type="text">
+        placeholder="Cth: Warung Makan Barokah"
+        type="text"
+        (ionFocus)="onFieldFocus($event)"
+        aria-label="Nama warung atau calon pelanggan">
       </ion-input>
-    </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">
-        Nomor WhatsApp / HP Toko <ion-text color="danger">*</ion-text>
-      </ion-label>
+      <label class="ui-field-label">Nomor WhatsApp / HP toko *</label>
       <ion-input
+        class="ui-input"
+        fill="outline"
         [(ngModel)]="formData.customer_phone"
         placeholder="08xxxxxxxxxx"
         type="tel"
-        inputmode="tel">
+        inputmode="tel"
+        (ionFocus)="onFieldFocus($event)"
+        aria-label="Nomor WhatsApp atau HP toko">
       </ion-input>
-    </ion-item>
 
-    <ion-item>
-      <ion-label position="stacked">Alamat / Patokan Toko (Opsional)</ion-label>
-      <ion-input
-        [(ngModel)]="formData.address"
-        placeholder="Cth: Sebelah Alfamart Jl. Merdeka No. 4"
-        type="text">
-      </ion-input>
-    </ion-item>
+      <!-- Bagian Opsional Dilipat -->
+      <div class="optional-toggle-row" (click)="showOptional = !showOptional">
+        <span class="optional-toggle-text">Alamat dan catatan (opsional)</span>
+        <ion-icon [name]="showOptional ? 'chevron-up-outline' : 'chevron-down-outline'" class="optional-toggle-icon"></ion-icon>
+      </div>
 
-    <ion-item>
-      <ion-label position="stacked">Catatan Kebutuhan / Minat (Opsional)</ion-label>
-      <ion-textarea
-        [(ngModel)]="formData.notes"
-        placeholder="Cth: Minat es kristal 10 bal/hari, minta dihubungi besok sore"
-        rows="2"
-        [autoGrow]="true">
-      </ion-textarea>
-    </ion-item>
+      <div *ngIf="showOptional" class="optional-fields-box">
+        <label class="ui-field-label">Alamat / patokan toko (opsional)</label>
+        <ion-input
+          class="ui-input"
+          fill="outline"
+          [(ngModel)]="formData.address"
+          placeholder="Cth: Sebelah Alfamart Jl. Merdeka No. 4"
+          type="text"
+          (ionFocus)="onFieldFocus($event)"
+          aria-label="Alamat atau patokan toko">
+        </ion-input>
 
-  </ion-list>
-
-  <!-- 4. SECTION FOTO BUKTI PENYERAHAN -->
-  <div class="photo-section">
-    <ion-button expand="block" color="secondary" (click)="takePicture()" class="camera-btn">
-      <ion-icon slot="start" name="camera-outline"></ion-icon>
-      {{ previewImage ? 'Ganti / Ambil Ulang Foto' : 'Ambil Foto Bukti Kartu Nama' }}
-    </ion-button>
-
-    <div *ngIf="previewImage" class="preview-container">
-      <img [src]="previewImage" alt="Preview Kartu Nama" class="preview-image" />
-      <div *ngIf="formData.latitude" class="gps-badge">
-        <ion-icon name="location-outline"></ion-icon>
-        <span>GPS Terkunci ({{ formData.latitude | number:'1.2-4' }}, {{ formData.longitude | number:'1.2-4' }})</span>
+        <label class="ui-field-label">Catatan kebutuhan / minat (opsional)</label>
+        <ion-textarea
+          class="ui-input"
+          fill="outline"
+          [(ngModel)]="formData.notes"
+          placeholder="Cth: Minat es kristal 10 bal/hari, minta dihubungi besok sore"
+          rows="2"
+          [autoGrow]="true"
+          (ionFocus)="onFieldFocus($event)"
+          aria-label="Catatan kebutuhan atau minat">
+        </ion-textarea>
       </div>
     </div>
-  </div>
 
-  <!-- 5. TOMBOL SUBMIT -->
-  <div class="submit-section">
-    <ion-button
-      expand="block"
-      color="primary"
-      (click)="submitCard()"
-      [disabled]="!isFormValid">
-      <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
-      <ion-icon *ngIf="!isSubmitting" slot="start" name="send-outline"></ion-icon>
-      Kirim Bukti Kartu Nama
-    </ion-button>
-    <div class="validation-hint" *ngIf="!isFormValid && !isSubmitting">
-      <small class="text-muted">Lengkapi Nama, Nomor HP (08...), dan Foto Bukti untuk mengirim.</small>
+    <!-- 3. FOTO BUKTI -->
+    <div class="ui-card">
+      <div class="ui-card-title mb-12">Foto bukti *</div>
+
+      <!-- Belum Ada Foto -->
+      <div *ngIf="!previewImage" class="ui-upload row" (click)="takePicture()">
+        <ion-icon name="camera-outline"></ion-icon>
+        <div>
+          <div class="t">Ambil foto bukti</div>
+          <div class="s">Foto penyerahan kartu nama</div>
+        </div>
+      </div>
+
+      <!-- Sudah Ada Foto -->
+      <div *ngIf="previewImage" class="proof-preview-box">
+        <div class="image-wrap">
+          <img [src]="previewImage" alt="Bukti penyerahan kartu nama" />
+        </div>
+        <div class="preview-footer">
+          <div *ngIf="formData.latitude" class="ui-badge ok gps-badge">
+            <ion-icon name="location-outline"></ion-icon>
+            <span>GPS terkunci ({{ formData.latitude | number:'1.2-4' }}, {{ formData.longitude | number:'1.2-4' }})</span>
+          </div>
+          <ion-button fill="outline" class="ui-btn-sm" (click)="takePicture()">
+            Ganti foto
+          </ion-button>
+        </div>
+      </div>
     </div>
-  </div>
 
+    <div class="ui-bottom-spacer"></div>
+
+  </div>
 </ion-content>
+
+<!-- 4. TOMBOL KIRIM MENEMPEL DI BAWAH -->
+<ion-footer class="ion-no-border ui-action-bar" [class.no-tabs]="!inTabs">
+  <ion-button
+    expand="block"
+    class="ui-btn"
+    (click)="submitCard()"
+    [disabled]="!isFormValid">
+    <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+    <ion-icon *ngIf="!isSubmitting" slot="start" name="send-outline"></ion-icon>
+    {{ isSubmitting ? 'Mengirim…' : 'Kirim bukti kartu nama' }}
+  </ion-button>
+  <div class="ui-help" *ngIf="!isFormValid && !isSubmitting">
+    Lengkapi nama, nomor HP (08…), dan foto bukti.
+  </div>
+</ion-footer>

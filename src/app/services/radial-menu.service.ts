@@ -1,11 +1,5 @@
 // src/app/services/radial-menu.service.ts
-// ─────────────────────────────────────────────────────────────
-// Service ini memisahkan STATE menu radial dari TabsPage,
-// sehingga overlay bisa dirender di AppComponent (level tertinggi)
-// dan tidak memblokir interaksi Ionic.
-// ─────────────────────────────────────────────────────────────
-
-import { Injectable, signal } from '@angular/core';
+import { Injectable } from '@angular/core';
 
 export interface MenuItem {
   label: string;
@@ -16,30 +10,72 @@ export interface MenuItem {
 @Injectable({ providedIn: 'root' })
 export class RadialMenuService {
 
-  // State menggunakan Angular Signals agar reactive tanpa Subject
   isOpen = false;
+  isClosing = false;
   items: MenuItem[] = [];
-  centerX = 0;   // posisi X tombol menu (untuk centering overlay)
+  centerX = 0;
 
   private onNavigate?: (route: string) => void;
+  private closeTimer: ReturnType<typeof setTimeout> | null = null;
 
-  /** Dipanggil dari TabsPage saat hold threshold tercapai */
-  open(items: MenuItem[], centerX: number, onNavigate: (route: string) => void) {
+  /**
+   * Membuka bottom sheet menu navigasi.
+   * Mendukung pemanggilan 2 parameter (items, onNavigate) maupun 3 parameter (items, centerX, onNavigate).
+   */
+  open(
+    items: MenuItem[],
+    onNavigateOrCenterX?: ((route: string) => void) | number,
+    onNavigate?: (route: string) => void
+  ) {
+    if (this.closeTimer) {
+      clearTimeout(this.closeTimer);
+      this.closeTimer = null;
+    }
+    this.isClosing = false;
     this.items = items;
-    this.centerX = centerX;
-    this.onNavigate = onNavigate;
+
+    if (typeof onNavigateOrCenterX === 'function') {
+      this.onNavigate = onNavigateOrCenterX;
+    } else {
+      this.centerX = typeof onNavigateOrCenterX === 'number' ? onNavigateOrCenterX : 0;
+      this.onNavigate = onNavigate;
+    }
+
     this.isOpen = true;
   }
 
-  /** Dipanggil dari AppComponent saat user melepas jari di item */
+  /** Navigasi ke route item yang dipilih dan tutup sheet */
   navigate(route: string) {
     this.onNavigate?.(route);
     this.close();
   }
 
+  /**
+   * Menutup sheet dengan animasi slide-down 200ms sebelum me-reset state.
+   */
   close() {
-    this.isOpen = false;
-    this.items = [];
-    this.onNavigate = undefined;
+    if (!this.isOpen || this.isClosing) return;
+    this.isClosing = true;
+
+    if (this.closeTimer) {
+      clearTimeout(this.closeTimer);
+    }
+
+    this.closeTimer = setTimeout(() => {
+      this.isOpen = false;
+      this.isClosing = false;
+      this.items = [];
+      this.onNavigate = undefined;
+      this.closeTimer = null;
+    }, 200);
+  }
+
+  /** Toggle buka/tutup sheet */
+  toggle(items: MenuItem[], onNavigate: (route: string) => void) {
+    if (this.isOpen) {
+      this.close();
+    } else {
+      this.open(items, onNavigate);
+    }
   }
 }

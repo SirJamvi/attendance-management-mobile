@@ -39,7 +39,13 @@ export class AttendanceService {
     return this.checkoutEligibilitySubject.value;
   }
 
-  checkIn(photoBase64: string, latitude: number, longitude: number, emergencyNote?: string) {
+  checkIn(
+    photoBase64: string,
+    latitude: number,
+    longitude: number,
+    emergencyNote?: string,
+    branchId?: number | null
+  ) {
     const body: Record<string, any> = {
       photo: photoBase64,
       latitude,
@@ -48,7 +54,14 @@ export class AttendanceService {
     if (emergencyNote && emergencyNote.trim()) {
       body['emergency_note'] = emergencyNote.trim();
     }
+    if (branchId) {
+      body['branch_id'] = branchId;
+    }
     return this.apiClient.post<ApiResponse<AttendanceData>>('attendance/check-in', body);
+  }
+
+  updateDutyBranch(branchId: number) {
+    return this.apiClient.post<ApiResponse<any>>('attendance/duty-branch', { branch_id: branchId });
   }
 
   checkOut(photoBase64: string, latitude: number, longitude: number) {

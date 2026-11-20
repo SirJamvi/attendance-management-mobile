@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import {
   IonHeader,
   IonToolbar,
@@ -8,17 +9,13 @@ import {
   IonBackButton,
   IonTitle,
   IonContent,
-  IonList,
-  IonItem,
-  IonLabel,
   IonInput,
   IonTextarea,
-  IonText,
   IonButton,
   IonIcon,
   IonProgressBar,
-  IonBadge,
   IonSpinner,
+  IonFooter,
   LoadingController,
   ToastController,
   NavController
@@ -33,7 +30,9 @@ import {
   sparklesOutline,
   cardOutline,
   trophyOutline,
-  refreshOutline
+  refreshOutline,
+  chevronDownOutline,
+  chevronUpOutline
 } from 'ionicons/icons';
 
 // Plugin Capacitor & Kompresi Foto Ultra-Ringan
@@ -56,17 +55,13 @@ import { BusinessCardService, BusinessCardKpiData } from 'src/app/services/busin
     IonBackButton,
     IonTitle,
     IonContent,
-    IonList,
-    IonItem,
-    IonLabel,
     IonInput,
     IonTextarea,
-    IonText,
     IonButton,
     IonIcon,
     IonProgressBar,
-    IonBadge,
-    IonSpinner
+    IonSpinner,
+    IonFooter
   ]
 })
 export class DeliveryProofPage implements OnInit {
@@ -74,6 +69,7 @@ export class DeliveryProofPage implements OnInit {
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
   private navCtrl = inject(NavController);
+  private router = inject(Router);
 
   // Model Form Penyerahan Kartu Nama (Prospek Baru)
   formData = {
@@ -89,6 +85,8 @@ export class DeliveryProofPage implements OnInit {
   previewImage: string | undefined;
   isSubmitting = false;
   isLoadingKpi = false;
+  inTabs = false;
+  showOptional = false;
 
   // Data KPI Mingguan & Bulanan
   kpi: BusinessCardKpiData = {
@@ -112,7 +110,9 @@ export class DeliveryProofPage implements OnInit {
       sparklesOutline,
       cardOutline,
       trophyOutline,
-      refreshOutline
+      refreshOutline,
+      chevronDownOutline,
+      chevronUpOutline
     });
   }
 
@@ -121,7 +121,17 @@ export class DeliveryProofPage implements OnInit {
   }
 
   ionViewWillEnter() {
+    this.inTabs = this.router.url.startsWith('/tabs');
     this.loadKpi();
+  }
+
+  onFieldFocus(event: any) {
+    const el = event?.target as HTMLElement;
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 250);
+    }
   }
 
   /**
@@ -290,6 +300,7 @@ export class DeliveryProofPage implements OnInit {
       photo: ''
     };
     this.previewImage = undefined;
+    this.showOptional = false;
   }
 
   async showToast(message: string, color: 'success' | 'warning' | 'danger') {

@@ -3,17 +3,6 @@
   pointer-events: auto !important;
 }
 
-ion-content {
-  --background: var(--ion-color-light);
-  pointer-events: auto !important;
-  --padding-bottom: calc(68px + env(safe-area-inset-bottom) + 16px);
-}
-
-.content-wrapper {
-  pointer-events: auto !important;
-  padding-bottom: calc(68px + env(safe-area-inset-bottom) + 16px) !important;
-}
-
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -27,118 +16,679 @@ ion-content {
   z-index: 9999;
 }
 
-.info-box {
-  --background: var(--ion-color-light);
-  border-radius: 12px;
-  margin-bottom: 16px;
-}
+// Section A: Warning Card
+.warning-card {
+  background: var(--ui-bad-bg);
+  border-color: var(--ui-bad);
+  color: var(--ui-bad-text);
 
-.small-text {
-  font-size: 14px;
-  color: var(--ion-color-medium);
-  margin-top: 8px;
-}
+  .warning-card-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
 
-.top-margin {
-  margin-top: 40px;
-}
-
-.spacer {
-  height: 16px;
-}
-
-.gatekeeper-card {
-  margin-left: 0;
-  margin-right: 0;
-  border-radius: 14px;
-  border-left: 4px solid var(--ion-color-warning);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
-}
-
-.gatekeeper-header {
-  padding-bottom: 8px;
-}
-
-.gatekeeper-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.checkout-locked-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: #fff8e1;
-  border: 1px solid #ffe082;
-  border-radius: 10px;
-  padding: 12px;
-  color: #6d4c00;
-
-  ion-icon {
-    font-size: 1.5rem;
+  .warning-icon {
+    font-size: 24px;
+    color: var(--ui-bad);
     flex-shrink: 0;
     margin-top: 2px;
   }
 
-  strong {
-    display: block;
-    font-size: 0.92rem;
-    margin-bottom: 2px;
+  .warning-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ui-bad-text);
   }
 
-  p {
-    margin: 0;
-    font-size: 0.82rem;
-    line-height: 1.35;
-  }
-}
-
-.shortcut-card {
-  margin-left: 0;
-  margin-bottom: 0;
-  border-radius: 14px;
-
-  h2 {
-    font-weight: 700;
-    margin-top: 8px;
-    margin-bottom: 2px;
-    font-size: 1rem;
-  }
-
-  p {
-    margin: 0;
-    opacity: 0.92;
+  .warning-message {
+    font-size: 13px;
+    color: var(--ui-bad-text);
+    margin-top: 2px;
   }
 }
 
+// Section B: Status Card
+.status-top {
+  .status-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .day-name {
+    font-size: 13px;
+    color: var(--ui-text-2);
+  }
+
+  .shift-info-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .shift-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ui-text);
+  }
+
+  .shift-time {
+    font-size: 13px;
+    color: var(--ui-text-2);
+  }
+}
+
+// Stepper
+.ui-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--ui-border);
+
+  .stepper-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .step-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 9999px;
+    background: var(--ui-off-bg);
+    color: var(--ui-off-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 500;
+    flex-shrink: 0;
+
+    ion-icon {
+      font-size: 16px;
+    }
+
+    &.active {
+      background: var(--ui-action);
+      color: #ffffff;
+    }
+
+    &.done {
+      background: var(--ui-ok);
+      color: #ffffff;
+    }
+
+    &.locked {
+      background: var(--ui-off-bg);
+      color: var(--ui-off-text);
+    }
+  }
+
+  .step-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .step-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ui-text);
+  }
+
+  .step-sub {
+    font-size: 12px;
+    color: var(--ui-text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stepper-line {
+    height: 2px;
+    flex: 0 0 28px;
+    background: var(--ui-border);
+    margin: 0 8px;
+
+    &.done {
+      background: var(--ui-ok);
+    }
+
+    &.active {
+      background: var(--ui-action);
+    }
+  }
+}
+
+// Section C: Syarat Absen Pulang
+.req-card {
+  .req-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .bypass-note {
+    margin-top: 4px;
+  }
+
+  .req-progress-track {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ui-action-soft);
+    overflow: hidden;
+    margin: 10px 0 6px;
+  }
+
+  .req-progress-fill {
+    height: 100%;
+    background: var(--ui-action);
+    transition: width 300ms ease;
+  }
+
+  .req-list {
+    margin-top: 4px;
+  }
+
+  .req-row {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+
+    &.hairline {
+      border-bottom: 0.5px solid var(--ui-border);
+    }
+
+    &.clickable {
+      cursor: pointer;
+    }
+  }
+
+  .req-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+
+    &.ok-ic {
+      color: var(--ui-ok);
+    }
+
+    &.warn-ic {
+      color: var(--ui-warn);
+    }
+  }
+
+  .req-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .req-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ui-text);
+  }
+
+  .req-sub {
+    font-size: 12px;
+    color: var(--ui-text-2);
+    margin-top: 2px;
+  }
+
+  .req-end {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .req-chevron {
+    font-size: 16px;
+    color: var(--ui-text-muted);
+  }
+}
+
+// Section D: Emergency Notice
+.emergency-box {
+  margin: 10px 0 14px;
+
+  .emergency-notice {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--ui-warn-bg);
+    color: var(--ui-warn-text);
+    border: 0.5px solid var(--ui-warn);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 10px;
+
+    ion-icon {
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+  }
+}
+
+.camera-container {
+  margin-top: 10px;
+}
+
+.gps-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+
+  .gps-text {
+    font-size: 13px;
+    color: var(--ui-text-2);
+  }
+}
+
+// Section E: Locked Banner
+.locked-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: var(--ui-warn-bg);
+  border: 0.5px solid var(--ui-warn);
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+  color: var(--ui-warn-text);
+
+  .locked-icon {
+    font-size: 22px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--ui-warn);
+  }
+
+  .locked-text {
+    flex: 1;
+  }
+
+  .locked-title {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    color: var(--ui-warn-text);
+  }
+
+  .locked-desc {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--ui-warn-text);
+  }
+}
+
+// Section F: Done Section
+.done-section {
+  text-align: center;
+  padding: 24px 0 12px;
+
+  .done-icon {
+    font-size: 64px;
+    color: var(--ui-ok);
+    margin-bottom: 8px;
+  }
+
+  .done-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ui-text);
+  }
+
+  .done-sub {
+    font-size: 13px;
+    color: var(--ui-text-2);
+    margin-top: 4px;
+  }
+
+  .done-card {
+    margin-top: 20px;
+    text-align: left;
+  }
+
+  .done-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+
+    &.hairline {
+      border-bottom: 0.5px solid var(--ui-border);
+    }
+  }
+
+  .done-label {
+    font-size: 13px;
+    color: var(--ui-text-2);
+  }
+
+  .done-val {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ui-text);
+  }
+}
+
+// Section G: Missions Section
+.missions-section {
+  margin-top: 16px;
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 2px 8px;
+  }
+
+  .flame-icon {
+    font-size: 20px;
+    color: var(--ui-bad);
+  }
+
+  .section-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--ui-text);
+  }
+
+  .mission-card {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .mission-header {
+    padding: 12px 14px;
+    background: var(--ui-upload-bg);
+    border-bottom: 0.5px solid var(--ui-border);
+  }
+
+  .mission-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ui-action-strong);
+    text-transform: uppercase;
+  }
+
+  .mission-reward {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ui-text);
+    margin-top: 2px;
+  }
+
+  .mission-standings {
+    padding: 0 14px;
+  }
+
+  .standing-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+
+    &.hairline {
+      border-bottom: 0.5px solid var(--ui-border);
+    }
+
+    &.is-me {
+      background: var(--ui-action-soft);
+      margin: 0 -14px;
+      padding: 10px 14px;
+    }
+  }
+
+  .standing-rank {
+    width: 32px;
+    font-size: 15px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .standing-name {
+    flex: 1;
+    font-size: 14px;
+    color: var(--ui-text);
+    display: flex;
+    align-items: center;
+  }
+
+  .standing-score {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ui-text);
+    flex-shrink: 0;
+  }
+
+  .fw-500 {
+    font-weight: 500;
+  }
+
+  .ml-1 {
+    margin-left: 6px;
+  }
+}
+
+// Section H: Quick Access
+.quick-access-section {
+  margin-top: 14px;
+}
+
+// Modal Header
 .blocked-modal-header {
   text-align: center;
   padding: 12px 8px;
 
   h3 {
     margin: 8px 0 4px;
-    font-weight: 700;
-    color: var(--ion-color-dark);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ui-text);
   }
 
   p {
     margin: 0;
-    font-size: 0.9rem;
-    color: #555;
+    font-size: 13px;
+    color: var(--ui-text-2);
+    line-height: 1.4;
   }
 }
 
-ion-card {
-  pointer-events: auto !important;
+.blocked-modal-title,
+.blocked-modal-close {
+  color: var(--ui-header-text);
+}
 
-  ion-card-content {
-    pointer-events: auto !important;
+.blocked-modal-icon {
+  font-size: 48px;
+  color: var(--ui-warn);
+}
+
+.blocked-card {
+  padding: 0 14px;
+}
+
+.blocked-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 0;
+
+  &.hairline {
+    border-bottom: 0.5px solid var(--ui-border);
+  }
+
+  .blocked-icon {
+    font-size: 22px;
+    color: var(--ui-bad);
+    flex-shrink: 0;
+  }
+
+  .blocked-body {
+    flex: 1;
+    margin: 0 10px;
+
+    .blocked-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ui-text);
+    }
+
+    .blocked-sub {
+      font-size: 12px;
+      color: var(--ui-text-2);
+      margin-top: 2px;
+    }
+  }
+
+  .blocked-btn {
+    height: 36px;
+    font-size: 12px;
   }
 }
 
-ion-button {
-  pointer-events: auto !important;
-  cursor: pointer !important;
+.blocked-close-btn {
+  --border-color: var(--ui-border);
+  --color: var(--ui-text-2);
+  background: transparent;
+}
+
+// ==========================================
+// STYLING CABANG TUGAS HARIAN (DUTY BRANCH)
+// ==========================================
+.duty-branch-selector {
+  background: var(--ui-card-subtle, #F8FAFC);
+  border: 1px solid var(--ui-border, #E5E7EB);
+  border-radius: 14px;
+  padding: 12px;
+  margin: 14px 0;
+
+  .duty-branch-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .duty-branch-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ui-text, #111827);
+
+    ion-icon {
+      color: var(--ui-action, #0277BD);
+      font-size: 16px;
+    }
+  }
+
+  .duty-branch-change-btn {
+    background: var(--ui-action-soft, #E1F5FE);
+    color: var(--ui-action, #0277BD);
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+
+    &:active {
+      opacity: 0.75;
+    }
+  }
+
+  .duty-branch-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #FFFFFF;
+    border: 1.5px solid var(--ui-border, #E5E7EB);
+    border-radius: 10px;
+    padding: 10px 12px;
+    min-height: 48px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &:active {
+      border-color: var(--ui-action, #0277BD);
+      background: var(--ui-action-soft, #E1F5FE);
+    }
+  }
+
+  .duty-branch-current-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .duty-branch-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ui-text, #111827);
+  }
+
+  .duty-branch-caption {
+    font-size: 12px;
+    color: var(--ui-text-muted, #6B7280);
+  }
+
+  .duty-branch-arrow {
+    font-size: 16px;
+    color: var(--ui-text-muted, #6B7280);
+    flex-shrink: 0;
+  }
+
+  .duty-branch-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--ui-text-2, #4B5563);
+    line-height: 1.4;
+
+    ion-icon {
+      font-size: 14px;
+      color: var(--ui-action, #0277BD);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
+}
+
+.duty-branch-active-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 0.5px solid var(--ui-border, #e2e8f0);
+  font-size: 12px;
+  color: var(--ui-text-2, #64748b);
+
+  ion-icon {
+    font-size: 15px;
+    color: var(--ion-color-primary, #0284c7);
+  }
+
+  strong {
+    color: var(--ui-text, #0f172a);
+  }
 }

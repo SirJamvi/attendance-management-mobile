@@ -1,31 +1,31 @@
 <div class="camera-wrapper">
   
-  <!-- Tampilan awal: Tombol Kamera -->
+  <!-- Tampilan awal: Tombol Kamera Tile .ui-upload -->
   <div 
     *ngIf="!photoPreview" 
-    class="camera-box ion-text-center"
+    class="ui-upload"
     (click)="takePicture()"
     (touchstart)="onTouchStart($event)"
     (mousedown)="onMouseDown($event)">
-    <ion-icon name="camera" class="camera-icon"></ion-icon>
-    <ion-text color="medium">
-      <p>Tap untuk Ambil Foto</p>
-    </ion-text>
+    <ion-icon name="camera"></ion-icon>
+    <div class="t">{{ buttonText }}</div>
+    <div class="s">{{ subText }}</div>
   </div>
 
-  <!-- Tampilan setelah foto diambil -->
+  <!-- Tampilan setelah foto diambil: Pratinjau Foto -->
   <div *ngIf="photoPreview" class="preview-box ion-text-center">
     <div class="image-container">
-      <img [src]="photoPreview" class="preview-image" alt="Pratinjau Foto" />
+      <img [src]="photoPreview" class="preview-image" alt="Pratinjau foto" />
     </div>
     
     <ion-button 
       (click)="retakePicture()" 
-      color="warning" 
+      fill="clear"
+      color="danger" 
       size="small" 
-      class="ion-margin-top">
-      <ion-icon slot="start" name="refresh-outline"></ion-icon>
-      Ambil Ulang
+      class="ion-margin-top delete-photo-btn">
+      <ion-icon slot="start" name="trash-outline"></ion-icon>
+      Hapus foto
     </ion-button>
   </div>
 

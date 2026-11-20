@@ -25,6 +25,9 @@
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
+/* Shared UI Kit Styles */
+@import "./theme/ui-kit.scss";
+
 /**
  * Ionic Dark Mode
  * -----------------------------------------------------
@@ -39,8 +42,8 @@
 // FORCE LIGHT MODE - SELALU TERANG
 // ============================================
 body {
-  --ion-background-color: #f4f5f8;
-  --ion-background-color-rgb: 244, 245, 248;
+  --ion-background-color: var(--ui-bg);
+  --ion-background-color-rgb: 243, 246, 249;
   
   --ion-text-color: #000000;
   --ion-text-color-rgb: 0, 0, 0;
@@ -71,7 +74,13 @@ body {
   
   // Toolbar
   --ion-toolbar-background: var(--ion-color-primary);
-  --ion-toolbar-color: #ffffff;
+  --ion-toolbar-color: #06324D;
+}
+
+// Global Toolbar Title Style
+ion-toolbar ion-title {
+  font-size: 17px;
+  font-weight: 500;
 }
 
 // ============================================

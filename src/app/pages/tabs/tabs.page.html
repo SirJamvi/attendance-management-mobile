@@ -1,4 +1,4 @@
-<ion-tabs>
+<ion-tabs (ionTabsDidChange)="onTabChange()">
 
   <ion-router-outlet></ion-router-outlet>
 
@@ -22,16 +22,13 @@
     <!-- MAIN MENU BUTTON -->
     <div class="main-menu-slot">
       <button
+        type="button"
         class="main-menu-btn"
-        [class.holding]="isHolding"
-        (mousedown)="onHoldStart($event)"
-        (touchstart)="onHoldStart($event)"
-        (mouseup)="onHoldEnd($event)"
-        (touchend)="onHoldEnd($event)"
-        (mouseleave)="cancelHold()"
+        (click)="toggleMenu()"
+        aria-label="Menu"
       >
         <div class="main-menu-circle">
-          <ion-icon name="grid-outline" class="main-icon"></ion-icon>
+          <ion-icon [name]="menuOpen ? 'close' : 'grid-outline'" class="main-icon"></ion-icon>
         </div>
         <span class="main-label">Menu</span>
       </button>
@@ -73,16 +70,13 @@
     <!-- MAIN MENU BUTTON -->
     <div class="main-menu-slot">
       <button
+        type="button"
         class="main-menu-btn"
-        [class.holding]="isHolding"
-        (mousedown)="onHoldStart($event)"
-        (touchstart)="onHoldStart($event)"
-        (mouseup)="onHoldEnd($event)"
-        (touchend)="onHoldEnd($event)"
-        (mouseleave)="cancelHold()"
+        (click)="toggleMenu()"
+        aria-label="Menu"
       >
         <div class="main-menu-circle">
-          <ion-icon name="grid-outline" class="main-icon"></ion-icon>
+          <ion-icon [name]="menuOpen ? 'close' : 'grid-outline'" class="main-icon"></ion-icon>
         </div>
         <span class="main-label">Menu</span>
       </button>
@@ -92,7 +86,7 @@
       <div class="icon-wrapper">
         <ion-icon name="clipboard-outline" class="tab-icon"></ion-icon>
       </div>
-      <ion-label class="tab-label">Delivery</ion-label>
+      <ion-label class="tab-label">Rekap order</ion-label>
     </ion-tab-button>
 
     <ion-tab-button tab="driver/salary" class="tab-btn">
@@ -124,16 +118,13 @@
     <!-- MAIN MENU BUTTON -->
     <div class="main-menu-slot">
       <button
+        type="button"
         class="main-menu-btn"
-        [class.holding]="isHolding"
-        (mousedown)="onHoldStart($event)"
-        (touchstart)="onHoldStart($event)"
-        (mouseup)="onHoldEnd($event)"
-        (touchend)="onHoldEnd($event)"
-        (mouseleave)="cancelHold()"
+        (click)="toggleMenu()"
+        aria-label="Menu"
       >
         <div class="main-menu-circle">
-          <ion-icon name="grid-outline" class="main-icon"></ion-icon>
+          <ion-icon [name]="menuOpen ? 'close' : 'grid-outline'" class="main-icon"></ion-icon>
         </div>
         <span class="main-label">Menu</span>
       </button>

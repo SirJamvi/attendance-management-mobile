@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonIcon } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { storefrontOutline } from 'ionicons/icons';
+import { storefrontOutline, chevronDownOutline } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
 import { AuthService } from 'src/app/services/auth';
 
@@ -11,41 +11,77 @@ import { AuthService } from 'src/app/services/auth';
   standalone: true,
   imports: [CommonModule, IonIcon],
   template: `
-    <div *ngIf="branchName" class="branch-pill">
+    <button
+      *ngIf="branchName"
+      type="button"
+      class="branch-pill"
+      [class.clickable]="clickable"
+      (click)="onClick()"
+      [attr.aria-label]="clickable ? 'Ubah cabang tugas: ' + branchName : 'Cabang tugas: ' + branchName"
+    >
       <ion-icon name="storefront-outline"></ion-icon>
-      <span>{{ branchName }}</span>
-    </div>
+      <span class="branch-label">{{ branchName }}</span>
+      <ion-icon *ngIf="clickable" name="chevron-down-outline" class="pill-chevron"></ion-icon>
+    </button>
   `,
   styles: [`
     .branch-pill {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      background: rgba(255, 255, 255, 0.22);
-      color: #ffffff;
+      background: rgba(255, 255, 255, 0.7);
+      color: #06324D;
       padding: 4px 10px;
       border-radius: 999px;
-      font-size: 11px;
-      font-weight: 600;
+      font-size: 12px;
+      font-weight: 500;
       margin-right: 8px;
-      max-width: 150px;
+      max-width: 165px;
       white-space: nowrap;
       overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .branch-pill ion-icon {
-      font-size: 13px;
-      flex-shrink: 0;
+      border: 1px solid rgba(6, 50, 77, 0.12);
+      font-family: inherit;
+      transition: background 0.15s ease, transform 0.1s ease;
+
+      ion-icon {
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+
+      .branch-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .pill-chevron {
+        font-size: 11px;
+        opacity: 0.75;
+        margin-left: 1px;
+      }
+
+      &.clickable {
+        cursor: pointer;
+        padding-right: 8px;
+
+        &:active {
+          background: rgba(255, 255, 255, 0.95);
+          transform: scale(0.97);
+        }
+      }
     }
   `]
 })
 export class BranchBadgeComponent implements OnInit, OnDestroy {
+  @Input() clickable = false;
+  @Output() clicked = new EventEmitter<void>();
+
   private authService = inject(AuthService);
   private sub?: Subscription;
   branchName = '';
 
   constructor() {
-    addIcons({ storefrontOutline });
+    addIcons({ storefrontOutline, chevronDownOutline });
   }
 
   ngOnInit() {
@@ -57,5 +93,11 @@ export class BranchBadgeComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.sub?.unsubscribe();
+  }
+
+  onClick() {
+    if (this.clickable) {
+      this.clicked.emit();
+    }
   }
 }

@@ -9,8 +9,8 @@
   // ============================================
   --ion-color-primary: #4FC3F7;
   --ion-color-primary-rgb: 79, 195, 247;
-  --ion-color-primary-contrast: #ffffff;
-  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-contrast: #06324D;
+  --ion-color-primary-contrast-rgb: 6, 50, 77;
   --ion-color-primary-shade: #46acd9;
   --ion-color-primary-tint: #61c9f8;
 
@@ -132,6 +132,48 @@
   --border-light: #E2E8F0;
   --border-medium: #CBD5E0;
   --border-dark: #A0AEC0;
+
+  // ============================================
+  // BOTTOM NAVIGATION & MENU SHEET VARIABLES
+  // ============================================
+  --nav-active: #0277BD;
+  --nav-inactive: #6B7280;
+  --nav-menu-btn: #0288D1;
+  --nav-border: #E5E7EB;
+  --menu-tile-bg: #E1F5FE;
+  --menu-tile-icon: #0277BD;
+  --menu-tile-pressed: #B3E5FC;
+  --menu-handle: #D1D5DB;
+  --menu-text: #1F2937;
+  --menu-backdrop: rgba(10, 18, 40, 0.45);
+
+  // ============================================
+  // UI KIT VARIABLES
+  // ============================================
+  --ui-bg: #F3F6F9;
+  --ui-card-bg: #FFFFFF;
+  --ui-border: #E5E7EB;
+  --ui-text: #111827;
+  --ui-text-2: #4B5563;
+  --ui-text-muted: #6B7280;
+  --ui-action: #0288D1;
+  --ui-action-strong: #0277BD;
+  --ui-action-soft: #E1F5FE;
+  --ui-header-text: #06324D;
+  --ui-input-border: #D1D5DB;
+  --ui-dashed: #90CAF9;
+  --ui-upload-bg: #F8FCFF;
+  --ui-ok: #059669;
+  --ui-ok-bg: #D1FAE5;
+  --ui-ok-text: #065F46;
+  --ui-warn: #D97706;
+  --ui-warn-bg: #FEF3C7;
+  --ui-warn-text: #92400E;
+  --ui-bad: #B91C1C;
+  --ui-bad-bg: #FEE2E2;
+  --ui-bad-text: #991B1B;
+  --ui-off-bg: #E5E9ED;
+  --ui-off-text: #5F6B76;
   
   // Shadow Colors
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);

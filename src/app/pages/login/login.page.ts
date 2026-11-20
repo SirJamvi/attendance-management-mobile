@@ -8,11 +8,14 @@ import {
   ToastController, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { eye, eyeOff, eyeOutline, eyeOffOutline, logIn, logoGoogle } from 'ionicons/icons';
+import { eye, eyeOff, eyeOutline, eyeOffOutline, logIn, logoGoogle, storefrontOutline } from 'ionicons/icons';
 
 import { AuthService } from 'src/app/services/auth';
 import { Storage } from 'src/app/services/storage';
-import { User } from 'src/app/types/api.types';
+import { BranchService } from 'src/app/services/branch.service';
+import { AttendanceService } from 'src/app/services/attendance';
+import { BranchSelectModalComponent } from 'src/app/components/branch-select-modal/branch-select-modal.component';
+import { Branch, User } from 'src/app/types/api.types';
 import { environment } from 'src/environments/environment';
 
 declare const google: any;
@@ -26,12 +29,15 @@ declare const google: any;
     CommonModule,
     FormsModule,
     IonContent,
-    IonItem, IonLabel, IonInput, IonButton, IonIcon, IonText, IonSpinner
+    IonItem, IonLabel, IonInput, IonButton, IonIcon, IonText, IonSpinner,
+    BranchSelectModalComponent
   ]
 })
 export class LoginPage implements OnInit {
   private storage = inject(Storage);
   private alertCtrl = inject(AlertController);
+  private branchService = inject(BranchService);
+  private attendanceService = inject(AttendanceService);
 
   username = '';
   password = '';
@@ -40,12 +46,18 @@ export class LoginPage implements OnInit {
   showPassword = false;
   errorMessage = '';
 
+  // State Pop-up Pemilihan Cabang Pasca-Login
+  isBranchModalOpen = false;
+  branches: Branch[] = [];
+  selectedBranchId: number | null = null;
+  pendingUser: User | null = null;
+
   constructor(
     private authService: AuthService,
     private router: Router,
     private toastCtrl: ToastController
   ) {
-    addIcons({ eye, eyeOff, eyeOutline, eyeOffOutline, logIn, logoGoogle });
+    addIcons({ eye, eyeOff, eyeOutline, eyeOffOutline, logIn, logoGoogle, storefrontOutline });
   }
 
   ngOnInit() {}
@@ -81,11 +93,7 @@ export class LoginPage implements OnInit {
             return;
           }
 
-          await this.showToast(
-            `Login Berhasil!${response.data.user.branch_name ? ' (' + response.data.user.branch_name + ')' : ''}`,
-            'success'
-          );
-          await this.redirectUser(response.data.user);
+          await this.handlePostLoginSuccess(response.data.user);
         } else {
           this.errorMessage = response.message || 'Login gagal.';
         }
@@ -218,8 +226,7 @@ export class LoginPage implements OnInit {
       next: async (response) => {
         this.isGoogleSubmitting = false;
         if (response.success && response.data?.user) {
-          await this.showToast('Login Google Berhasil!', 'success');
-          await this.redirectUser(response.data.user);
+          await this.handlePostLoginSuccess(response.data.user);
         } else {
           this.errorMessage = response.message || 'Login Google gagal.';
         }
@@ -243,6 +250,10 @@ export class LoginPage implements OnInit {
   }
 
   async redirectUser(user: User) {
+    await this.handlePostLoginSuccess(user);
+  }
+
+  private async handlePostLoginSuccess(user: User) {
     if (this.authService.isWebOnlyRole(user.role)) {
       const msg = 'Akun Owner/Admin hanya dapat diakses melalui Website Monitoring.';
       this.errorMessage = msg;
@@ -251,6 +262,48 @@ export class LoginPage implements OnInit {
       return;
     }
 
+    this.pendingUser = user;
+
+    // Ambil daftar cabang via AJAX
+    this.branchService.getBranches().subscribe({
+      next: (res) => {
+        if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+          this.branches = res.data;
+          this.selectedBranchId = user.branch_id || this.branches[0].id;
+          // Tampilkan pop-up modal pemilihan cabang
+          this.isBranchModalOpen = true;
+        } else {
+          this.proceedToApp(user);
+        }
+      },
+      error: (err) => {
+        console.warn('Gagal memuat cabang pasca login:', err);
+        this.proceedToApp(user);
+      }
+    });
+  }
+
+  async onBranchConfirmed(branch: Branch) {
+    this.isBranchModalOpen = false;
+    if (this.pendingUser) {
+      await this.authService.updateUserBranch(branch.id, branch.name);
+      this.attendanceService.updateDutyBranch(branch.id).subscribe({
+        next: (res) => console.log('✅ Duty branch pasca-login tersinkron:', res),
+        error: (err) => console.warn('⚠️ Gagal sinkron duty branch pasca-login:', err)
+      });
+      await this.showToast(`Login berhasil (${branch.name})`, 'success');
+      await this.proceedToApp(this.pendingUser);
+    }
+  }
+
+  onBranchModalDismiss() {
+    this.isBranchModalOpen = false;
+    if (this.pendingUser) {
+      this.proceedToApp(this.pendingUser);
+    }
+  }
+
+  private async proceedToApp(user: User) {
     const targetRoute = this.authService.getDefaultRouteForRole(user.role);
     if (targetRoute !== '/login') {
       this.router.navigate([targetRoute], { replaceUrl: true });

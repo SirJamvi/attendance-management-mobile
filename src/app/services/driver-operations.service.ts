@@ -23,8 +23,12 @@ export class DriverOperationsService {
   // A. INSPEKSI BENSIN & KONDISI ARMADA
   // ==========================================
 
-  getVehicles(): Observable<ApiResponse<VehicleOption[]>> {
-    return this.apiClient.get<ApiResponse<VehicleOption[]>>('driver/vehicles');
+  getVehicles(branchId?: number | null): Observable<ApiResponse<VehicleOption[]>> {
+    const params: Record<string, number> = {};
+    if (branchId !== undefined && branchId !== null) {
+      params['branch_id'] = branchId;
+    }
+    return this.apiClient.get<ApiResponse<VehicleOption[]>>('driver/vehicles', params);
   }
 
   getTodayChecksheets(date?: string): Observable<ApiResponse<any>> {

@@ -1,145 +1,178 @@
 // app.component.scss
-// Semua style overlay radial menu ada di sini (level app)
+// Styling Bottom Sheet Menu Navigasi (Level App)
 
 // ═══════════════════════════════════════════════
-// OVERLAY RADIAL
+// OVERLAY WRAPPER
 // ═══════════════════════════════════════════════
-.radial-overlay {
-  // Fixed: menutupi seluruh layar tapi HANYA saat *ngIf=true
-  // Tidak ada opacity trick — elemen benar-benar tidak ada di DOM saat tertutup
+.menu-sheet-overlay {
   position: fixed;
   inset: 0;
-  z-index: 99999;   // di atas semua layer Ionic
-  pointer-events: all;
+  z-index: 99999;
+  pointer-events: none;
 
-  // Animasi masuk
-  animation: overlay-in 0.2s ease forwards;
-}
+  // ═══════════════════════════════════════════════
+  // BACKDROP
+  // Berakhir tepat di atas tab bar agar tab bar tetap terlihat
+  // ═══════════════════════════════════════════════
+  .menu-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+    background: var(--menu-backdrop, rgba(10, 18, 40, 0.45));
+    pointer-events: all;
+    animation: fadeInBackdrop 0.25s ease-out forwards;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
 
-@keyframes overlay-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
+  // ═══════════════════════════════════════════════
+  // BOTTOM SHEET CONTAINER
+  // Duduk tepat di atas tab bar
+  // ═══════════════════════════════════════════════
+  .menu-sheet-container {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(60px + env(safe-area-inset-bottom));
+    background: #ffffff;
+    border-radius: 22px 22px 0 0;
+    border-top: 1px solid var(--nav-border, #E5E7EB);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    pointer-events: all;
+    animation: slideUpSheet 0.25s ease-out forwards;
+    padding-bottom: 8px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
 
-.overlay-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(10, 18, 40, 0.5);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
+  // ═══════════════════════════════════════════════
+  // STATE CLOSING (ANIMASI KELUAR)
+  // ═══════════════════════════════════════════════
+  &.closing {
+    .menu-backdrop {
+      animation: fadeOutBackdrop 0.2s ease-in forwards;
+    }
+
+    .menu-sheet-container {
+      animation: slideDownSheet 0.2s ease-in forwards;
+    }
+  }
 }
 
 // ═══════════════════════════════════════════════
-// CONTAINER — terpusat di atas tombol menu
+// KOMPONEN SHEET INTERIOR
 // ═══════════════════════════════════════════════
-.radial-container {
-  position: absolute;
-  bottom: calc(68px + env(safe-area-inset-bottom));
-  // left diset via binding Angular di template
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--menu-handle, #D1D5DB);
+  margin: 12px auto 8px auto;
 }
 
-// ═══════════════════════════════════════════════
-// ITEM RADIAL
-// ═══════════════════════════════════════════════
-.radial-item {
-  position: absolute;
-  top: 0; left: 0;
-  width: 64px;
-  height: 64px;
-  margin: -32px;    // center item ke origin
+.sheet-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--menu-text, #1F2937);
+  text-align: center;
+  margin-bottom: 16px;
+  letter-spacing: 0.1px;
+}
 
+.sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  row-gap: 16px;
+  column-gap: 12px;
+  padding: 0 16px 16px 16px;
+  justify-items: center;
+}
+
+.sheet-item {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  width: 100%;
+  min-width: 48px;
+  min-height: 48px;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  outline: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 
-  background: rgba(255, 255, 255, 0.97);
-  border-radius: 50%;
-  border: 2px solid transparent;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-
-  // Animasi posisi dikontrol via transform binding di template
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
-              background 0.15s ease,
-              border-color 0.15s ease;
-
-  ion-icon {
-    font-size: 22px;
-    color: #2563eb;
-    transition: color 0.15s ease;
-  }
-
-  span {
-    font-size: 9px;
-    font-weight: 600;
-    color: #374151;
-    white-space: nowrap;
-    transition: color 0.15s ease;
-  }
-
-  &.hovered {
-    background: #2563eb;
-    border-color: #1d4ed8;
-    ion-icon { color: #fff; }
-    span { color: #fff; }
+  &:active .sheet-icon-box {
+    background: var(--menu-tile-pressed, #B3E5FC);
+    transform: scale(0.95);
   }
 }
 
-// ═══════════════════════════════════════════════
-// TOMBOL CLOSE DI TENGAH
-// ═══════════════════════════════════════════════
-.radial-close-btn {
-  position: absolute;
-  top: 0; left: 0;
-  width: 50px;
-  height: 50px;
-  margin: -25px;
-
-  background: #1d4ed8;
-  border-radius: 50%;
+.sheet-icon-box {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: var(--menu-tile-bg, #E1F5FE);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
-  animation: pulse-ring 1.5s infinite;
+  transition: background 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   ion-icon {
-    font-size: 22px;
-    color: #fff;
+    font-size: 26px;
+    color: var(--menu-tile-icon, #0277BD);
   }
 }
 
-@keyframes pulse-ring {
-  0%   { box-shadow: 0 0 0 0   rgba(37, 99, 235, 0.55); }
-  70%  { box-shadow: 0 0 0 12px rgba(37, 99, 235, 0); }
-  100% { box-shadow: 0 0 0 0   rgba(37, 99, 235, 0); }
-}
-
-// ═══════════════════════════════════════════════
-// HINT
-// ═══════════════════════════════════════════════
-.swipe-hint {
-  position: absolute;
-  top: -130px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(255, 255, 255, 0.92);
-  border-radius: 20px;
-  padding: 6px 14px;
+.sheet-label {
   font-size: 12px;
   font-weight: 500;
-  color: #1e40af;
-  white-space: nowrap;
-  pointer-events: none;
-  animation: fadeInHint 0.3s ease forwards;
+  color: var(--menu-text, #1F2937);
+  margin-top: 6px;
+  text-align: center;
+  line-height: 1.2;
 }
 
-@keyframes fadeInHint {
-  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+// ═══════════════════════════════════════════════
+// KEYFRAME ANIMASI
+// ═══════════════════════════════════════════════
+@keyframes slideUpSheet {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownSheet {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes fadeInBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOutBackdrop {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
 }

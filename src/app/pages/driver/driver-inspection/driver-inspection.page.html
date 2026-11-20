@@ -1,287 +1,381 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
-    <ion-title>Inspeksi Armada</ion-title>
+    <ion-title>Inspeksi armada</ion-title>
     <ion-buttons slot="end">
-      <app-branch-badge></app-branch-badge>
+      <app-branch-badge [clickable]="true" (clicked)="openBranchModal()"></app-branch-badge>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-content [fullscreen]="true" class="ui-content">
   <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- Banner Penjelasan Gatekeeper Siang -->
-  <div class="info-banner">
-    <ion-icon name="speedometer-outline"></ion-icon>
-    <div>
-      <strong>Inspeksi Bensin & Kondisi Armada</strong>
-      <p>Slot <b>Siang (11:45–12:30 WIB)</b> adalah syarat wajib pembuka kunci Absen Pulang. Cukup pilih motor, cek bensin/kelengkapan, dan foto bukti.</p>
+  <div class="ui-wrap">
+    <!-- Banner Info -->
+    <div class="ui-card info-card">
+      <div class="ui-card-title">Inspeksi bensin dan kondisi armada</div>
+      <div class="ui-sub">Slot siang (11:45–12:30 WIB) wajib diisi untuk membuka absen pulang.</div>
     </div>
-  </div>
 
-  <div *ngIf="isLoading" class="center-state">
-    <ion-spinner name="crescent" color="primary"></ion-spinner>
-    <p>Memuat jadwal inspeksi...</p>
-  </div>
+    <div *ngIf="isLoading" class="center-state">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p class="ui-sub">Memuat jadwal inspeksi…</p>
+    </div>
 
-  <div *ngIf="!isLoading && errorMsg" class="center-state">
-    <ion-icon name="alert-circle-outline" color="danger" style="font-size: 44px;"></ion-icon>
-    <p>{{ errorMsg }}</p>
-    <ion-button fill="outline" size="small" (click)="loadData()">Muat Ulang</ion-button>
-  </div>
+    <div *ngIf="!isLoading && errorMsg" class="center-state">
+      <ion-icon name="alert-circle-outline" class="error-icon"></ion-icon>
+      <p class="ui-sub">{{ errorMsg }}</p>
+      <ion-button fill="outline" size="small" class="ui-btn reload-btn ion-margin-top" (click)="loadData()">
+        Muat ulang
+      </ion-button>
+    </div>
 
-  <!-- DAFTAR 3 SLOT INSPEKSI (PAGI / SIANG GATEKEEPER / SORE) -->
-  <div *ngIf="!isLoading && !errorMsg">
-    <ion-card
-      *ngFor="let slot of slots"
-      class="slot-card"
-      [class.gatekeeper-slot]="isSiangGatekeeper(slot)">
-      <ion-card-header>
+    <!-- DAFTAR 3 SLOT INSPEKSI (PAGI / SIANG GATEKEEPER / SORE) -->
+    <div *ngIf="!isLoading && !errorMsg">
+      <div
+        *ngFor="let slot of slots"
+        class="ui-card slot-card">
         <div class="slot-header-row">
           <div>
-            <div class="gatekeeper-chip" *ngIf="isSiangGatekeeper(slot)">
-              <ion-icon name="lock-closed-outline"></ion-icon>
-              <span>SYARAT ABSEN PULANG</span>
-            </div>
-            <ion-card-title>{{ slot.title }}</ion-card-title>
-            <ion-card-subtitle *ngIf="slot.time_window || slot.window_start">
-              <ion-icon name="time-outline" style="vertical-align: middle;"></ion-icon>
+            <span *ngIf="isSiangGatekeeper(slot)" class="ui-badge warn mb-6">
+              Syarat absen pulang
+            </span>
+            <div class="ui-card-title">{{ slot.title }}</div>
+            <div *ngIf="slot.time_window || slot.window_start" class="ui-sub-sm">
+              <ion-icon name="time-outline" class="time-icon"></ion-icon>
               {{ slot.time_window || (slot.window_start + ' - ' + slot.window_end + ' WIB') }}
-            </ion-card-subtitle>
+            </div>
           </div>
-          <ion-badge [color]="getStatusColor(slot.status || slot.window_status)">
+          <span class="ui-badge" [ngClass]="getStatusClass(slot.status || slot.window_status)">
             {{ getStatusLabel(slot.status || slot.window_status) }}
-          </ion-badge>
+          </span>
         </div>
-      </ion-card-header>
 
-      <ion-card-content>
-        <div *ngIf="slot.vehicles && slot.vehicles.length > 0; else fallbackVehicles">
-          <div *ngFor="let v of slot.vehicles" class="vehicle-row" [class.done]="v.completed">
+        <!-- Banner Reassurance: Tugas driver sudah terpenuhi -->
+        <div *ngIf="hasCurrentUserInspectedSlot(slot)" class="user-inspected-banner">
+          <ion-icon name="checkmark-circle"></ion-icon>
+          <div class="banner-content">
+            <div class="banner-title">Tugas inspeksi Anda sudah selesai</div>
+            <div class="banner-sub">
+              Anda telah menginspeksi <strong>{{ getCurrentUserInspectedVehicleName(slot) }}</strong>. Unit lain diperuntukkan bagi rekan driver lainnya.
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-12">
+          <div *ngIf="slot.vehicles && slot.vehicles.length > 0; else fallbackVehicles">
+            <div *ngFor="let v of slot.vehicles" class="vehicle-row" [class.done]="v.completed">
+              <div class="vehicle-info">
+                <div class="vehicle-name-line">
+                  <ion-icon name="bicycle-outline"></ion-icon>
+                  <strong>{{ v.name || v.vehicle_name }}</strong>
+                  <span *ngIf="v.plate_number" class="plate-tag">{{ v.plate_number }}</span>
+                </div>
+
+                <div *ngIf="v.completed" class="done-note">
+                  <ion-icon name="checkmark-circle-outline"></ion-icon>
+                  <span>
+                    Sudah dicek oleh {{ v.submitted_by || 'Petugas' }}
+                    <ng-container *ngIf="isCurrentUserInspector(v)">(Anda)</ng-container>
+                    <ng-container *ngIf="v.submitted_by_role"> ({{ v.submitted_by_role }})</ng-container>
+                    <ng-container *ngIf="v.submitted_at"> · {{ v.submitted_at }}</ng-container>
+                  </span>
+                </div>
+                <div *ngIf="!v.completed" class="ui-sub-sm pending-note">
+                  Belum dicek pada slot ini
+                </div>
+              </div>
+
+              <div *ngIf="!v.completed">
+                <span *ngIf="hasCurrentUserInspectedSlot(slot)" class="badge-driver-other">
+                  Driver lain
+                </span>
+                <ion-button
+                  *ngIf="!hasCurrentUserInspectedSlot(slot)"
+                  class="ui-btn-action"
+                  (click)="openVehicleForm(slot, v)">
+                  Cek armada
+                </ion-button>
+              </div>
+            </div>
+          </div>
+
+          <ng-template #fallbackVehicles>
+            <ion-button expand="block" class="ui-btn" (click)="openQuickInspection()">
+              <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+              Isi inspeksi armada
+            </ion-button>
+          </ng-template>
+        </div>
+      </div>
+
+      <!-- Fallback jika daftar slot kosong tetapi ada armada aktif -->
+      <div *ngIf="slots.length === 0" class="ui-card slot-card">
+        <div class="ui-card-title">Armada cabang aktif</div>
+        <div class="ui-sub-sm">Pilih motor untuk melakukan inspeksi bensin & kondisi</div>
+
+        <div class="mt-12">
+          <div *ngFor="let v of vehicles" class="vehicle-row">
             <div class="vehicle-info">
               <div class="vehicle-name-line">
-                <ion-icon name="bicycle-outline" color="primary"></ion-icon>
-                <strong>{{ v.name || v.vehicle_name }}</strong>
+                <ion-icon name="bicycle-outline"></ion-icon>
+                <strong>{{ v.name }}</strong>
                 <span *ngIf="v.plate_number" class="plate-tag">{{ v.plate_number }}</span>
               </div>
-
-              <div *ngIf="v.completed" class="done-badge">
-                <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
-                <span>
-                  Sudah dicek oleh {{ v.submitted_by || 'Petugas' }}
-                  <ng-container *ngIf="v.submitted_by_role">({{ v.submitted_by_role }})</ng-container>
-                  <ng-container *ngIf="v.submitted_at"> pukul {{ v.submitted_at }}</ng-container>
-                </span>
-              </div>
-              <div *ngIf="!v.completed" class="pending-note">
-                Belum dicek pada slot ini
-              </div>
             </div>
-
-            <ion-button
-              *ngIf="!v.completed"
-              size="small"
-              color="primary"
-              (click)="openVehicleForm(slot, v)">
-              Cek Armada
+            <ion-button class="ui-btn-action" (click)="openQuickInspection(v.id)">
+              Cek armada
             </ion-button>
           </div>
-        </div>
 
-        <ng-template #fallbackVehicles>
-          <ion-button expand="block" size="small" color="primary" (click)="openQuickInspection()">
-            <ion-icon name="add-circle-outline" slot="start"></ion-icon>
-            Isi Inspeksi Armada
-          </ion-button>
-        </ng-template>
-      </ion-card-content>
-    </ion-card>
-
-    <!-- Fallback jika daftar slot kosong tetapi ada armada aktif -->
-    <ion-card *ngIf="slots.length === 0" class="slot-card">
-      <ion-card-header>
-        <ion-card-title>Armada Cabang Aktif</ion-card-title>
-        <ion-card-subtitle>Pilih motor untuk melakukan inspeksi bensin & kondisi</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <div *ngFor="let v of vehicles" class="vehicle-row">
-          <div class="vehicle-info">
-            <div class="vehicle-name-line">
-              <ion-icon name="bicycle-outline" color="primary"></ion-icon>
-              <strong>{{ v.name }}</strong>
-              <span *ngIf="v.plate_number" class="plate-tag">{{ v.plate_number }}</span>
-            </div>
-          </div>
-          <ion-button size="small" color="primary" (click)="openQuickInspection(v.id)">
-            Cek Armada
+          <ion-button *ngIf="vehicles.length === 0" expand="block" class="ui-btn" (click)="openQuickInspection()">
+            Buka form inspeksi armada
           </ion-button>
         </div>
+      </div>
+    </div>
 
-        <ion-button *ngIf="vehicles.length === 0" expand="block" (click)="openQuickInspection()">
-          Buka Form Inspeksi Armada
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
+    <div class="ui-bottom-spacer"></div>
   </div>
-
-  <div style="height: 84px;"></div>
 </ion-content>
 
 <!-- ======================================================== -->
-<!-- MODAL FORM INSPEKSI ARMADA SIMPEL & INSTAN (0ms DELAY)  -->
+<!-- MODAL FORM INSPEKSI ARMADA SIMPEL & INSTAN               -->
 <!-- ======================================================== -->
 <ion-modal [isOpen]="isModalOpen" (didDismiss)="closeModal()">
   <ng-template>
     <ion-header>
       <ion-toolbar color="primary">
-        <ion-title>Inspeksi Armada Motor</ion-title>
+        <ion-title>Inspeksi armada motor</ion-title>
         <ion-buttons slot="end">
-          <ion-button (click)="closeModal()">
+          <ion-button (click)="closeModal()" aria-label="Tutup">
             <ion-icon name="close-outline"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
+
+      <!-- Indikator 3 Langkah Progres -->
+      <div class="ui-step-bar">
+        <!-- Step 1: Motor -->
+        <div class="ui-step">
+          <div class="ui-step-dot" [class.done]="stepMotorDone" [class.active]="activeStep === 1 && !stepMotorDone">
+            <ion-icon *ngIf="stepMotorDone" name="checkmark"></ion-icon>
+            <span *ngIf="!stepMotorDone">1</span>
+          </div>
+          <span class="ui-step-label" [class.done]="stepMotorDone" [class.active]="activeStep === 1 && !stepMotorDone">
+            Motor
+          </span>
+        </div>
+
+        <div class="ui-step-line" [class.done]="stepMotorDone"></div>
+
+        <!-- Step 2: Cek -->
+        <div class="ui-step">
+          <div class="ui-step-dot" [class.done]="stepCekDone" [class.active]="activeStep === 2 && !stepCekDone">
+            <ion-icon *ngIf="stepCekDone" name="checkmark"></ion-icon>
+            <span *ngIf="!stepCekDone">2</span>
+          </div>
+          <span class="ui-step-label" [class.done]="stepCekDone" [class.active]="activeStep === 2 && !stepCekDone">
+            Cek
+          </span>
+        </div>
+
+        <div class="ui-step-line" [class.done]="stepCekDone"></div>
+
+        <!-- Step 3: Foto -->
+        <div class="ui-step">
+          <div class="ui-step-dot" [class.done]="stepFotoDone" [class.active]="activeStep === 3 && !stepFotoDone">
+            <ion-icon *ngIf="stepFotoDone" name="checkmark"></ion-icon>
+            <span *ngIf="!stepFotoDone">3</span>
+          </div>
+          <span class="ui-step-label" [class.done]="stepFotoDone" [class.active]="activeStep === 3 && !stepFotoDone">
+            Foto
+          </span>
+        </div>
+      </div>
     </ion-header>
 
-    <ion-content class="ion-padding modal-content">
+    <ion-content class="ui-content modal-content">
+      <div class="ui-wrap">
 
-      <!-- 1. PILIH MOTOR OPERASIONAL -->
-      <div class="section-box">
-        <div class="section-header">
-          <ion-icon name="bicycle-outline" color="primary"></ion-icon>
-          <strong>1. Pilih Motor yang Dibawa</strong>
-        </div>
-        <ion-item lines="none" class="modal-input-item">
-          <ion-select
-            label="Armada Motor *"
-            labelPlacement="stacked"
-            interface="action-sheet"
-            [(ngModel)]="selectedVehicleId"
-            placeholder="Pilih unit motor">
-            <ion-select-option *ngFor="let v of vehicles" [value]="v.id">
-              {{ v.name }} {{ v.plate_number ? '(' + v.plate_number + ')' : '' }}
-            </ion-select-option>
-          </ion-select>
-        </ion-item>
-      </div>
-
-      <!-- 2. APA YANG MAU DICEK -->
-      <div class="section-box">
-        <div class="section-header">
-          <ion-icon name="speedometer-outline" color="primary"></ion-icon>
-          <strong>2. Cek Bensin & Kelengkapan</strong>
-        </div>
-
-        <!-- Level Bensin -->
-        <label class="field-label">Level Bensin *</label>
-        <div class="chips-grid">
-          <button
-            type="button"
-            *ngFor="let opt of fuelOptions"
-            class="chip-button"
-            [class.selected]="fuelLevel === opt"
-            (click)="fuelLevel = opt">
-            {{ opt }}
-          </button>
-        </div>
-
-        <!-- Kelengkapan Armada (Jas Hujan & Terpal) -->
-        <div class="tarp-toggle-card" (click)="tarpAvailable = !tarpAvailable">
-          <ion-checkbox [(ngModel)]="tarpAvailable" (click)="$event.stopPropagation()"></ion-checkbox>
-          <div class="tarp-desc">
-            <strong>Terpal & Jas Hujan Lengkap</strong>
-            <p>Terpal penutup es dan jas hujan tersedia & layak pakai</p>
+        <!-- KARTU 1: ARMADA MOTOR (AJAX BOTTOM SHEET) -->
+        <div class="ui-card">
+          <div class="ui-select-trigger-header">
+            <label class="ui-field-label">Armada motor *</label>
+            <button type="button" class="ui-select-trigger-btn" (click)="openVehicleSelectModal()">
+              Ganti
+            </button>
+          </div>
+          <div
+            class="ui-select-trigger-card"
+            (click)="openVehicleSelectModal()"
+            role="button"
+            tabindex="0"
+            aria-label="Pilih unit motor">
+            <div class="trigger-info">
+              <div class="trigger-name">
+                {{ selectedVehicleName }} {{ selectedVehiclePlate }}
+              </div>
+              <div class="trigger-caption">Ketuk untuk memilih unit motor tugas hari ini</div>
+            </div>
+            <ion-icon name="chevron-forward" class="trigger-arrow"></ion-icon>
           </div>
         </div>
 
-        <!-- Kondisi Mesin / Kendaraan -->
-        <label class="field-label" style="margin-top: 14px;">Kondisi Kendaraan *</label>
-        <div class="cond-grid">
-          <button
-            type="button"
-            *ngFor="let c of conditionOptions"
-            class="cond-button"
-            [class.selected]="vehicleCondition === c.value"
-            (click)="vehicleCondition = c.value">
-            {{ c.label }}
-          </button>
-        </div>
+        <!-- KARTU 2: BENSIN DAN KELENGKAPAN -->
+        <div class="ui-card">
+          <div class="ui-card-title mb-12">Bensin dan kelengkapan</div>
 
-        <!-- Odometer & Catatan (Opsional) -->
-        <ion-item lines="full" class="modal-input-item" style="margin-top: 10px;">
+          <!-- Level Bensin -->
+          <label class="ui-field-label">Level bensin *</label>
+          <div class="ui-seg">
+            <button
+              type="button"
+              *ngFor="let opt of fuelOptions"
+              class="ui-seg-btn"
+              [class.selected]="fuelLevel === opt.value"
+              (click)="fuelLevel = opt.value"
+              [attr.aria-pressed]="fuelLevel === opt.value">
+              {{ opt.label }}
+            </button>
+          </div>
+
+          <!-- Terpal & Jas Hujan -->
+          <div class="tarp-card" (click)="tarpAvailable = !tarpAvailable">
+            <ion-checkbox [(ngModel)]="tarpAvailable" (click)="$event.stopPropagation()"></ion-checkbox>
+            <div class="tarp-text">
+              <div class="tarp-title">Terpal dan jas hujan lengkap</div>
+              <div class="tarp-sub">Tersedia dan layak pakai</div>
+            </div>
+          </div>
+
+          <!-- Kondisi Kendaraan -->
+          <label class="ui-field-label">Kondisi kendaraan *</label>
+          <div class="ui-seg">
+            <button
+              type="button"
+              *ngFor="let c of conditionOptions"
+              class="ui-seg-btn"
+              [class.selected]="vehicleCondition === c.value"
+              [class.ok]="vehicleCondition === c.value && c.tone === 'ok'"
+              [class.warn]="vehicleCondition === c.value && c.tone === 'warn'"
+              [class.bad]="vehicleCondition === c.value && c.tone === 'bad'"
+              (click)="vehicleCondition = c.value"
+              [attr.aria-pressed]="vehicleCondition === c.value">
+              {{ c.label }}
+            </button>
+          </div>
+
+          <!-- KM Speedometer -->
+          <label class="ui-field-label">KM speedometer (opsional)</label>
           <ion-input
             type="number"
-            label="KM Speedometer (Opsional)"
-            labelPlacement="stacked"
+            class="ui-input"
+            fill="outline"
             placeholder="Contoh: 12500"
-            [(ngModel)]="odometer">
+            [(ngModel)]="odometer"
+            aria-label="KM speedometer">
           </ion-input>
-        </ion-item>
 
-        <ion-item lines="none" class="modal-input-item">
-          <ion-textarea
-            label="Catatan Kendala (Opsional)"
-            labelPlacement="stacked"
-            rows="2"
-            placeholder="Misal: rem belakang agak longgar..."
-            [(ngModel)]="notes">
-          </ion-textarea>
-        </ion-item>
-      </div>
+          <!-- Catatan Dilipat -->
+          <div *ngIf="!showNotes" class="notes-toggle-box">
+            <button type="button" class="notes-toggle-btn" (click)="showNotes = true">
+              + Tambah catatan kendala
+            </button>
+          </div>
 
-      <!-- 3. BUKTI FOTO EVIDENCE (WAJIB) -->
-      <div class="section-box evidence-box">
-        <div class="section-header">
-          <ion-icon name="camera-outline" color="primary"></ion-icon>
-          <strong>3. Foto Bukti Evidence (Wajib)</strong>
-        </div>
-        <p class="section-hint">Foto indikator speedometer/bensin atau kondisi fisik motor. Dikompres otomatis ultra-ringan (~35 KB).</p>
-
-        <!-- Placeholder Ambil Foto -->
-        <div *ngIf="!evidencePhoto" class="camera-trigger" (click)="takePhoto()">
-          <ion-icon name="camera-outline"></ion-icon>
-          <strong>Ambil Foto Bukti</strong>
-          <span>Klik untuk membuka kamera</span>
+          <div *ngIf="showNotes" class="mt-8">
+            <label class="ui-field-label">Catatan kendala (opsional)</label>
+            <ion-textarea
+              class="ui-input"
+              fill="outline"
+              rows="2"
+              placeholder="Misal: rem belakang agak longgar…"
+              [(ngModel)]="notes"
+              aria-label="Catatan kendala">
+            </ion-textarea>
+          </div>
         </div>
 
-        <!-- Preview Foto Jika Sudah Diambil -->
-        <div *ngIf="evidencePhoto" class="preview-container">
-          <img [src]="evidencePhoto" alt="Bukti Foto" />
-          <div class="preview-footer">
-            <span class="badge-success">✓ Foto Siap (~35 KB)</span>
-            <div class="btn-group">
-              <ion-button size="small" fill="outline" color="dark" (click)="takePhoto()">
-                Ganti Foto
-              </ion-button>
-              <ion-button size="small" fill="clear" color="danger" (click)="clearPhoto()">
-                <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
-              </ion-button>
+        <!-- KARTU 3: FOTO BUKTI -->
+        <div class="ui-card">
+          <div class="ui-card-title mb-12">Foto bukti *</div>
+
+          <!-- Belum Ada Foto: Upload Box Row -->
+          <div *ngIf="!evidencePhoto" class="ui-upload row" (click)="takePhoto()">
+            <ion-icon name="camera-outline"></ion-icon>
+            <div>
+              <div class="t">Ambil foto bukti</div>
+              <div class="s">Bagasi (Terpal & Jas Hujan)</div>
+            </div>
+          </div>
+
+          <!-- Sudah Ada Foto: Preview Box -->
+          <div *ngIf="evidencePhoto" class="photo-preview-box">
+            <div class="image-wrap">
+              <img [src]="evidencePhoto" alt="Foto bukti inspeksi" />
+            </div>
+            <div class="preview-actions">
+              <span class="ui-badge ok">Foto siap</span>
+              <div class="actions-right">
+                <ion-button fill="outline" class="ui-btn-sm" (click)="takePhoto()">
+                  Ganti foto
+                </ion-button>
+                <ion-button fill="clear" color="danger" class="ui-icon-btn" (click)="clearPhoto()" aria-label="Hapus foto">
+                  <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                </ion-button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 4. TOMBOL KIRIM INSPEKSI -->
-      <div class="submit-footer">
-        <ion-button
-          expand="block"
-          color="success"
-          size="large"
-          class="submit-action-btn"
-          [disabled]="isSubmitting || !selectedVehicleId || !evidencePhoto"
-          (click)="submitInspection()">
-          <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
-          <ion-icon *ngIf="!isSubmitting" name="send-outline" slot="start"></ion-icon>
-          {{ isSubmitting ? 'Mengirim...' : (evidencePhoto ? 'Kirim Inspeksi Armada' : 'Ambil Foto Bukti Dahulu') }}
-        </ion-button>
-        <p class="lock-hint" *ngIf="!evidencePhoto">
-          * Ambil 1 foto bukti fisik sebelum tombol kirim dapat ditekan.
-        </p>
       </div>
-
-      <div style="height: 30px;"></div>
     </ion-content>
+
+    <!-- Tombol Kirim Menempel di Bawah (Modal) -->
+    <ion-footer class="ion-no-border ui-action-bar no-tabs">
+      <ion-button
+        expand="block"
+        class="ui-btn"
+        [disabled]="isSubmitting || !selectedVehicleId || !evidencePhoto"
+        (click)="submitInspection()">
+        <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!isSubmitting" name="send-outline" slot="start"></ion-icon>
+        {{ isSubmitting ? 'Mengirim…' : 'Kirim inspeksi' }}
+      </ion-button>
+
+      <div *ngIf="!selectedVehicleId" class="ui-help bad">
+        Pilih motor dulu.
+      </div>
+      <div *ngIf="selectedVehicleId && !evidencePhoto" class="ui-help bad">
+        Foto bukti wajib diambil dulu.
+      </div>
+    </ion-footer>
   </ng-template>
 </ion-modal>
+
+<!-- ======================================================== -->
+<!-- MODAL PEMILIHAN MOTOR (AJAX BOTTOM SHEET ANTI-DUPLIKASI) -->
+<!-- ======================================================== -->
+<app-vehicle-select-modal
+  [isOpen]="isVehicleModalOpen"
+  [vehicles]="vehicles"
+  [selectedVehicleId]="selectedVehicleId"
+  [completedMap]="completedVehicleMap"
+  (vehicleSelected)="onVehicleSelected($event)"
+  (dismiss)="closeVehicleSelectModal()">
+</app-vehicle-select-modal>
+
+<!-- ======================================================== -->
+<!-- MODAL PEMILIHAN CABANG TUGAS (AJAX BOTTOM SHEET)         -->
+<!-- ======================================================== -->
+<app-branch-select-modal
+  [isOpen]="isBranchModalOpen"
+  [branches]="branches"
+  [selectedBranchId]="authService.getCurrentUserValue()?.branch_id ?? null"
+  [canDismiss]="true"
+  (branchSelected)="onBranchSelected($event)"
+  (dismiss)="closeBranchModal()">
+</app-branch-select-modal>

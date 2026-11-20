@@ -3,13 +3,12 @@ import { CommonModule } from '@angular/common';
 import {
   IonButton,
   IonIcon,
-  IonText,
   Platform,
   AlertController
 } from '@ionic/angular/standalone';
 import { CameraDirection } from '@capacitor/camera';
 import { addIcons } from 'ionicons';
-import { camera, refreshOutline } from 'ionicons/icons';
+import { camera, refreshOutline, trashOutline } from 'ionicons/icons';
 import { captureCompressedPhoto } from 'src/app/utils/image-compressor';
 
 @Component({
@@ -17,22 +16,32 @@ import { captureCompressedPhoto } from 'src/app/utils/image-compressor';
   templateUrl: './camera-view.component.html',
   styleUrls: ['./camera-view.component.scss'],
   standalone: true,
-  imports: [CommonModule, IonButton, IonIcon, IonText]
+  imports: [CommonModule, IonButton, IonIcon]
 })
 export class CameraViewComponent {
   @Input() direction: 'front' | 'rear' = 'front';
   @Input() promptHeader = 'Ambil Foto Kehadiran';
   @Input() maxWidth = 720;
   @Input() quality = 0.5;
+  @Input() buttonText = 'Ambil foto selfie';
+  @Input() subText = 'Ketuk untuk membuka kamera';
 
-  public photoPreview: string | null = null;
+  @Input()
+  get photoPreview(): string | null {
+    return this._photoPreview;
+  }
+  set photoPreview(val: string | null) {
+    this._photoPreview = val;
+  }
+  private _photoPreview: string | null = null;
+
   @Output() photoTaken = new EventEmitter<string | null>();
 
   constructor(
     private alertCtrl: AlertController,
     private platform: Platform
   ) {
-    addIcons({ camera, refreshOutline });
+    addIcons({ camera, refreshOutline, trashOutline });
   }
 
   async takePicture() {

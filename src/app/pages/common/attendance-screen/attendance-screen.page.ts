@@ -6,10 +6,8 @@ import { Subscription } from 'rxjs';
 
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonButtons,
-  IonBackButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle,
-  IonCardSubtitle, IonIcon, IonSpinner, IonItem, IonLabel, IonNote, IonList,
-  IonBadge, IonGrid, IonRow, IonCol, IonModal, IonTextarea,
-  IonRefresher, IonRefresherContent,
+  IonBackButton, IonIcon, IonSpinner, IonModal, IonTextarea,
+  IonRefresher, IonRefresherContent, IonFooter,
   AlertController, LoadingController, ToastController, Platform
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -18,18 +16,23 @@ import {
   timeOutline, alertCircleOutline, warningOutline, flame, giftOutline,
   lockClosedOutline, lockOpenOutline, chevronForwardOutline, shieldCheckmarkOutline,
   cubeOutline, podiumOutline, speedometerOutline, clipboardOutline,
-  checkmarkDoneOutline, statsChartOutline, closeOutline, trashOutline, warning
+  checkmarkDoneOutline, statsChartOutline, closeOutline, trashOutline, warning,
+  sendOutline, checkmark, storefrontOutline, informationCircleOutline, chevronForward,
+  personCircleOutline, cardOutline
 } from 'ionicons/icons';
 import { Geolocation, Position } from '@capacitor/geolocation';
 
 import { CameraViewComponent } from '../../../components/camera-view/camera-view.component';
 import { LoadingSpinnerComponent } from '../../../components/loading-spinner/loading-spinner.component';
 import { BranchBadgeComponent } from '../../../components/branch-badge/branch-badge.component';
+import { BranchSelectModalComponent } from '../../../components/branch-select-modal/branch-select-modal.component';
 import { AttendanceService } from '../../../services/attendance';
 import { AuthService } from '../../../services/auth';
+import { BranchService } from '../../../services/branch.service';
 
 import {
   Attendance,
+  Branch,
   CheckoutEligibility,
   CheckoutRequirement,
   User
@@ -47,11 +50,10 @@ import {
     CameraViewComponent,
     LoadingSpinnerComponent,
     BranchBadgeComponent,
+    BranchSelectModalComponent,
     IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonButtons,
-    IonBackButton, IonCard, IonCardContent, IonCardHeader, IonCardTitle,
-    IonCardSubtitle, IonIcon, IonSpinner, IonItem, IonLabel, IonNote, IonList,
-    IonBadge, IonGrid, IonRow, IonCol, IonModal, IonTextarea,
-    IonRefresher, IonRefresherContent
+    IonBackButton, IonIcon, IonSpinner, IonModal, IonTextarea,
+    IonRefresher, IonRefresherContent, IonFooter
   ]
 })
 export class AttendanceScreenPage implements OnInit, OnDestroy {
@@ -60,6 +62,10 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
   attendanceToday: Attendance | null = null;
   currentUser: User | null = null;
   userRole = '';
+
+  branches: Branch[] = [];
+  selectedBranchId: number | null = null;
+  isBranchModalOpen = false;
 
   shiftInfo: any = null;
   isDayOff = false;
@@ -87,6 +93,7 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
   constructor(
     private attendanceService: AttendanceService,
     private authService: AuthService,
+    private branchService: BranchService,
     private router: Router,
     private alertCtrl: AlertController,
     private loadingCtrl: LoadingController,
@@ -98,8 +105,96 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
       timeOutline, alertCircleOutline, warningOutline, flame, giftOutline,
       lockClosedOutline, lockOpenOutline, chevronForwardOutline, shieldCheckmarkOutline,
       cubeOutline, podiumOutline, speedometerOutline, clipboardOutline,
-      checkmarkDoneOutline, statsChartOutline, closeOutline, trashOutline, warning
+      checkmarkDoneOutline, statsChartOutline, closeOutline, trashOutline, warning,
+      sendOutline, checkmark, storefrontOutline, informationCircleOutline, chevronForward,
+      personCircleOutline
     });
+  }
+
+  get userDisplayName(): string {
+    return this.currentUser?.name || this.currentUser?.username || 'Rekan';
+  }
+
+  openBranchModal() {
+    this.isBranchModalOpen = true;
+  }
+
+  closeBranchModal() {
+    this.isBranchModalOpen = false;
+  }
+
+  async onBranchSelectedFromModal(branch: Branch) {
+    this.isBranchModalOpen = false;
+    await this.applyDutyBranchChange(branch.id, branch.name);
+    const toast = await this.toastCtrl.create({
+      message: `Cabang tugas aktif: ${branch.name}`,
+      duration: 2000,
+      color: 'success',
+      position: 'bottom'
+    });
+    await toast.present();
+  }
+
+  async onBranchChange(event: any) {
+    const branchId = Number(event?.detail?.value ?? event);
+    if (branchId) {
+      await this.applyDutyBranchChange(branchId);
+    }
+  }
+
+  async applyDutyBranchChange(branchId: number, branchName?: string) {
+    this.selectedBranchId = branchId;
+    const branch = this.branches.find(b => b.id === branchId);
+    const resolvedName = branchName || branch?.name || '';
+
+    // 1. Reaktivitas Header Badge: Langsung update local auth state detik itu juga agar app-branch-badge seketika berganti
+    await this.authService.updateUserBranch(branchId, resolvedName);
+
+    // 2. Sinkronkan cabang tugas ke backend via POST /api/v1/attendance/duty-branch
+    this.attendanceService.updateDutyBranch(branchId).subscribe({
+      next: (res) => {
+        console.log('✅ Duty branch berhasil disinkronkan ke backend:', res);
+      },
+      error: (err) => {
+        console.warn('⚠️ Gagal update duty branch ke backend:', err);
+      }
+    });
+  }
+
+  get showActionBar(): boolean {
+    if (this.isLoading) return false;
+    return !this.attendanceToday || !this.attendanceToday.check_out_time;
+  }
+
+  get completedRequirementsCount(): number {
+    return this.checkoutEligibility?.requirements?.filter(r => r.completed).length || 0;
+  }
+
+  get totalRequirementsCount(): number {
+    return this.checkoutEligibility?.requirements?.length || 0;
+  }
+
+  get requirementsProgressPercent(): number {
+    if (!this.totalRequirementsCount) return 0;
+    return Math.round((this.completedRequirementsCount / this.totalRequirementsCount) * 100);
+  }
+
+  get helpText(): string {
+    if (this.attendanceToday && this.isCheckoutLocked) {
+      return 'Selesaikan syarat absen pulang dulu.';
+    }
+    if (!this.photoData) {
+      return 'Ambil foto selfie dulu.';
+    }
+    if (this.photoData && !this.locationData) {
+      return 'Mencari lokasi GPS…';
+    }
+    return '';
+  }
+
+  get selectedBranchName(): string {
+    const branch = this.branches.find(b => b.id === this.selectedBranchId);
+    return branch ? branch.name : (this.currentUser?.branch_name || '');
   }
 
   ngOnInit() {
@@ -107,6 +202,25 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
       this.authService.getCurrentUser().subscribe((user) => {
         this.currentUser = user;
         this.userRole = user?.role || '';
+        if (!this.selectedBranchId && user?.branch_id) {
+          this.selectedBranchId = user.branch_id;
+        }
+      })
+    );
+
+    this.subs.add(
+      this.branchService.getBranches().subscribe({
+        next: (res) => {
+          if (res?.data && Array.isArray(res.data)) {
+            this.branches = res.data;
+            if (!this.selectedBranchId && this.currentUser?.branch_id) {
+              this.selectedBranchId = this.currentUser.branch_id;
+            } else if (!this.selectedBranchId && this.branches.length > 0) {
+              this.selectedBranchId = this.branches[0].id;
+            }
+          }
+        },
+        error: (err) => console.warn('Gagal memuat cabang:', err)
       })
     );
 
@@ -157,6 +271,9 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
     this.attendanceService.getStatus().subscribe({
       next: (response) => {
         this.attendanceToday = response.data;
+        if (response.data?.branch_id) {
+          this.selectedBranchId = response.data.branch_id;
+        }
 
         if (response.meta) {
           this.shiftInfo = response.meta.shift_name
@@ -173,6 +290,13 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
 
           if ('checkout_eligibility' in response.meta) {
             this.checkoutEligibility = response.meta.checkout_eligibility ?? null;
+          }
+
+          if (response.meta.duty_branch_id) {
+            this.selectedBranchId = response.meta.duty_branch_id;
+            if (response.meta.duty_branch_name) {
+              this.authService.updateUserBranch(response.meta.duty_branch_id, response.meta.duty_branch_name);
+            }
           }
         }
 
@@ -282,10 +406,18 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
       this.photoData!,
       this.locationData!.latitude,
       this.locationData!.longitude,
-      this.isDayOff ? this.emergencyNote : undefined
+      this.isDayOff ? this.emergencyNote : undefined,
+      this.selectedBranchId
     ).subscribe({
       next: async (response) => {
         await loading.dismiss();
+
+        if (this.selectedBranchId) {
+          const selected = this.branches.find(b => b.id === this.selectedBranchId);
+          if (selected) {
+            await this.authService.updateUserBranch(selected.id, selected.name);
+          }
+        }
 
         const hasAutoChecksheet = !!(response?.data as any)?.auto_checksheet;
         if (this.isKoOrKasir && hasAutoChecksheet) {
