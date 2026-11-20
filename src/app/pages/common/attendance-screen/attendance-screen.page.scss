@@ -692,3 +692,61 @@
     color: var(--ui-text, #0f172a);
   }
 }
+
+// Multi-Sesi Previous Card
+.previous-sessions-card {
+  background: var(--ui-card-bg, #ffffff);
+  border: 1px solid var(--ui-border, #e2e8f0);
+  margin-bottom: 16px;
+
+  .session-card-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--ui-border-light, #f1f5f9);
+
+    .session-ic-done {
+      font-size: 20px;
+      color: var(--ui-ok, #10b981);
+    }
+
+    .session-card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ui-text, #0f172a);
+    }
+  }
+
+  .session-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .session-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 13px;
+
+    .session-item-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .session-shift-name {
+        font-weight: 500;
+        color: var(--ui-text, #1e293b);
+      }
+    }
+
+    .session-item-right {
+      color: var(--ui-text-muted, #64748b);
+      font-size: 12px;
+      font-weight: 500;
+    }
+  }
+}

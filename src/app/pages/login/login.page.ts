@@ -17,6 +17,8 @@ import { AttendanceService } from 'src/app/services/attendance';
 import { BranchSelectModalComponent } from 'src/app/components/branch-select-modal/branch-select-modal.component';
 import { Branch, User } from 'src/app/types/api.types';
 import { environment } from 'src/environments/environment';
+import { Capacitor } from '@capacitor/core';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 
 declare const google: any;
 
@@ -132,11 +134,61 @@ export class LoginPage implements OnInit {
     this.errorMessage = '';
     const clientId = environment.googleClientId;
 
+    // Jika berjalan pada platform native (Android / iOS)
+    if (Capacitor.isNativePlatform()) {
+      await this.nativeGoogleLogin(clientId);
+      return;
+    }
+
+    // Jika berjalan pada browser web
     if (clientId && typeof window !== 'undefined') {
       await this.triggerGoogleOneTap(clientId);
     } else {
       // Tampilkan dialog Google ID Token atau panduan jika belum di-set
       await this.showGoogleTokenPrompt();
+    }
+  }
+
+  private async nativeGoogleLogin(clientId: string) {
+    if (!clientId) {
+      await this.showToast('Google Client ID belum dikonfigurasi.', 'warning');
+      return;
+    }
+
+    this.isGoogleSubmitting = true;
+    try {
+      await SocialLogin.initialize({
+        google: {
+          webClientId: clientId,
+        },
+      });
+
+      const res = await SocialLogin.login({
+        provider: 'google',
+        options: {
+          style: 'bottom',
+        },
+      });
+
+      let idToken: string | null = null;
+      if (res?.result && 'idToken' in res.result) {
+        idToken = res.result.idToken;
+      }
+
+      if (idToken) {
+        this.processGoogleLogin(idToken);
+      } else {
+        this.isGoogleSubmitting = false;
+        await this.showToast('Gagal memperoleh token autentikasi Google.', 'warning');
+      }
+    } catch (err: any) {
+      this.isGoogleSubmitting = false;
+      console.error('❌ Native Google Login error:', err);
+      const errMsg = err?.message || err?.code || 'Login Google dibatalkan atau terjadi kesalahan.';
+      if (typeof errMsg === 'string' && (errMsg.toLowerCase().includes('cancel') || errMsg.toLowerCase().includes('user_cancel') || errMsg.includes('16'))) {
+        return;
+      }
+      await this.showToast(`Login Google gagal: ${errMsg}`, 'danger');
     }
   }
 
@@ -191,7 +243,7 @@ export class LoginPage implements OnInit {
   private async showGoogleTokenPrompt() {
     const alert = await this.alertCtrl.create({
       header: 'Masuk dengan Google',
-      message: 'Masukkan ID Token Google akun Anda untuk otentikasi ke server staging:',
+      message: 'Masukkan ID Token Google akun Anda untuk otentikasi:',
       inputs: [
         {
           name: 'id_token',
@@ -264,8 +316,9 @@ export class LoginPage implements OnInit {
 
     this.pendingUser = user;
 
-    // Ambil daftar cabang via AJAX
-    this.branchService.getBranches().subscribe({
+    // Bersihkan cache lama dan ambil daftar cabang segar pasca-login
+    this.branchService.clearCache();
+    this.branchService.getBranches(true).subscribe({
       next: (res) => {
         if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
           this.branches = res.data;

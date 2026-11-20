@@ -71,12 +71,16 @@ export interface AttendanceStatusMeta {
   checkout_eligibility?: CheckoutEligibility | null;
   duty_branch_id?: number | null;
   duty_branch_name?: string | null;
+  previous_sessions?: any[];
+  current_session_number?: number;
+  can_check_in_next_session?: boolean;
 }
 
 export interface Attendance {
   id: number;
   user_id: number;
   branch_id?: number | null;
+  session_number?: number;
   date: string;
   check_in_time: string;
   check_in_photo: string;
@@ -342,6 +346,44 @@ export interface KoKpiSummary {
 
 export type PaymentMethodType = 'cash' | 'transfer' | 'qris' | 'kasbon';
 
+export interface PosOrderDeliveryItem {
+  pos_transaction_id: number;
+  invoice_number: string;
+  customer_name: string;
+  customer_address?: string | null;
+  qty_20kg: number;
+  qty_15kg: number;
+  qty_10kg: number;
+  qty_5kg: number;
+  total_balls: number;
+  total_weight_kg: number;
+  payment_method: PaymentMethodType | string;
+  total_amount: number;
+  cash_collected: number;
+  transaction_time: string;
+}
+
+export interface DriverPosOrdersResponse {
+  pos_available: boolean;
+  pos_error?: string;
+  date: string;
+  is_confirmed: boolean;
+  confirmed_balls: number;
+  total_orders: number;
+  total_balls: number;
+  qty_20kg: number;
+  qty_15kg: number;
+  qty_10kg: number;
+  qty_5kg: number;
+  total_weight_kg: number;
+  total_cash_expected: number;
+  orders: PosOrderDeliveryItem[];
+  daily_ball_target: number;
+  shift_type: string;
+  target_achievement_pct: number;
+  checkout_eligibility?: CheckoutEligibility | null;
+}
+
 export interface DriverDeliveryItemInput {
   customer_name: string;
   qty_20kg: number;
@@ -381,8 +423,10 @@ export interface DriverDeliveryHistoryData {
     approved_count?: number;
     pending_count?: number;
     rejected_count?: number;
+    target_balls?: number;
+    achievement_pct?: number;
   };
-  deliveries: KoDeliveryItem[];
+  deliveries: KoDeliveryItem[] | { data: KoDeliveryItem[] } | any;
 }
 
 export interface DeliveryKpiSummary {

@@ -11,6 +11,7 @@ import {
   DriverDeliveryPayload,
   DriverDeliveryTodayData,
   DriverDeliveryHistoryData,
+  DriverPosOrdersResponse,
 } from '../types/api.types';
 
 @Injectable({
@@ -56,8 +57,22 @@ export class DriverOperationsService {
   }
 
   // ==========================================
-  // B. BULK INPUT DELIVERY (MAGIC PASTE WA & MANUAL)
+  // B. PENGIRIMAN DRIVER (INTEGRASI POS BUKU-DIGITAL)
   // ==========================================
+
+  getPosOrders(date?: string): Observable<ApiResponse<DriverPosOrdersResponse>> {
+    const params: Record<string, string> = {};
+    if (date) params['date'] = date;
+    return this.apiClient.get<ApiResponse<DriverPosOrdersResponse>>('driver/deliveries/pos-orders', params);
+  }
+
+  confirmPosDeliveries(payload: {
+    vehicle_id?: number | null;
+    proof_photo?: string | null;
+    delivery_date?: string;
+  }): Observable<ApiResponse<any>> {
+    return this.apiClient.post<ApiResponse<any>>('driver/deliveries/confirm-pos', payload);
+  }
 
   parseWaText(
     raw_wa_text: string

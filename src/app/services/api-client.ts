@@ -134,13 +134,13 @@ export class ApiClient {
     }
 
     if (err instanceof HttpErrorResponse && err.status === 401 && !isAuthEndpoint) {
-      console.warn('🔒 HTTP 401 Unauthorized on', cleanEndpoint, '- clearing session and redirecting to /login');
-      this.storage.clearSession().finally(() => {
-        this.unauthorizedSubject.next();
-        if (this.router.url !== '/login') {
+      console.warn('🔒 HTTP 401 Unauthorized on', cleanEndpoint, '- checking session status');
+      if (this.router.url !== '/login') {
+        this.storage.clearSession().finally(() => {
+          this.unauthorizedSubject.next();
           this.router.navigate(['/login'], { replaceUrl: true });
-        }
-      });
+        });
+      }
     }
 
     return throwError(() => err);

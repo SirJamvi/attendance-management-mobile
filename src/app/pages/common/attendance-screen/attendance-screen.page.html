@@ -165,13 +165,38 @@
       </div>
     </div>
 
+    <!-- SECTION RIWAYAT SESI SEBELUMNYA HARI INI -->
+    <div *ngIf="previousSessions && previousSessions.length > 0" class="ui-card previous-sessions-card">
+      <div class="session-card-header">
+        <ion-icon name="checkmark-done-circle" class="session-ic-done"></ion-icon>
+        <span class="session-card-title">Sesi Selesai Hari Ini ({{ previousSessions.length }})</span>
+      </div>
+      <div class="session-list">
+        <div *ngFor="let s of previousSessions" class="session-item-row">
+          <div class="session-item-left">
+            <span class="ui-badge ok">Sesi {{ s.session_number }}</span>
+            <span class="session-shift-name">{{ s.shift_name }}</span>
+          </div>
+          <div class="session-item-right">
+            <span>{{ s.check_in_time | date: 'HH:mm' }} - {{ s.check_out_time | date: 'HH:mm' }} WIB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- SECTION D: MODE PRESENSI MASUK -->
     <div *ngIf="!attendanceToday" class="ui-card">
-      <div class="ui-card-title">{{ isDayOff ? 'Presensi darurat (hari libur)' : 'Presensi masuk' }}</div>
+      <div class="ui-card-title">
+        {{ previousSessions && previousSessions.length > 0
+          ? ('Presensi Masuk Sesi ' + currentSessionNumber)
+          : (isDayOff ? 'Presensi darurat (hari libur)' : 'Presensi masuk') }}
+      </div>
       <div class="ui-sub">
-        {{ isKoOrKasir
-          ? 'Check-in otomatis menyelesaikan checksheet buka depot pagi.'
-          : (isDayOff ? 'Foto selfie untuk pengajuan darurat.' : 'Foto selfie untuk kehadiran.') }}
+        {{ previousSessions && previousSessions.length > 0
+          ? 'Masuk shift berikutnya / helper sore. Ambil foto selfie untuk kehadiran.'
+          : (isKoOrKasir
+            ? 'Check-in otomatis menyelesaikan checksheet buka depot pagi.'
+            : (isDayOff ? 'Foto selfie untuk pengajuan darurat.' : 'Foto selfie untuk kehadiran.')) }}
       </div>
 
       <!-- Warning & Emergency Note for Day Off -->

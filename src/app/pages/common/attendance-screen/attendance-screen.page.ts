@@ -75,6 +75,11 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
   hasSevereWarning = false;
   warningMessage = '';
 
+  // Multi-Sesi Hari Ini (Helper Pagi & Helper Sore)
+  previousSessions: any[] = [];
+  currentSessionNumber = 1;
+  canCheckInNextSession = false;
+
   photoData: string | null = null;
   locationData: { latitude: number; longitude: number } | null = null;
   isSubmitDisabled = true;
@@ -298,6 +303,10 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
               this.authService.updateUserBranch(response.meta.duty_branch_id, response.meta.duty_branch_name);
             }
           }
+
+          this.previousSessions = response.meta.previous_sessions || [];
+          this.currentSessionNumber = response.meta.current_session_number || (this.previousSessions.length + 1);
+          this.canCheckInNextSession = !!response.meta.can_check_in_next_session;
         }
 
         this.isLoading = false;

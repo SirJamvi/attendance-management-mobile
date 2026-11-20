@@ -4,16 +4,17 @@ import { FormsModule } from '@angular/forms';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton,
   IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
-  IonSegment, IonSegmentButton, IonLabel, IonInput, IonTextarea, IonSelect,
-  IonSelectOption, IonItem, IonIcon, IonBadge, IonProgressBar, IonSpinner,
+  IonSegment, IonSegmentButton, IonLabel, IonSelect, IonSelectOption,
+  IonItem, IonIcon, IonBadge, IonProgressBar, IonSpinner,
   IonRefresher, IonRefresherContent,
   LoadingController, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   sparklesOutline, addCircleOutline, trashOutline, cameraOutline, sendOutline,
-  checkmarkCircleOutline, timeOutline, alertCircleOutline, cubeOutline,
-  calendarOutline, carOutline, listOutline
+  checkmarkCircleOutline, checkmarkDoneCircleOutline, timeOutline, alertCircleOutline,
+  cubeOutline, calendarOutline, carOutline, listOutline, refreshOutline, storefrontOutline,
+  cashOutline, cardOutline, receiptOutline
 } from 'ionicons/icons';
 import { CameraDirection } from '@capacitor/camera';
 
@@ -23,9 +24,9 @@ import { BranchBadgeComponent } from 'src/app/components/branch-badge/branch-bad
 import { captureCompressedPhoto } from 'src/app/utils/image-compressor';
 import {
   DriverDeliveryHistoryData,
-  DriverDeliveryItemInput,
-  DriverDeliveryPayload,
-  DriverDeliveryTodayData,
+  DriverPosOrdersResponse,
+  KoDeliveryItem,
+  PosOrderDeliveryItem,
   VehicleOption
 } from 'src/app/types/api.types';
 
@@ -40,8 +41,8 @@ import {
     BranchBadgeComponent,
     IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton,
     IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
-    IonSegment, IonSegmentButton, IonLabel, IonInput, IonTextarea, IonSelect,
-    IonSelectOption, IonItem, IonIcon, IonBadge, IonProgressBar, IonSpinner,
+    IonSegment, IonSegmentButton, IonLabel, IonSelect, IonSelectOption,
+    IonItem, IonIcon, IonBadge, IonProgressBar, IonSpinner,
     IonRefresher, IonRefresherContent
   ]
 })
@@ -51,34 +52,28 @@ export class DriverBulkDeliveryPage implements OnInit {
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
 
-  activeTab: 'magic_paste' | 'manual' | 'progress' = 'magic_paste';
+  activeTab: 'pos_orders' | 'history' = 'pos_orders';
 
   // Shared metadata
   vehicles: VehicleOption[] = [];
   selectedVehicleId: number | null = null;
   proofPhoto: string | null = null;
 
-  // Tab 1: Magic Paste WA
-  rawWaText = '';
-  isParsing = false;
-  parsedItems: DriverDeliveryItemInput[] = [];
+  // Tab 1: Pesanan POS Hari Ini
+  isLoadingPos = false;
+  posData: DriverPosOrdersResponse | null = null;
+  isSubmitting = false;
 
-  // Tab 2: Manual Multi-Baris
-  manualItems: DriverDeliveryItemInput[] = [this.createEmptyItem()];
-
-  // Tab 3: Progres Hari Ini & Riwayat
-  isLoadingProgress = false;
-  todayData: DriverDeliveryTodayData | null = null;
+  // Tab 2: Riwayat Pengiriman
   historyMonth = this.getCurrentMonthString();
   historyData: DriverDeliveryHistoryData | null = null;
-
-  isSubmitting = false;
 
   constructor() {
     addIcons({
       sparklesOutline, addCircleOutline, trashOutline, cameraOutline, sendOutline,
-      checkmarkCircleOutline, timeOutline, alertCircleOutline, cubeOutline,
-      calendarOutline, carOutline, listOutline
+      checkmarkCircleOutline, checkmarkDoneCircleOutline, timeOutline, alertCircleOutline,
+      cubeOutline, calendarOutline, carOutline, listOutline, refreshOutline, storefrontOutline,
+      cashOutline, cardOutline, receiptOutline
     });
   }
 
@@ -87,25 +82,13 @@ export class DriverBulkDeliveryPage implements OnInit {
   }
 
   ionViewWillEnter() {
-    this.loadTodayDeliveries();
+    this.loadPosOrders();
     this.loadDeliveryHistory();
   }
 
   private getCurrentMonthString(): string {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  }
-
-  createEmptyItem(): DriverDeliveryItemInput {
-    return {
-      customer_name: '',
-      qty_20kg: 0,
-      qty_15kg: 0,
-      qty_10kg: 0,
-      qty_5kg: 0,
-      payment_method: 'cash',
-      cash_collected: 0,
-    };
   }
 
   loadVehicles() {
@@ -118,107 +101,25 @@ export class DriverBulkDeliveryPage implements OnInit {
   }
 
   // ==========================================
-  // TAB 1: MAGIC PASTE WA
+  // TAB 1: AMBIL PESANAN POS BUKU-DIGITAL
   // ==========================================
 
-  async parseWaText() {
-    if (!this.rawWaText.trim()) {
-      await this.showToast('Tempel teks laporan WA terlebih dahulu.', 'warning');
-      return;
-    }
-
-    this.isParsing = true;
-    const loading = await this.loadingCtrl.create({ message: 'Mem-parse teks WA...' });
-    await loading.present();
-
-    this.driverService.parseWaText(this.rawWaText).subscribe({
-      next: async (res) => {
-        this.isParsing = false;
-        await loading.dismiss();
-
-        const rawItems = res?.data?.items || (Array.isArray(res?.data) ? (res.data as any) : []);
-        this.parsedItems = rawItems.map((it: any) => ({
-          customer_name: it.customer_name || '',
-          qty_20kg: Number(it.qty_20kg || 0),
-          qty_15kg: Number(it.qty_15kg || 0),
-          qty_10kg: Number(it.qty_10kg || 0),
-          qty_5kg: Number(it.qty_5kg || 0),
-          payment_method: (it.payment_method || 'cash').toLowerCase(),
-          cash_collected: Number(it.cash_collected || 0),
-        }));
-
-        if (this.parsedItems.length === 0) {
-          await this.showToast('Tidak ada baris pengiriman terdeteksi. Anda bisa tambah manual.', 'warning');
-        } else {
-          await this.showToast(`Berhasil mem-parse ${this.parsedItems.length} baris pengiriman!`, 'success');
+  loadPosOrders(event?: any) {
+    this.isLoadingPos = !event && !this.posData;
+    this.driverService.getPosOrders().subscribe({
+      next: (res) => {
+        if (res?.success && res.data) {
+          this.posData = res.data;
         }
+        this.isLoadingPos = false;
+        if (event) event.target.complete();
       },
       error: async (err) => {
-        this.isParsing = false;
-        await loading.dismiss();
-        await this.showToast(err.error?.message || 'Gagal mem-parse teks WA.', 'danger');
+        this.isLoadingPos = false;
+        if (event) event.target.complete();
+        console.error('Error loading POS orders:', err);
       }
     });
-  }
-
-  addParsedRow() {
-    this.parsedItems.push(this.createEmptyItem());
-  }
-
-  removeParsedRow(index: number) {
-    this.parsedItems.splice(index, 1);
-  }
-
-  // ==========================================
-  // TAB 2: INPUT MANUAL MULTI-BARIS
-  // ==========================================
-
-  addManualRow() {
-    this.manualItems.push(this.createEmptyItem());
-  }
-
-  removeManualRow(index: number) {
-    if (this.manualItems.length > 1) {
-      this.manualItems.splice(index, 1);
-    } else {
-      this.manualItems[0] = this.createEmptyItem();
-    }
-  }
-
-  // ==========================================
-  // HELPERS: RINGKASAN & FOTO BUKTI
-  // ==========================================
-
-  getItemBalls(item: DriverDeliveryItemInput): number {
-    return (
-      (Number(item.qty_20kg) || 0) +
-      (Number(item.qty_15kg) || 0) +
-      (Number(item.qty_10kg) || 0) +
-      (Number(item.qty_5kg) || 0)
-    );
-  }
-
-  getItemWeightKg(item: DriverDeliveryItemInput): number {
-    return (
-      (Number(item.qty_20kg) || 0) * 20 +
-      (Number(item.qty_15kg) || 0) * 15 +
-      (Number(item.qty_10kg) || 0) * 10 +
-      (Number(item.qty_5kg) || 0) * 5
-    );
-  }
-
-  getSummary(items: DriverDeliveryItemInput[]) {
-    let totalBalls = 0;
-    let totalWeight = 0;
-    let totalCash = 0;
-
-    for (const item of items) {
-      totalBalls += this.getItemBalls(item);
-      totalWeight += this.getItemWeightKg(item);
-      totalCash += Number(item.cash_collected) || 0;
-    }
-
-    return { count: items.length, totalBalls, totalWeight, totalCash };
   }
 
   async takeProofPhoto() {
@@ -227,7 +128,7 @@ export class DriverBulkDeliveryPage implements OnInit {
         direction: CameraDirection.Rear,
         maxWidth: 1280,
         quality: 0.75,
-        promptHeader: 'Foto Bukti Pengiriman',
+        promptHeader: 'Foto Bukti Setoran Kasir / Rekap',
       });
       if (compressed) {
         this.proofPhoto = compressed;
@@ -247,88 +148,43 @@ export class DriverBulkDeliveryPage implements OnInit {
     this.proofPhoto = null;
   }
 
-  // ==========================================
-  // SUBMIT BULK DELIVERY
-  // ==========================================
-
-  async submitDeliveries(mode: 'magic_paste' | 'manual') {
-    const sourceItems = mode === 'magic_paste' ? this.parsedItems : this.manualItems;
-    if (sourceItems.length === 0) {
-      await this.showToast('Tambahkan minimal 1 baris pengiriman.', 'warning');
+  async confirmDeliveries() {
+    if (!this.posData || !this.posData.orders || this.posData.orders.length === 0) {
+      await this.showToast('Tidak ada pesanan POS untuk dikonfirmasi.', 'warning');
       return;
     }
 
-    const sanitizedItems: DriverDeliveryItemInput[] = [];
-    for (let i = 0; i < sourceItems.length; i++) {
-      const it = sourceItems[i];
-      if (!it.customer_name || !it.customer_name.trim()) {
-        await this.showToast(`Baris #${i + 1}: Nama customer wajib diisi.`, 'warning');
-        return;
-      }
-      if (this.getItemBalls(it) <= 0) {
-        await this.showToast(`Baris #${i + 1} (${it.customer_name}): Jumlah bal minimal 1.`, 'warning');
-        return;
-      }
-      sanitizedItems.push({
-        customer_name: it.customer_name.trim(),
-        qty_20kg: Number(it.qty_20kg) || 0,
-        qty_15kg: Number(it.qty_15kg) || 0,
-        qty_10kg: Number(it.qty_10kg) || 0,
-        qty_5kg: Number(it.qty_5kg) || 0,
-        payment_method: it.payment_method || 'cash',
-        cash_collected: Number(it.cash_collected) || 0,
-      });
-    }
-
-    const payload: DriverDeliveryPayload = {
-      input_mode: mode,
-      items: sanitizedItems,
-    };
-
-    if (this.selectedVehicleId) {
-      payload.vehicle_id = this.selectedVehicleId;
-    }
-    if (mode === 'magic_paste' && this.rawWaText.trim()) {
-      payload.raw_wa_text = this.rawWaText.trim();
-    }
-    if (this.proofPhoto) {
-      payload.proof_photo = this.proofPhoto;
-    }
-
     this.isSubmitting = true;
-    const loading = await this.loadingCtrl.create({ message: 'Mengirim laporan delivery...' });
+    const loading = await this.loadingCtrl.create({
+      message: 'Mengonfirmasi pesanan POS...',
+    });
     await loading.present();
 
-    this.driverService.submitBulkDelivery(payload).subscribe({
+    this.driverService.confirmPosDeliveries({
+      vehicle_id: this.selectedVehicleId,
+      proof_photo: this.proofPhoto,
+    }).subscribe({
       next: async (res) => {
         this.isSubmitting = false;
         await loading.dismiss();
 
-        // Update Driver checkout eligibility immediately so Absen Pulang unlocks!
+        // Update Driver checkout eligibility immediately so Absen Pulang unlocks
         const eligibility = res?.data?.checkout_eligibility || res?.meta?.checkout_eligibility;
         if (eligibility) {
           this.attendanceService.updateCheckoutEligibility(eligibility);
         }
 
-        await this.showToast(res?.message || 'Laporan delivery berhasil dikirim!', 'success');
+        await this.showToast(res?.message || 'Pengiriman POS berhasil dikonfirmasi!', 'success');
 
-        // Reset form & switch to Progress tab
-        if (mode === 'magic_paste') {
-          this.rawWaText = '';
-          this.parsedItems = [];
-        } else {
-          this.manualItems = [this.createEmptyItem()];
-        }
         this.proofPhoto = null;
-        this.activeTab = 'progress';
-        this.loadTodayDeliveries();
+        this.loadPosOrders();
         this.loadDeliveryHistory();
       },
       error: async (err) => {
         this.isSubmitting = false;
         await loading.dismiss();
         await this.showToast(
-          err.error?.message || 'Gagal mengirim laporan delivery.',
+          err.error?.message || 'Gagal mengonfirmasi pengiriman POS.',
           'danger'
         );
       }
@@ -336,24 +192,13 @@ export class DriverBulkDeliveryPage implements OnInit {
   }
 
   // ==========================================
-  // TAB 3: PROGRES HARI INI & RIWAYAT
+  // TAB 2: RIWAYAT PENGIRIMAN
   // ==========================================
 
-  loadTodayDeliveries(event?: any) {
-    this.isLoadingProgress = !event && !this.todayData;
-    this.driverService.getTodayDeliveries().subscribe({
-      next: (res) => {
-        if (res?.success && res.data) {
-          this.todayData = res.data;
-        }
-        this.isLoadingProgress = false;
-        if (event) event.target.complete();
-      },
-      error: () => {
-        this.isLoadingProgress = false;
-        if (event) event.target.complete();
-      }
-    });
+  get historyDeliveries(): KoDeliveryItem[] {
+    if (!this.historyData?.deliveries) return [];
+    if (Array.isArray(this.historyData.deliveries)) return this.historyData.deliveries;
+    return (this.historyData.deliveries as any)?.data || [];
   }
 
   loadDeliveryHistory() {
@@ -379,8 +224,17 @@ export class DriverBulkDeliveryPage implements OnInit {
     return 'Pending';
   }
 
+  getPaymentBadgeColor(method: string): string {
+    const m = (method || '').toLowerCase();
+    if (m === 'cash') return 'success';
+    if (m === 'transfer') return 'primary';
+    if (m === 'qris') return 'tertiary';
+    if (m === 'kasbon' || m === 'tempo') return 'warning';
+    return 'medium';
+  }
+
   doRefresh(event: any) {
-    this.loadTodayDeliveries(event);
+    this.loadPosOrders(event);
     this.loadDeliveryHistory();
   }
 
