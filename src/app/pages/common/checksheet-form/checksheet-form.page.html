@@ -98,6 +98,61 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- Kalkulator Fisik 3 Kulkas / Freezer (Khusus Form ko-opname-stok) -->
+    <ion-card *ngIf="isOpnameForm && opnameProducts.length > 0" class="field-card opname-card">
+      <ion-card-header>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ion-icon name="snow-outline" color="primary" style="font-size: 1.5rem;"></ion-icon>
+          <div>
+            <ion-card-title style="font-size: 1.05rem; font-weight: 700;">Kalkulator Fisik 3 Kulkas / Freezer</ion-card-title>
+            <ion-card-subtitle style="font-size: 0.78rem;">
+              Masukkan isi fisik es di tiap kulkas. Total fisik akan otomatis terhitung dan tersinkron ke POS Buku Digital.
+            </ion-card-subtitle>
+          </div>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div *ngFor="let p of opnameProducts" class="opname-item-box">
+          <div class="opname-item-header">
+            <div>
+              <strong style="color: #0f172a; font-size: 0.95rem;">{{ p.product_name }}</strong>
+              <small class="text-muted" style="display: block; font-size: 0.75rem;">Satuan: {{ p.unit }}</small>
+            </div>
+            <div style="text-align: right;">
+              <small class="text-muted" style="display: block; font-size: 0.7rem;">Stok Sistem</small>
+              <ion-badge color="medium" style="font-size: 0.8rem;">{{ p.system_stock }}</ion-badge>
+            </div>
+          </div>
+
+          <div class="kulkas-grid">
+            <div class="kulkas-col">
+              <label>Kulkas 1</label>
+              <input type="number" [(ngModel)]="p.kulkas_1" [ngModelOptions]="{standalone: true}" (input)="onKulkasStockChange(p)" min="0" placeholder="0" class="kulkas-input" />
+            </div>
+            <div class="kulkas-col">
+              <label>Kulkas 2</label>
+              <input type="number" [(ngModel)]="p.kulkas_2" [ngModelOptions]="{standalone: true}" (input)="onKulkasStockChange(p)" min="0" placeholder="0" class="kulkas-input" />
+            </div>
+            <div class="kulkas-col">
+              <label>Kulkas 3</label>
+              <input type="number" [(ngModel)]="p.kulkas_3" [ngModelOptions]="{standalone: true}" (input)="onKulkasStockChange(p)" min="0" placeholder="0" class="kulkas-input" />
+            </div>
+            <div class="kulkas-col total-col">
+              <label>Total Fisik</label>
+              <div class="kulkas-total-badge" [class.diff]="p.actual_stock !== p.system_stock">
+                {{ p.actual_stock || 0 }}
+              </div>
+            </div>
+          </div>
+
+          <div class="opname-note-wrap">
+            <input type="text" [(ngModel)]="p.notes" [ngModelOptions]="{standalone: true}" placeholder="Catatan selisih (opsional, misal: 1 bal cair)..." class="opname-note-input" />
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
     <!-- DYNAMIC FIELDS -->
     <ion-card *ngFor="let field of formSchema.fields" class="field-card">
       <ion-card-content>

@@ -47,8 +47,15 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Segment 3 Fase + Insidental -->
-  <ion-segment [(ngModel)]="selectedTab" class="phase-segment">
+  <!-- Segment 4 Fase + Insidental -->
+  <div *ngIf="todayData?.active_shift" class="shift-info-bar ion-margin-bottom">
+    <ion-badge [color]="todayData?.active_shift === 'pagi' ? 'primary' : 'tertiary'" style="font-size: 0.8rem; padding: 6px 12px; border-radius: 8px;">
+      <ion-icon name="time-outline" style="vertical-align: middle; margin-right: 4px;"></ion-icon>
+      Jadwal: {{ todayData?.active_shift === 'pagi' ? 'Shift Pagi (Pagi, Siang, Sore)' : 'Shift Siang/Malam (Siang, Sore, Malam)' }}
+    </ion-badge>
+  </div>
+
+  <ion-segment [(ngModel)]="selectedTab" class="phase-segment" [scrollable]="true">
     <ion-segment-button value="pagi">
       <ion-label>Pagi</ion-label>
     </ion-segment-button>
@@ -57,6 +64,9 @@
     </ion-segment-button>
     <ion-segment-button value="sore">
       <ion-label>Sore</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="malam">
+      <ion-label>Malam</ion-label>
     </ion-segment-button>
     <ion-segment-button value="insidental">
       <ion-label>Insidental</ion-label>
@@ -91,14 +101,33 @@
               {{ slot.time_window || (slot.window_start + ' - ' + slot.window_end + ' WIB') }}
             </ion-card-subtitle>
           </div>
-          <ion-badge [color]="getStatusColor(slot.status)">
-            {{ getStatusLabel(slot.status) }}
+          <ion-badge [color]="getStatusColor(slot.status, slot)">
+            {{ getStatusLabel(slot.status, slot) }}
           </ion-badge>
         </div>
       </ion-card-header>
 
       <ion-card-content>
         <p *ngIf="slot.description" class="slot-desc">{{ slot.description }}</p>
+
+        <!-- Badge Khusus Exempt (Dilewati sesuai shift) -->
+        <div *ngIf="slot.is_exempt" class="auto-badge-row">
+          <ion-badge color="medium">
+            <ion-icon name="time-outline" style="vertical-align: middle; margin-right: 4px;"></ion-icon>
+            {{ slot.exempt_reason || 'Dilewati pada shift ini' }}
+          </ion-badge>
+        </div>
+
+        <!-- Badge Khusus Tersinkron dari Web Kasir POS -->
+        <div *ngIf="slot.source === 'pos_web_sync' || slot.pos_synced" class="auto-badge-row">
+          <ion-badge color="success">
+            <ion-icon name="checkmark-circle-outline" style="vertical-align: middle; margin-right: 4px;"></ion-icon>
+            Tersinkron dari Web Kasir POS
+          </ion-badge>
+          <span *ngIf="slot.submitted_at" class="submitted-meta">
+            Oleh {{ slot.submitted_by || 'Kasir' }} ({{ slot.submitted_at }})
+          </span>
+        </div>
 
         <!-- Badge Otomatis dari Presensi -->
         <div *ngIf="isAutoAttendanceSlot(slot)" class="auto-badge-row">

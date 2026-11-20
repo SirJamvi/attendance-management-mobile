@@ -13,7 +13,7 @@ import { addIcons } from 'ionicons';
 import {
   cameraOutline, trashOutline, locationOutline, refreshOutline,
   checkmarkCircleOutline, alertCircleOutline, eyeOffOutline, warningOutline,
-  carOutline, personOutline, closeOutline, sendOutline
+  carOutline, personOutline, closeOutline, sendOutline, snowOutline
 } from 'ionicons/icons';
 import { CameraDirection } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
@@ -31,6 +31,7 @@ import {
   ChecksheetFormSchema,
   ChecksheetSubmitPayload,
   DriverOption,
+  OpnameProductItem,
   VehicleOption
 } from 'src/app/types/api.types';
 
@@ -74,6 +75,7 @@ export class ChecksheetFormPage implements OnInit {
   isBlindCount = false;
   vehicles: VehicleOption[] = [];
   drivers: DriverOption[] = [];
+  opnameProducts: OpnameProductItem[] = [];
 
   answers: Record<string, any> = {};
 
@@ -90,7 +92,7 @@ export class ChecksheetFormPage implements OnInit {
     addIcons({
       cameraOutline, trashOutline, locationOutline, refreshOutline,
       checkmarkCircleOutline, alertCircleOutline, eyeOffOutline, warningOutline,
-      carOutline, personOutline, closeOutline, sendOutline
+      carOutline, personOutline, closeOutline, sendOutline, snowOutline
     });
   }
 
@@ -124,6 +126,21 @@ export class ChecksheetFormPage implements OnInit {
 
   get isGatepassForm(): boolean {
     return this.slug === 'ko-gatepass-rute-jauh';
+  }
+
+  get isOpnameForm(): boolean {
+    return this.slug === 'ko-opname-stok';
+  }
+
+  onKulkasStockChange(item: OpnameProductItem) {
+    const k1 = Number(item.kulkas_1) || 0;
+    const k2 = Number(item.kulkas_2) || 0;
+    const k3 = Number(item.kulkas_3) || 0;
+    item.actual_stock = k1 + k2 + k3;
+
+    // Otomatis akumulasikan ke field standard actual_stock (Total Bal Es)
+    const grandTotal = this.opnameProducts.reduce((sum, p) => sum + (Number(p.actual_stock) || 0), 0);
+    this.answers['actual_stock'] = grandTotal;
   }
 
   private getFallbackSchema(slug: string): ChecksheetFormSchema | null {
@@ -232,6 +249,17 @@ export class ChecksheetFormPage implements OnInit {
         }
 
         this.drivers = Array.isArray(meta.drivers) ? meta.drivers : [];
+
+        if (meta.opname_products && Array.isArray(meta.opname_products)) {
+          this.opnameProducts = meta.opname_products.map((p: any) => ({
+            ...p,
+            kulkas_1: 0,
+            kulkas_2: 0,
+            kulkas_3: 0,
+            actual_stock: 0,
+            notes: '',
+          }));
+        }
 
         if (!this.formScheduleId && meta.active_schedule_id) {
           this.formScheduleId = Number(meta.active_schedule_id);
@@ -456,6 +484,22 @@ export class ChecksheetFormPage implements OnInit {
     if (this.latitude !== null && this.longitude !== null) {
       payload.latitude = this.latitude;
       payload.longitude = this.longitude;
+    }
+
+    if (this.isOpnameForm && this.opnameProducts.length > 0) {
+      payload.items = this.opnameProducts.map(p => ({
+        inventory_id: p.inventory_id,
+        product_id: p.product_id,
+        actual_stock: Number(p.actual_stock) || 0,
+        notes: p.notes || null,
+        kulkas_1: Number(p.kulkas_1) || 0,
+        kulkas_2: Number(p.kulkas_2) || 0,
+        kulkas_3: Number(p.kulkas_3) || 0,
+      }));
+    }
+
+    if (this.isBlindCount && sanitizedAnswers['actual_cash_drawer'] !== undefined) {
+      payload.actual_cash_drawer = sanitizedAnswers['actual_cash_drawer'];
     }
 
     const submit$ = this.isDriverMode

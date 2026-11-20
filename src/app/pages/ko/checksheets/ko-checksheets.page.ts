@@ -44,7 +44,7 @@ export class KoChecksheetsPage implements OnInit {
   private router = inject(Router);
 
   selectedDate = this.getTodayDateString();
-  selectedTab: 'pagi' | 'siang' | 'sore' | 'insidental' = 'pagi';
+  selectedTab: 'pagi' | 'siang' | 'sore' | 'malam' | 'insidental' = 'pagi';
 
   isLoading = true;
   errorMsg = '';
@@ -70,7 +70,9 @@ export class KoChecksheetsPage implements OnInit {
 
   private selectInitialPhaseByHour() {
     const hour = new Date().getHours();
-    if (hour >= 15) {
+    if (hour >= 20) {
+      this.selectedTab = 'malam';
+    } else if (hour >= 15) {
       this.selectedTab = 'sore';
     } else if (hour >= 11) {
       this.selectedTab = 'siang';
@@ -95,6 +97,11 @@ export class KoChecksheetsPage implements OnInit {
       next: (res) => {
         if (res?.success) {
           this.todayData = res.data;
+          // Jika shift siang dan tab masih di pagi, otomatis geser ke tab siang/sesi aktif
+          if (this.todayData?.active_shift === 'siang' && this.selectedTab === 'pagi') {
+            const hour = new Date().getHours();
+            this.selectedTab = hour >= 20 ? 'malam' : (hour >= 15 ? 'sore' : 'siang');
+          }
         } else {
           this.errorMsg = res?.message || 'Gagal memuat checksheet.';
         }
@@ -131,7 +138,10 @@ export class KoChecksheetsPage implements OnInit {
     return this.todayData.phases[this.selectedTab] || [];
   }
 
-  getStatusColor(status: string): string {
+  getStatusColor(status: string, slot?: ChecksheetSlot): string {
+    if (slot?.is_exempt || status === 'exempt') return 'medium';
+    if (slot?.source === 'pos_web_sync' || slot?.pos_synced) return 'success';
+
     switch (status) {
       case 'done':
         return 'success';
@@ -149,7 +159,14 @@ export class KoChecksheetsPage implements OnInit {
     }
   }
 
-  getStatusLabel(status: string): string {
+  getStatusLabel(status: string, slot?: ChecksheetSlot): string {
+    if (slot?.is_exempt || status === 'exempt') {
+      return slot?.exempt_reason || 'Dilewati (Shift)';
+    }
+    if (slot?.source === 'pos_web_sync' || slot?.pos_synced) {
+      return 'Selesai (POS Web)';
+    }
+
     switch (status) {
       case 'done':
         return 'Selesai';
@@ -174,6 +191,8 @@ export class KoChecksheetsPage implements OnInit {
 
   canFillSlot(slot: ChecksheetSlot): boolean {
     if (slot.requires_vehicle) return false;
+    if (slot.is_exempt || slot.status === 'exempt') return false;
+    if (slot.source === 'pos_web_sync' || slot.pos_synced) return false;
     if (this.isAutoAttendanceSlot(slot) && (slot.status === 'done' || slot.status === 'late')) {
       return false;
     }

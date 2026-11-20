@@ -114,16 +114,29 @@ export class LoginPage implements OnInit {
 
         if (err.status === 403) {
           const forbiddenMsg =
-            err.error?.message || 'Akun Owner/Admin hanya dapat diakses melalui Website Monitoring.';
+            err.error?.data?.error ||
+            err.error?.message ||
+            'Akun Anda dinonaktifkan atau tidak memiliki izin akses mobile.';
           this.errorMessage = forbiddenMsg;
           await this.showRoleGuardAlert(forbiddenMsg);
           return;
         }
 
-        const apiMsg =
-          err.error?.message ||
-          err.error?.data?.error ||
-          'Login gagal. Periksa koneksi atau kredensial Anda.';
+        let apiMsg = 'Login gagal. Periksa koneksi atau kredensial Anda.';
+        if (err.status === 0 || err.name === 'TimeoutError' || err.status === 408) {
+          apiMsg = 'Gagal terhubung ke server. Periksa koneksi internet Anda atau coba beberapa saat lagi.';
+        } else if (err.status === 401) {
+          apiMsg =
+            err.error?.data?.error ||
+            (err.error?.message && err.error?.message !== 'Unauthorized.'
+              ? err.error.message
+              : 'Username atau Password salah. Silakan periksa kembali.');
+        } else if (err.status === 422) {
+          apiMsg = err.error?.message || 'Data login tidak lengkap.';
+        } else {
+          apiMsg = err.error?.data?.error || err.error?.message || apiMsg;
+        }
+
         this.errorMessage = apiMsg;
         await this.showToast(apiMsg, 'danger');
       }
@@ -294,7 +307,18 @@ export class LoginPage implements OnInit {
           return;
         }
 
-        const msg = err.error?.message || err.error?.data?.error || 'Login Google gagal diverifikasi di server.';
+        let msg = 'Login Google gagal diverifikasi di server.';
+        if (err.status === 0 || err.name === 'TimeoutError' || err.status === 408) {
+          msg = 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
+        } else if (err.status === 401) {
+          msg = err.error?.data?.error || err.error?.message || 'Autentikasi Google ditolak.';
+        } else if (err.status === 404) {
+          msg = err.error?.message || 'Akun Google tidak terdaftar di sistem.';
+        } else if (err.status === 403) {
+          msg = err.error?.data?.error || err.error?.message || 'Akun Anda dinonaktifkan atau tidak memiliki izin akses mobile.';
+        } else {
+          msg = err.error?.data?.error || err.error?.message || msg;
+        }
         this.errorMessage = msg;
         await this.showToast(msg, 'danger');
       }

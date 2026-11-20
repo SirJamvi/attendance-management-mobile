@@ -103,6 +103,7 @@ export type ChecksheetSlotStatus =
   | 'late'
   | 'missed'
   | 'needs_owner_review'
+  | 'exempt'
   | string;
 
 export interface ChecksheetVehicleStatus {
@@ -124,17 +125,22 @@ export interface ChecksheetSlot {
   slug: string;
   title: string;
   description?: string | null;
-  phase?: 'pagi' | 'siang' | 'sore' | string;
+  phase?: 'pagi' | 'siang' | 'sore' | 'malam' | string;
   slot_name?: string;
   window_start?: string;
   window_end?: string;
   time_window?: string;
   status: ChecksheetSlotStatus;
   window_status?: ChecksheetSlotStatus;
-  source?: 'auto' | 'manual' | string;
+  source?: 'auto' | 'manual' | 'pos_web_sync' | string;
   requires_vehicle?: boolean;
   is_gatekeeper?: boolean;
   is_checkout_gatekeeper?: boolean;
+  is_exempt?: boolean;
+  exempt_reason?: string | null;
+  pos_synced?: boolean;
+  synced_operator?: string | null;
+  pos_sync_info?: any;
   submitted_at?: string | null;
   submitted_by?: string | null;
   vehicles?: ChecksheetVehicleStatus[];
@@ -142,7 +148,10 @@ export interface ChecksheetSlot {
 
 export interface ChecksheetTodayData {
   date?: string;
+  branch_id?: number;
   branch_name?: string;
+  active_shift?: 'pagi' | 'siang';
+  active_phases?: string[];
   completed_slots: number;
   total_slots: number;
   progress_percent: number;
@@ -150,6 +159,7 @@ export interface ChecksheetTodayData {
     pagi: ChecksheetSlot[];
     siang: ChecksheetSlot[];
     sore: ChecksheetSlot[];
+    malam?: ChecksheetSlot[];
   };
 }
 
@@ -234,10 +244,24 @@ export interface DriverOption {
   username?: string;
 }
 
+export interface OpnameProductItem {
+  product_id: number;
+  product_name: string;
+  unit: string;
+  inventory_id: number;
+  system_stock: number;
+  actual_stock?: number;
+  kulkas_1?: number;
+  kulkas_2?: number;
+  kulkas_3?: number;
+  notes?: string;
+}
+
 export interface ChecksheetFormMeta {
   is_blind_count?: boolean;
   vehicles?: VehicleOption[];
   drivers?: DriverOption[];
+  opname_products?: OpnameProductItem[];
   active_schedule_id?: number | null;
 }
 
@@ -253,6 +277,8 @@ export interface ChecksheetSubmitPayload {
   latitude?: number | null;
   longitude?: number | null;
   answers: Record<string, any>;
+  items?: any[];
+  actual_cash_drawer?: number | null;
 }
 
 export interface BlindCountReconciliation {
