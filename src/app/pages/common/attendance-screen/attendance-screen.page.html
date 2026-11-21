@@ -221,10 +221,35 @@
         <app-camera-view [photoPreview]="photoData" (photoTaken)="handlePhoto($event)"></app-camera-view>
       </div>
 
-      <!-- GPS Spinner -->
+      <!-- GPS Status / Spinner -->
       <div *ngIf="photoData && !locationData" class="gps-loading">
         <ion-spinner name="crescent" color="primary"></ion-spinner>
-        <span class="gps-text">Mencari lokasi GPS…</span>
+        <span class="gps-text">Mengunci koordinat GPS…</span>
+      </div>
+      <div *ngIf="photoData && locationData" class="gps-ready">
+        <ion-icon name="checkmark-circle" color="success"></ion-icon>
+        <span class="gps-text ok">Lokasi GPS terkunci ({{ locationData.latitude | number:'1.4-4' }}, {{ locationData.longitude | number:'1.4-4' }})</span>
+      </div>
+
+      <!-- Action Button Submit Langsung di Dalam Kartu Masuk -->
+      <div class="submit-action-box">
+        <ion-button
+          expand="block"
+          size="large"
+          class="ui-btn submit-btn"
+          [class.danger]="isDayOff"
+          [disabled]="isSubmitDisabled || isSubmitting"
+          (click)="submitCheckIn()">
+          <ion-icon slot="start" [name]="isSubmitting ? 'hourglass-outline' : (locationData ? 'send-outline' : 'location-outline')"></ion-icon>
+          <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+          <span *ngIf="!photoData">Ambil Foto Selfie Dulu</span>
+          <span *ngIf="photoData && !locationData">Menunggu Lokasi GPS...</span>
+          <span *ngIf="photoData && locationData">{{ isDayOff ? 'Ajukan Presensi Darurat' : 'Kirim Presensi Masuk' }}</span>
+        </ion-button>
+
+        <div *ngIf="helpText" class="ui-help" style="margin-top: 8px;">
+          {{ helpText }}
+        </div>
       </div>
     </div>
 
@@ -249,10 +274,35 @@
         <app-camera-view [photoPreview]="photoData" (photoTaken)="handlePhoto($event)"></app-camera-view>
       </div>
 
-      <!-- GPS Spinner -->
+      <!-- GPS Status / Spinner -->
       <div *ngIf="photoData && !locationData" class="gps-loading">
         <ion-spinner name="crescent" color="primary"></ion-spinner>
-        <span class="gps-text">Mencari lokasi GPS…</span>
+        <span class="gps-text">Mengunci koordinat GPS…</span>
+      </div>
+      <div *ngIf="photoData && locationData" class="gps-ready">
+        <ion-icon name="checkmark-circle" color="success"></ion-icon>
+        <span class="gps-text ok">Lokasi GPS terkunci ({{ locationData.latitude | number:'1.4-4' }}, {{ locationData.longitude | number:'1.4-4' }})</span>
+      </div>
+
+      <!-- Action Button Submit Langsung di Dalam Kartu Pulang -->
+      <div class="submit-action-box">
+        <ion-button
+          expand="block"
+          size="large"
+          class="ui-btn submit-btn"
+          [disabled]="isSubmitDisabled || isCheckoutLocked || isSubmitting"
+          (click)="submitCheckOut()">
+          <ion-icon slot="start" [name]="isCheckoutLocked ? 'lock-closed-outline' : (isSubmitting ? 'hourglass-outline' : (locationData ? 'send-outline' : 'location-outline'))"></ion-icon>
+          <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+          <span *ngIf="isCheckoutLocked">Absen Pulang Terkunci</span>
+          <span *ngIf="!isCheckoutLocked && !photoData">Ambil Foto Selfie Dulu</span>
+          <span *ngIf="!isCheckoutLocked && photoData && !locationData">Menunggu Lokasi GPS...</span>
+          <span *ngIf="!isCheckoutLocked && photoData && locationData">Kirim Presensi Pulang</span>
+        </ion-button>
+
+        <div *ngIf="helpText" class="ui-help" [class.bad]="isCheckoutLocked" style="margin-top: 8px;">
+          {{ helpText }}
+        </div>
       </div>
     </div>
 
@@ -432,36 +482,6 @@
   </ion-modal>
 
 </ion-content>
-
-<!-- SECTION I: STICKY SUBMIT FOOTER -->
-<ion-footer *ngIf="showActionBar" class="ion-no-border ui-action-bar">
-  <!-- Mode Masuk -->
-  <ion-button
-    *ngIf="!attendanceToday"
-    expand="block"
-    class="ui-btn"
-    [class.danger]="isDayOff"
-    [disabled]="isSubmitDisabled"
-    (click)="submitCheckIn()">
-    <ion-icon slot="start" name="send-outline"></ion-icon>
-    {{ isDayOff ? 'Ajukan presensi darurat' : 'Kirim presensi masuk' }}
-  </ion-button>
-
-  <!-- Mode Pulang -->
-  <ion-button
-    *ngIf="attendanceToday && !attendanceToday.check_out_time"
-    expand="block"
-    class="ui-btn"
-    [disabled]="isSubmitDisabled || isCheckoutLocked"
-    (click)="submitCheckOut()">
-    <ion-icon slot="start" [name]="isCheckoutLocked ? 'lock-closed-outline' : 'send-outline'"></ion-icon>
-    {{ isCheckoutLocked ? 'Absen pulang terkunci' : 'Kirim presensi pulang' }}
-  </ion-button>
-
-  <div *ngIf="helpText" class="ui-help" [class.bad]="attendanceToday && isCheckoutLocked">
-    {{ helpText }}
-  </div>
-</ion-footer>
 
 <!-- Pop-up Modal Pemilihan Cabang Tugas (Interactive AJAX Sheet) -->
 <app-branch-select-modal

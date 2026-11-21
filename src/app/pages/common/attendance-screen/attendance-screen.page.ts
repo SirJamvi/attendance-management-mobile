@@ -7,7 +7,7 @@ import { Subscription } from 'rxjs';
 import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonButtons,
   IonBackButton, IonIcon, IonSpinner, IonModal, IonTextarea,
-  IonRefresher, IonRefresherContent, IonFooter,
+  IonRefresher, IonRefresherContent,
   AlertController, LoadingController, ToastController, Platform
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -18,7 +18,7 @@ import {
   cubeOutline, podiumOutline, speedometerOutline, clipboardOutline,
   checkmarkDoneOutline, statsChartOutline, closeOutline, trashOutline, warning,
   sendOutline, checkmark, storefrontOutline, informationCircleOutline, chevronForward,
-  personCircleOutline, cardOutline
+  personCircleOutline, cardOutline, locationOutline, hourglassOutline
 } from 'ionicons/icons';
 import { Geolocation, Position } from '@capacitor/geolocation';
 
@@ -53,7 +53,7 @@ import {
     BranchSelectModalComponent,
     IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonButtons,
     IonBackButton, IonIcon, IonSpinner, IonModal, IonTextarea,
-    IonRefresher, IonRefresherContent, IonFooter
+    IonRefresher, IonRefresherContent
   ]
 })
 export class AttendanceScreenPage implements OnInit, OnDestroy {
@@ -83,6 +83,7 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
   photoData: string | null = null;
   locationData: { latitude: number; longitude: number } | null = null;
   isSubmitDisabled = true;
+  isSubmitting = false;
 
   // Driver Gatekeeper Check-Out Eligibility
   checkoutEligibility: CheckoutEligibility | null = null;
@@ -112,7 +113,7 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
       cubeOutline, podiumOutline, speedometerOutline, clipboardOutline,
       checkmarkDoneOutline, statsChartOutline, closeOutline, trashOutline, warning,
       sendOutline, checkmark, storefrontOutline, informationCircleOutline, chevronForward,
-      personCircleOutline
+      personCircleOutline, locationOutline, hourglassOutline
     });
   }
 
@@ -404,8 +405,9 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
   }
 
   async submitCheckIn() {
-    if (this.isSubmitDisabled) return;
+    if (this.isSubmitDisabled || this.isSubmitting) return;
 
+    this.isSubmitting = true;
     const loading = await this.loadingCtrl.create({
       message: this.isDayOff ? 'Mengirim Presensi Darurat...' : 'Mengirim Absen Masuk...'
     });
@@ -419,6 +421,7 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
       this.selectedBranchId
     ).subscribe({
       next: async (response) => {
+        this.isSubmitting = false;
         await loading.dismiss();
 
         if (this.selectedBranchId) {
@@ -446,6 +449,7 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
         this.resetForm();
       },
       error: async (err: any) => {
+        this.isSubmitting = false;
         await loading.dismiss();
         this.showAlert('Gagal', err.error?.message || 'Gagal mengirim data.');
       }
@@ -453,8 +457,9 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
   }
 
   async submitCheckOut() {
-    if (this.isSubmitDisabled || this.isCheckoutLocked) return;
+    if (this.isSubmitDisabled || this.isCheckoutLocked || this.isSubmitting) return;
 
+    this.isSubmitting = true;
     const loading = await this.loadingCtrl.create({ message: 'Mengirim Absen Pulang...' });
     await loading.present();
 
@@ -464,12 +469,14 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
       this.locationData!.longitude
     ).subscribe({
       next: async () => {
+        this.isSubmitting = false;
         await loading.dismiss();
         await this.showAlert('Berhasil', 'Absen Pulang Tercatat!');
         this.loadStatus();
         this.resetForm();
       },
       error: async (err: any) => {
+        this.isSubmitting = false;
         await loading.dismiss();
 
         if (err.status === 422 && err.error?.data?.code === 'DRIVER_CHECKOUT_BLOCKED') {

@@ -298,6 +298,41 @@
   }
 }
 
+.gps-ready {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 12px;
+  background: var(--ui-ok-bg, #f0fdf4);
+  border-radius: 8px;
+
+  ion-icon {
+    font-size: 16px;
+  }
+
+  .gps-text.ok {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ui-ok, #16a34a);
+  }
+}
+
+.submit-action-box {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 0.5px solid var(--ui-border, #E5E7EB);
+
+  .submit-btn {
+    --border-radius: 12px;
+    --background: var(--ui-action, #0277BD);
+    font-size: 15px;
+    font-weight: 600;
+    height: 48px;
+  }
+}
+
 // Section E: Locked Banner
 .locked-banner {
   display: flex;
