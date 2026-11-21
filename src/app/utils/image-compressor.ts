@@ -63,12 +63,12 @@ export async function captureCompressedPhoto(options?: {
   quality?: number;
   promptHeader?: string;
 }): Promise<string | null> {
-  const maxWidth = options?.maxWidth ?? 720;
-  const quality = options?.quality ?? 0.5;
+  const maxWidth = Math.min(options?.maxWidth ?? 640, 640);
+  const quality = Math.min(options?.quality ?? 0.5, 0.55);
   const direction = options?.direction ?? CameraDirection.Rear;
 
   const photo = await Camera.getPhoto({
-    quality: Math.round(quality * 100),
+    quality: Math.min(Math.round(quality * 100), 55),
     allowEditing: false,
     resultType: CameraResultType.DataUrl,
     source: CameraSource.Camera,
