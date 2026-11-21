@@ -15,7 +15,6 @@ import {
   IonIcon,
   IonProgressBar,
   IonSpinner,
-  IonFooter,
   LoadingController,
   ToastController,
   NavController
@@ -32,7 +31,8 @@ import {
   trophyOutline,
   refreshOutline,
   chevronDownOutline,
-  chevronUpOutline
+  chevronUpOutline,
+  ellipseOutline
 } from 'ionicons/icons';
 
 // Plugin Capacitor & Kompresi Foto Ultra-Ringan
@@ -60,8 +60,7 @@ import { BusinessCardService, BusinessCardKpiData } from 'src/app/services/busin
     IonButton,
     IonIcon,
     IonProgressBar,
-    IonSpinner,
-    IonFooter
+    IonSpinner
   ]
 })
 export class DeliveryProofPage implements OnInit {
@@ -112,7 +111,8 @@ export class DeliveryProofPage implements OnInit {
       trophyOutline,
       refreshOutline,
       chevronDownOutline,
-      chevronUpOutline
+      chevronUpOutline,
+      ellipseOutline
     });
   }
 
@@ -213,14 +213,28 @@ export class DeliveryProofPage implements OnInit {
   }
 
   /**
+   * Helper validasi per-field
+   */
+  get isNameValid(): boolean {
+    return !!(this.formData.customer_name && this.formData.customer_name.trim().length >= 2);
+  }
+
+  get isPhoneValid(): boolean {
+    if (!this.formData.customer_phone) return false;
+    const cleaned = this.formData.customer_phone.replace(/[^0-9+]/g, '');
+    const phoneRegex = /^(^\+62|62|^08)(\d{8,13})$/;
+    return phoneRegex.test(cleaned);
+  }
+
+  get isPhotoValid(): boolean {
+    return !!this.formData.photo;
+  }
+
+  /**
    * Validasi kelengkapan form
    */
   get isFormValid(): boolean {
-    const nameValid = !!(this.formData.customer_name && this.formData.customer_name.trim().length >= 2);
-    const phoneValid = !!(this.formData.customer_phone && this.formData.customer_phone.trim().length >= 8);
-    const photoValid = !!this.formData.photo;
-
-    return nameValid && phoneValid && photoValid && !this.isSubmitting;
+    return this.isNameValid && this.isPhoneValid && this.isPhotoValid && !this.isSubmitting;
   }
 
   /**

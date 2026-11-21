@@ -387,7 +387,7 @@
       <ion-button
         expand="block"
         class="ui-btn"
-        [disabled]="isSubmitting || !selectedVehicleId || !evidencePhoto"
+        [disabled]="isSubmitting"
         (click)="submitInspection()">
         <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
         <ion-icon *ngIf="!isSubmitting" name="send-outline" slot="start"></ion-icon>

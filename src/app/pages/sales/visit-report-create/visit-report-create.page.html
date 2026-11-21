@@ -118,10 +118,12 @@
       </div>
     </div>
 
-    <ion-button expand="block" type="submit" size="large" class="ion-margin-top" [disabled]="isSubmitting || !photoData || !locationData">
+    <ion-button expand="block" type="submit" size="large" class="ion-margin-top" [disabled]="isSubmitting">
       <span *ngIf="!isSubmitting">Submit Laporan</span>
       <ion-spinner *ngIf="isSubmitting"></ion-spinner>
     </ion-button>
+
+    <div style="height: 60px;"></div>
 
   </form>
 

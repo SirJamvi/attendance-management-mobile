@@ -163,23 +163,44 @@
       </div>
     </div>
 
-    <div class="ui-bottom-spacer"></div>
+    <!-- 4. AKSI KIRIM BUKTI (TERINTEGRASI DI DALAM KONTEN AGAR SELALU TERLIHAT JELAS) -->
+    <div class="ui-card action-card">
+      <div class="form-status-header">
+        <span class="status-label">Kelengkapan data:</span>
+      </div>
+
+      <div class="status-chips">
+        <div class="status-chip" [class.done]="isNameValid">
+          <ion-icon [name]="isNameValid ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
+          <span>Nama warung</span>
+        </div>
+        <div class="status-chip" [class.done]="isPhoneValid">
+          <ion-icon [name]="isPhoneValid ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
+          <span>No. HP (08..)</span>
+        </div>
+        <div class="status-chip" [class.done]="isPhotoValid">
+          <ion-icon [name]="isPhotoValid ? 'checkmark-circle' : 'ellipse-outline'"></ion-icon>
+          <span>Foto bukti</span>
+        </div>
+      </div>
+
+      <ion-button
+        expand="block"
+        class="ui-btn submit-btn"
+        (click)="submitCard()"
+        [disabled]="isSubmitting">
+        <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
+        <ion-icon *ngIf="!isSubmitting" slot="start" name="send-outline"></ion-icon>
+        {{ isSubmitting ? 'Mengirim data...' : 'Kirim Bukti Kartu Nama' }}
+      </ion-button>
+
+      <div class="ui-help" *ngIf="!isFormValid && !isSubmitting">
+        Lengkapi nama warung, nomor HP, dan foto bukti di atas.
+      </div>
+    </div>
+
+    <!-- Spacer agar tombol dan kartu aksi bebas dari tab bar bawah -->
+    <div class="ui-bottom-spacer" style="height: 100px;"></div>
 
   </div>
 </ion-content>
-
-<!-- 4. TOMBOL KIRIM MENEMPEL DI BAWAH -->
-<ion-footer class="ion-no-border ui-action-bar" [class.no-tabs]="!inTabs">
-  <ion-button
-    expand="block"
-    class="ui-btn"
-    (click)="submitCard()"
-    [disabled]="!isFormValid">
-    <ion-spinner *ngIf="isSubmitting" name="crescent" slot="start"></ion-spinner>
-    <ion-icon *ngIf="!isSubmitting" slot="start" name="send-outline"></ion-icon>
-    {{ isSubmitting ? 'Mengirim…' : 'Kirim bukti kartu nama' }}
-  </ion-button>
-  <div class="ui-help" *ngIf="!isFormValid && !isSubmitting">
-    Lengkapi nama, nomor HP (08…), dan foto bukti.
-  </div>
-</ion-footer>
