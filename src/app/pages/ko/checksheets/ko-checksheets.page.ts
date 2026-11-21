@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -18,6 +18,7 @@ import {
 } from 'ionicons/icons';
 
 import { KoOperationsService } from 'src/app/services/ko-operations.service';
+import { AudioNotificationService } from 'src/app/services/audio-notification.service';
 import { BranchBadgeComponent } from 'src/app/components/branch-badge/branch-badge.component';
 import {
   ChecksheetIncidentalData,
@@ -42,8 +43,9 @@ import {
     IonModal, IonTextarea
   ]
 })
-export class KoChecksheetsPage implements OnInit {
+export class KoChecksheetsPage implements OnInit, OnDestroy {
   private koService = inject(KoOperationsService);
+  private audioService = inject(AudioNotificationService);
   private router = inject(Router);
   private toastCtrl = inject(ToastController);
   private loadingCtrl = inject(LoadingController);
@@ -64,6 +66,11 @@ export class KoChecksheetsPage implements OnInit {
   verifyNotes = '';
   isVerifying = false;
 
+  // Tracker Deteksi Inspeksi Driver Baru & Notifikasi Suara In-App
+  private knownSubmissionIds = new Set<number>();
+  private isFirstLoad = true;
+  private pollInterval: any = null;
+
   constructor() {
     addIcons({
       timeOutline, checkmarkCircleOutline, alertCircleOutline, bicycleOutline,
@@ -77,8 +84,17 @@ export class KoChecksheetsPage implements OnInit {
     this.selectInitialPhaseByHour();
   }
 
+  ngOnDestroy() {
+    this.stopLiveInspectionPolling();
+  }
+
   ionViewWillEnter() {
     this.loadAll();
+    this.startLiveInspectionPolling();
+  }
+
+  ionViewWillLeave() {
+    this.stopLiveInspectionPolling();
   }
 
   private selectInitialPhaseByHour() {
@@ -108,8 +124,8 @@ export class KoChecksheetsPage implements OnInit {
 
     this.koService.getTodayChecksheets(this.selectedDate).subscribe({
       next: (res) => {
-        if (res?.success) {
-          this.todayData = res.data;
+        if (res?.success && res.data) {
+          this.processTodayDataAndDetectNewInspections(res.data);
           // Jika shift siang dan tab masih di pagi, otomatis geser ke tab siang/sesi aktif
           if (this.todayData?.active_shift === 'siang' && this.selectedTab === 'pagi') {
             const hour = new Date().getHours();
@@ -138,6 +154,99 @@ export class KoChecksheetsPage implements OnInit {
         // Non-fatal
       }
     });
+  }
+
+  // ==========================================
+  // POLLING LIVE INSPEKSI & SOUND ALERT (IN-APP)
+  // ==========================================
+  private startLiveInspectionPolling() {
+    this.stopLiveInspectionPolling();
+    this.pollInterval = setInterval(() => {
+      this.checkNewInspectionsSilently();
+    }, 15000); // Poll setiap 15 detik saat KO sedang aktif di halaman
+  }
+
+  private stopLiveInspectionPolling() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
+  }
+
+  private checkNewInspectionsSilently() {
+    this.koService.getTodayChecksheets(this.selectedDate).subscribe({
+      next: (res) => {
+        if (res?.success && res.data) {
+          this.processTodayDataAndDetectNewInspections(res.data);
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  private processTodayDataAndDetectNewInspections(data: ChecksheetTodayData) {
+    this.todayData = data;
+
+    const allCompletedVehicles: ChecksheetVehicleStatus[] = [];
+    if (data.phases) {
+      const phaseList = [data.phases.pagi, data.phases.siang, data.phases.sore, data.phases.malam || []];
+      for (const phaseSlots of phaseList) {
+        if (!Array.isArray(phaseSlots)) continue;
+        for (const slot of phaseSlots) {
+          if (slot.requires_vehicle && Array.isArray(slot.vehicles)) {
+            for (const v of slot.vehicles) {
+              if (v.completed && v.submission_id) {
+                allCompletedVehicles.push(v);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // Jika bukan load pertama, deteksi inspeksi baru yang belum diverifikasi
+    if (!this.isFirstLoad) {
+      const newSubmissions = allCompletedVehicles.filter(
+        (v) => v.submission_id && !this.knownSubmissionIds.has(v.submission_id) && !v.is_verified
+      );
+
+      if (newSubmissions.length > 0) {
+        const latest = newSubmissions[0];
+        // 1. Bunyikan nada lonceng chime + getar haptic
+        this.audioService.playNotificationChime();
+
+        // 2. Munculkan Toast Notifikasi interaktif di atas
+        this.toastCtrl.create({
+          header: '🔔 Inspeksi Armada Baru!',
+          message: `${latest.submitted_by || 'Driver'} telah memeriksa ${latest.name}. Ketuk untuk verifikasi.`,
+          position: 'top',
+          color: 'primary',
+          duration: 7000,
+          buttons: [
+            {
+              text: 'Verifikasi',
+              role: 'info',
+              handler: () => {
+                this.openVerifyModal(latest);
+              }
+            },
+            {
+              text: 'Tutup',
+              role: 'cancel'
+            }
+          ]
+        }).then(t => t.present());
+      }
+    }
+
+    // Rekam semua ID submission yang sudah diproses
+    for (const v of allCompletedVehicles) {
+      if (v.submission_id) {
+        this.knownSubmissionIds.add(v.submission_id);
+      }
+    }
+
+    this.isFirstLoad = false;
   }
 
   onDateChange() {
