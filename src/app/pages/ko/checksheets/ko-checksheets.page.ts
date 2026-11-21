@@ -6,13 +6,15 @@ import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton,
   IonIcon, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
   IonSegment, IonSegmentButton, IonLabel, IonBadge, IonProgressBar,
-  IonRefresher, IonRefresherContent, IonSpinner, IonItem, IonList
+  IonRefresher, IonRefresherContent, IonSpinner, IonItem, IonList,
+  IonModal, IonTextarea, ToastController, LoadingController, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   timeOutline, checkmarkCircleOutline, alertCircleOutline, bicycleOutline,
   flashOutline, documentTextOutline, chevronForwardOutline, calendarOutline,
-  sparklesOutline, refreshOutline
+  sparklesOutline, refreshOutline, shieldCheckmarkOutline, eyeOutline,
+  closeOutline, warningOutline, checkmarkDoneCircleOutline
 } from 'ionicons/icons';
 
 import { KoOperationsService } from 'src/app/services/ko-operations.service';
@@ -36,12 +38,16 @@ import {
     IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton,
     IonIcon, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
     IonSegment, IonSegmentButton, IonLabel, IonBadge, IonProgressBar,
-    IonRefresher, IonRefresherContent, IonSpinner, IonItem, IonList
+    IonRefresher, IonRefresherContent, IonSpinner, IonItem, IonList,
+    IonModal, IonTextarea
   ]
 })
 export class KoChecksheetsPage implements OnInit {
   private koService = inject(KoOperationsService);
   private router = inject(Router);
+  private toastCtrl = inject(ToastController);
+  private loadingCtrl = inject(LoadingController);
+  private alertCtrl = inject(AlertController);
 
   selectedDate = this.getTodayDateString();
   selectedTab: 'pagi' | 'siang' | 'sore' | 'malam' | 'insidental' = 'pagi';
@@ -52,11 +58,18 @@ export class KoChecksheetsPage implements OnInit {
   todayData: ChecksheetTodayData | null = null;
   incidentalData: ChecksheetIncidentalData | null = null;
 
+  // State Modal Verifikasi Inspeksi KO
+  isVerifyModalOpen = false;
+  selectedVehicleForVerify: ChecksheetVehicleStatus | null = null;
+  verifyNotes = '';
+  isVerifying = false;
+
   constructor() {
     addIcons({
       timeOutline, checkmarkCircleOutline, alertCircleOutline, bicycleOutline,
       flashOutline, documentTextOutline, chevronForwardOutline, calendarOutline,
-      sparklesOutline, refreshOutline
+      sparklesOutline, refreshOutline, shieldCheckmarkOutline, eyeOutline,
+      closeOutline, warningOutline, checkmarkDoneCircleOutline
     });
   }
 
@@ -230,5 +243,70 @@ export class KoChecksheetsPage implements OnInit {
 
   doRefresh(event: any) {
     this.loadAll(event);
+  }
+
+  // ==========================================
+  // MODAL VERIFIKASI INSPEKSI ARMADA OLEH KO
+  // ==========================================
+  openVerifyModal(vehicle: ChecksheetVehicleStatus) {
+    this.selectedVehicleForVerify = vehicle;
+    this.verifyNotes = vehicle.review_notes || '';
+    this.isVerifyModalOpen = true;
+  }
+
+  closeVerifyModal() {
+    this.isVerifyModalOpen = false;
+    this.selectedVehicleForVerify = null;
+    this.verifyNotes = '';
+  }
+
+  async submitVerification(decision: 'approved' | 'needs_review') {
+    if (!this.selectedVehicleForVerify?.submission_id) {
+      const toast = await this.toastCtrl.create({
+        message: 'Data submission inspeksi tidak memiliki ID yang valid.',
+        duration: 2500,
+        color: 'warning'
+      });
+      await toast.present();
+      return;
+    }
+
+    const subId = this.selectedVehicleForVerify.submission_id;
+    this.isVerifying = true;
+    const loading = await this.loadingCtrl.create({
+      message: decision === 'approved' ? 'Menyetujui verifikasi armada...' : 'Menandai catatan perbaikan...'
+    });
+    await loading.present();
+
+    this.koService.verifyInspection(subId, {
+      status: decision,
+      review_notes: this.verifyNotes ? this.verifyNotes.trim() : undefined
+    }).subscribe({
+      next: async () => {
+        this.isVerifying = false;
+        await loading.dismiss();
+        this.closeVerifyModal();
+
+        const toast = await this.toastCtrl.create({
+          message: decision === 'approved'
+            ? 'Armada berhasil diverifikasi & disetujui! ✅'
+            : 'Catatan perbaikan berhasil disimpan ⚠️',
+          duration: 3000,
+          color: decision === 'approved' ? 'success' : 'warning'
+        });
+        await toast.present();
+        this.loadAll();
+      },
+      error: async (err) => {
+        this.isVerifying = false;
+        await loading.dismiss();
+        const toast = await this.toastCtrl.create({
+          message: err.error?.message || 'Gagal menyimpan verifikasi.',
+          duration: 3000,
+          color: 'danger'
+        });
+        await toast.present();
+      }
+    });
   }
 }

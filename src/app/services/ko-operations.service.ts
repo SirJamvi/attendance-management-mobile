@@ -62,6 +62,16 @@ export class KoOperationsService {
     return this.apiClient.get<ApiResponse<any>>('ko/checksheets/history', params);
   }
 
+  verifyInspection(
+    submissionId: number,
+    payload: { status: 'approved' | 'needs_review' | 'rejected'; review_notes?: string }
+  ): Observable<ApiResponse<any>> {
+    return this.apiClient.post<ApiResponse<any>>(
+      `ko/checksheets/submissions/${submissionId}/verify`,
+      payload
+    );
+  }
+
   // ==========================================
   // B. APPROVAL DELIVERY DRIVER & CROSS-CHECK POS
   // ==========================================

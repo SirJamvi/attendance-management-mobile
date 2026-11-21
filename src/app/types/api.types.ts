@@ -117,6 +117,12 @@ export interface ChecksheetVehicleStatus {
   submitted_by_role?: string | null;
   submitted_at?: string | null;
   submission_id?: number | null;
+  is_verified?: boolean;
+  verified_by?: string | null;
+  verified_at?: string | null;
+  verification_status?: string;
+  review_notes?: string | null;
+  answers?: Record<string, { value_text?: string; value_numeric?: number; file_path?: string | null }> | null;
 }
 
 export interface ChecksheetSlot {

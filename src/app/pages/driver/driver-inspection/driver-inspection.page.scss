@@ -107,31 +107,206 @@
   flex-shrink: 0;
 }
 
-// Modal Form Styles
-.tarp-card {
+// ==========================================
+// VOLUME SLIDER STYLE (LEVEL BENSIN - IMAGE 3)
+// ==========================================
+.fuel-slider-section {
+  margin-bottom: 12px;
+}
+
+.fuel-slider-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  .m-0 {
+    margin: 0;
+  }
+}
+
+.fuel-level-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ui-off-bg);
+  color: var(--ui-off-text);
+
+  &.ok {
+    background: var(--ui-ok-bg);
+    color: var(--ui-ok-text);
+  }
+
+  &.warn {
+    background: var(--ui-warn-bg);
+    color: var(--ui-warn-text);
+  }
+
+  &.bad {
+    background: var(--ui-bad-bg);
+    color: var(--ui-bad-text);
+  }
+}
+
+.fuel-volume-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #1e293b; // Deep sleek dark background like Image 3
+  border-radius: 14px;
+  margin: 6px 0 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  .fuel-icon-wrap {
+    color: #38bdf8;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+
+    &.warn {
+      color: #f87171;
+    }
+  }
+
+  .fuel-icon-wrap-right {
+    color: #64748b;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+
+    &.active {
+      color: #38bdf8;
+    }
+  }
+}
+
+.fuel-track-container {
+  position: relative;
+  flex: 1;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.fuel-track-bg {
+  position: relative;
+  width: 100%;
+  height: 6px;
+  background: #475569;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.fuel-track-fill {
+  height: 100%;
+  background: #38bdf8; // Vivid electric blue matching Image 3
+  border-radius: 999px;
+  transition: width 0.15s ease-out;
+}
+
+.fuel-thumb-indicator {
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #38bdf8;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.7);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: left 0.15s ease-out;
+}
+
+.fuel-native-range {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+  z-index: 2;
+  -webkit-appearance: none;
+}
+
+.fuel-ticks {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: 4px;
+
+  .fuel-tick-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 6px 2px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ui-text-2);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &.active {
+      color: var(--ui-action-strong);
+      font-weight: 700;
+      background: var(--ui-off-bg);
+    }
+  }
+}
+
+// ==========================================
+// 2 CHECKBOX TERPISAH (TERPAL & JAS HUJAN)
+// ==========================================
+.checklist-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 14px;
+}
+
+.checklist-item-card {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
   border-radius: 10px;
   background: var(--ui-bg);
+  border: 1px solid var(--ui-border);
   cursor: pointer;
-  margin: 12px 0;
+  transition: all 0.15s ease;
 
-  .tarp-text {
+  &.checked {
+    border-color: rgba(2, 132, 199, 0.4);
+    background: rgba(2, 132, 199, 0.04);
+  }
+
+  .checklist-item-text {
     flex: 1;
   }
 
-  .tarp-title {
+  .checklist-item-title {
     font-size: 13px;
     font-weight: 500;
     color: var(--ui-text);
   }
 
-  .tarp-sub {
-    font-size: 12px;
+  .checklist-item-sub {
+    font-size: 11px;
     color: var(--ui-text-2);
   }
+}
+
+.mt-16 {
+  margin-top: 16px;
 }
 
 .notes-toggle-box {

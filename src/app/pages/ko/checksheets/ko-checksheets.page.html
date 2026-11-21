@@ -159,18 +159,55 @@
                   <ng-container *ngIf="v.submitted_at"> pukul {{ v.submitted_at }}</ng-container>
                 </span>
               </div>
+
+              <!-- Status Verifikasi KO -->
+              <div *ngIf="v.completed && v.is_verified" class="vehicle-verify-status ok">
+                <ion-icon name="shield-checkmark-outline"></ion-icon>
+                <span>Terverifikasi KO ({{ v.verified_by || 'KO' }})</span>
+              </div>
+              <div *ngIf="v.completed && !v.is_verified" class="vehicle-verify-status pending">
+                <ion-icon name="alert-circle-outline"></ion-icon>
+                <span>Menunggu Verifikasi KO</span>
+              </div>
+
               <div *ngIf="!v.completed" class="vehicle-pending-text">
                 Belum dicek pada slot ini
               </div>
             </div>
 
-            <ion-button
-              *ngIf="!v.completed"
-              size="small"
-              color="primary"
-              (click)="openVehicleInspection(slot, v)">
-              Cek Armada Ini
-            </ion-button>
+            <!-- Tombol Aksi KO -->
+            <div class="vehicle-btn-group">
+              <!-- Jika armada belum diinspeksi siapa pun -->
+              <ion-button
+                *ngIf="!v.completed"
+                size="small"
+                color="primary"
+                (click)="openVehicleInspection(slot, v)">
+                Cek Armada Ini
+              </ion-button>
+
+              <!-- Jika sudah dicek driver & belum diverifikasi KO -->
+              <ion-button
+                *ngIf="v.completed && !v.is_verified"
+                size="small"
+                color="tertiary"
+                fill="solid"
+                (click)="openVerifyModal(v)">
+                <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
+                Verifikasi
+              </ion-button>
+
+              <!-- Jika sudah diverifikasi KO: tombol tinjau ulang / lihat foto -->
+              <ion-button
+                *ngIf="v.completed && v.is_verified"
+                size="small"
+                color="medium"
+                fill="outline"
+                (click)="openVerifyModal(v)">
+                <ion-icon name="eye-outline" slot="start"></ion-icon>
+                Detail
+              </ion-button>
+            </div>
           </div>
         </div>
 
@@ -279,3 +316,138 @@
 
   <div style="height: 84px;"></div>
 </ion-content>
+
+<!-- ======================================================== -->
+<!-- MODAL VERIFIKASI INSPEKSI ARMADA OLEH KO                -->
+<!-- ======================================================== -->
+<ion-modal [isOpen]="isVerifyModalOpen" (didDismiss)="closeVerifyModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Verifikasi Armada Motor</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeVerifyModal()" aria-label="Tutup">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding" *ngIf="selectedVehicleForVerify">
+      <!-- Info Header Armada -->
+      <div class="verify-header-card">
+        <div class="verify-vehicle-name">
+          <ion-icon name="bicycle-outline"></ion-icon>
+          <span>{{ selectedVehicleForVerify.name }}</span>
+          <span *ngIf="selectedVehicleForVerify.plate_number" class="plate-tag">
+            {{ selectedVehicleForVerify.plate_number }}
+          </span>
+        </div>
+        <p class="verify-driver-sub">
+          Diperiksa oleh <strong>{{ selectedVehicleForVerify.submitted_by || 'Driver' }}</strong>
+          <span *ngIf="selectedVehicleForVerify.submitted_by_role"> ({{ selectedVehicleForVerify.submitted_by_role }})</span>
+          · {{ selectedVehicleForVerify.submitted_at || 'Hari ini' }}
+        </p>
+      </div>
+
+      <!-- Foto Bukti Lapangan -->
+      <div class="verify-section">
+        <label class="verify-section-label">Foto Bukti Evidence</label>
+        <div class="verify-photo-box" *ngIf="selectedVehicleForVerify.answers?.['fuel_photo']?.file_path; else noPhoto">
+          <img [src]="selectedVehicleForVerify.answers!['fuel_photo']!.file_path" alt="Foto Bukti Inspeksi" />
+        </div>
+        <ng-template #noPhoto>
+          <div class="verify-no-photo">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+            <p>Tidak ada lampiran foto bukti tersimpan.</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Ringkasan Hasil Cek Lapangan -->
+      <div class="verify-section">
+        <label class="verify-section-label">Rincian Hasil Pengecekan</label>
+        <div class="verify-data-list">
+          <!-- Level Bensin -->
+          <div class="verify-data-item">
+            <span class="lbl">Level Bensin</span>
+            <span class="val font-bold">
+              {{ selectedVehicleForVerify.answers?.['fuel_level']?.value_text || '-' }}
+            </span>
+          </div>
+
+          <!-- Terpal -->
+          <div class="verify-data-item">
+            <span class="lbl">Terpal Penutup Es</span>
+            <span class="val" [class.text-success]="selectedVehicleForVerify.answers?.['tarp_available']?.value_numeric === 1">
+              {{ selectedVehicleForVerify.answers?.['tarp_available']?.value_numeric === 1 ? 'Tersedia & Layak' : 'Tidak Lengkap' }}
+            </span>
+          </div>
+
+          <!-- Jas Hujan -->
+          <div class="verify-data-item">
+            <span class="lbl">Jas Hujan</span>
+            <span class="val" [class.text-success]="selectedVehicleForVerify.answers?.['raincoat_available']?.value_numeric === 1">
+              {{ selectedVehicleForVerify.answers?.['raincoat_available']?.value_numeric === 1 ? 'Tersedia & Layak' : 'Tidak Lengkap' }}
+            </span>
+          </div>
+
+          <!-- Kondisi Armada -->
+          <div class="verify-data-item">
+            <span class="lbl">Kondisi Motor</span>
+            <span class="val font-bold">
+              {{ selectedVehicleForVerify.answers?.['vehicle_condition']?.value_text || '-' }}
+            </span>
+          </div>
+
+          <!-- KM Speedometer -->
+          <div class="verify-data-item">
+            <span class="lbl">Speedometer</span>
+            <span class="val">
+              {{ selectedVehicleForVerify.answers?.['odometer']?.value_numeric ? (selectedVehicleForVerify.answers!['odometer']!.value_numeric + ' KM') : '-' }}
+            </span>
+          </div>
+
+          <!-- Catatan Kendala -->
+          <div class="verify-data-item col" *ngIf="selectedVehicleForVerify.answers?.['notes']?.value_text">
+            <span class="lbl">Catatan Driver:</span>
+            <span class="val italic">"{{ selectedVehicleForVerify.answers!['notes']!.value_text }}"</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Catatan Verifikasi KO -->
+      <div class="verify-section">
+        <label class="verify-section-label">Catatan Verifikasi KO (Opsional)</label>
+        <ion-textarea
+          fill="outline"
+          rows="2"
+          placeholder="Misal: Kondisi motor sudah dicek fisik, bensin & terpal sesuai…"
+          [(ngModel)]="verifyNotes">
+        </ion-textarea>
+      </div>
+
+      <!-- Aksi Verifikasi KO -->
+      <div class="verify-btn-actions">
+        <ion-button
+          expand="block"
+          color="success"
+          [disabled]="isVerifying"
+          (click)="submitVerification('approved')">
+          <ion-icon name="checkmark-done-circle-outline" slot="start"></ion-icon>
+          {{ isVerifying ? 'Menyimpan...' : 'Verifikasi & Setujui' }}
+        </ion-button>
+
+        <ion-button
+          expand="block"
+          fill="outline"
+          color="warning"
+          [disabled]="isVerifying"
+          (click)="submitVerification('needs_review')">
+          <ion-icon name="warning-outline" slot="start"></ion-icon>
+          Catatan / Perlu Cek Ulang
+        </ion-button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

@@ -14,7 +14,8 @@ import {
   speedometerOutline, bicycleOutline, checkmarkCircleOutline, timeOutline,
   lockClosedOutline, alertCircleOutline, addCircleOutline, cameraOutline,
   trashOutline, closeOutline, sendOutline, shieldCheckmarkOutline, imageOutline,
-  checkmark, chevronForward, checkmarkCircle, storefrontOutline, close
+  checkmark, chevronForward, checkmarkCircle, storefrontOutline, close,
+  checkmarkDoneCircleOutline
 } from 'ionicons/icons';
 
 import { DriverOperationsService } from 'src/app/services/driver-operations.service';
@@ -80,16 +81,18 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
   selectedSlotTitle = 'Inspeksi Bensin & Armada';
   selectedVehicleId: number | null = null;
 
+  fuelSliderIndex = 4; // Default ke Penuh (index 4)
   fuelLevel = 'Penuh';
   fuelOptions = [
-    { value: 'Hampir Habis', label: 'Habis' },
-    { value: '1/4', label: '1/4' },
-    { value: '1/2', label: '1/2' },
-    { value: '3/4', label: '3/4' },
-    { value: 'Penuh', label: 'Penuh' }
+    { value: 'Hampir Habis', label: 'Habis', percent: 0 },
+    { value: '1/4', label: '1/4', percent: 25 },
+    { value: '1/2', label: '1/2', percent: 50 },
+    { value: '3/4', label: '3/4', percent: 75 },
+    { value: 'Penuh', label: 'Penuh', percent: 100 }
   ];
 
-  tarpAvailable = true; // Jas Hujan & Terpal
+  tarpAvailable = true; // Checkbox 1: Terpal
+  raincoatAvailable = true; // Checkbox 2: Jas Hujan
 
   vehicleCondition = 'Layak Jalan';
   conditionOptions = [
@@ -108,8 +111,34 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
       speedometerOutline, bicycleOutline, checkmarkCircleOutline, timeOutline,
       lockClosedOutline, alertCircleOutline, addCircleOutline, cameraOutline,
       trashOutline, closeOutline, sendOutline, shieldCheckmarkOutline, imageOutline,
-      checkmark, chevronForward, checkmarkCircle, storefrontOutline, close
+      checkmark, chevronForward, checkmarkCircle, storefrontOutline, close,
+      checkmarkDoneCircleOutline
     });
+  }
+
+  // ==========================================
+  // GETTERS & HANDLERS SLIDER VOLUME BENSIN
+  // ==========================================
+  get fuelFillPercent(): number {
+    return (this.fuelSliderIndex / (this.fuelOptions.length - 1)) * 100;
+  }
+
+  setFuelByIndex(index: number) {
+    if (index >= 0 && index < this.fuelOptions.length) {
+      this.fuelSliderIndex = index;
+      this.fuelLevel = this.fuelOptions[index].value;
+    }
+  }
+
+  onFuelSliderChange(event: any) {
+    const val = parseInt(event.target.value, 10);
+    this.setFuelByIndex(val);
+  }
+
+  getFuelBadgeClass(): string {
+    if (this.fuelSliderIndex === 0) return 'bad';
+    if (this.fuelSliderIndex <= 2) return 'warn';
+    return 'ok';
   }
 
   // ==========================================
@@ -387,8 +416,9 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
 
     this.selectedVehicleId = targetVehicleId;
 
-    this.fuelLevel = 'Penuh';
+    this.setFuelByIndex(4); // Default Penuh (index 4 / 100%)
     this.tarpAvailable = true;
+    this.raincoatAvailable = true;
     this.vehicleCondition = 'Layak Jalan';
     this.odometer = null;
     this.notes = '';
@@ -490,6 +520,7 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
         fuel_level: this.fuelLevel,
         fuel_photo: this.evidencePhoto,
         tarp_available: this.tarpAvailable,
+        raincoat_available: this.raincoatAvailable,
         vehicle_condition: this.vehicleCondition,
         odometer: this.odometer ? Number(this.odometer) : null,
         notes: this.notes ? this.notes.trim() : null,

@@ -228,26 +228,74 @@
         <div class="ui-card">
           <div class="ui-card-title mb-12">Bensin dan kelengkapan</div>
 
-          <!-- Level Bensin -->
-          <label class="ui-field-label">Level bensin *</label>
-          <div class="ui-seg">
-            <button
-              type="button"
-              *ngFor="let opt of fuelOptions"
-              class="ui-seg-btn"
-              [class.selected]="fuelLevel === opt.value"
-              (click)="fuelLevel = opt.value"
-              [attr.aria-pressed]="fuelLevel === opt.value">
-              {{ opt.label }}
-            </button>
+          <!-- Level Bensin (Volume Slider Style sesuai Desain Image 3) -->
+          <div class="fuel-slider-section">
+            <div class="fuel-slider-header">
+              <label class="ui-field-label m-0">Level bensin *</label>
+              <span class="fuel-level-badge" [ngClass]="getFuelBadgeClass()">
+                {{ fuelLevel }} ({{ fuelFillPercent }}%)
+              </span>
+            </div>
+
+            <!-- Volume Bar Slider -->
+            <div class="fuel-volume-wrapper">
+              <div class="fuel-icon-wrap" [class.warn]="fuelSliderIndex <= 1">
+                <ion-icon name="speedometer-outline"></ion-icon>
+              </div>
+
+              <div class="fuel-track-container">
+                <div class="fuel-track-bg">
+                  <div class="fuel-track-fill" [style.width.%]="fuelFillPercent"></div>
+                </div>
+                <div class="fuel-thumb-indicator" [style.left.%]="fuelFillPercent"></div>
+                <input
+                  type="range"
+                  min="0"
+                  max="4"
+                  step="1"
+                  class="fuel-native-range"
+                  [value]="fuelSliderIndex"
+                  (input)="onFuelSliderChange($event)"
+                  aria-label="Level Bensin" />
+              </div>
+
+              <div class="fuel-icon-wrap-right" [class.active]="fuelSliderIndex === 4">
+                <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+              </div>
+            </div>
+
+            <!-- Ticks Pilihan Cepat (Habis, 1/4, 1/2, 3/4, Penuh) -->
+            <div class="fuel-ticks">
+              <button
+                type="button"
+                *ngFor="let opt of fuelOptions; let idx = index"
+                class="fuel-tick-btn"
+                [class.active]="fuelSliderIndex === idx"
+                (click)="setFuelByIndex(idx)">
+                {{ opt.label }}
+              </button>
+            </div>
           </div>
 
-          <!-- Terpal & Jas Hujan -->
-          <div class="tarp-card" (click)="tarpAvailable = !tarpAvailable">
-            <ion-checkbox [(ngModel)]="tarpAvailable" (click)="$event.stopPropagation()"></ion-checkbox>
-            <div class="tarp-text">
-              <div class="tarp-title">Terpal dan jas hujan lengkap</div>
-              <div class="tarp-sub">Tersedia dan layak pakai</div>
+          <!-- Kelengkapan Armada (2 Checkbox Terpisah: Terpal & Jas Hujan) -->
+          <label class="ui-field-label mt-16">Kelengkapan operasional *</label>
+          <div class="checklist-grid">
+            <!-- 1. Terpal Penutup Es -->
+            <div class="checklist-item-card" [class.checked]="tarpAvailable" (click)="tarpAvailable = !tarpAvailable">
+              <ion-checkbox [(ngModel)]="tarpAvailable" (click)="$event.stopPropagation()"></ion-checkbox>
+              <div class="checklist-item-text">
+                <div class="checklist-item-title">Terpal penutup es</div>
+                <div class="checklist-item-sub">Tersedia & kondisi layak pakai</div>
+              </div>
+            </div>
+
+            <!-- 2. Jas Hujan Driver -->
+            <div class="checklist-item-card" [class.checked]="raincoatAvailable" (click)="raincoatAvailable = !raincoatAvailable">
+              <ion-checkbox [(ngModel)]="raincoatAvailable" (click)="$event.stopPropagation()"></ion-checkbox>
+              <div class="checklist-item-text">
+                <div class="checklist-item-title">Jas hujan operasional</div>
+                <div class="checklist-item-sub">Tersedia & kondisi layak pakai</div>
+              </div>
             </div>
           </div>
 
