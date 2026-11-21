@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,14 +7,15 @@ import {
   IonIcon, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
   IonSegment, IonSegmentButton, IonLabel, IonBadge, IonProgressBar,
   IonRefresher, IonRefresherContent, IonSpinner, IonItem, IonList,
-  IonModal, IonTextarea, ToastController, LoadingController, AlertController
+  IonModal, IonTextarea, ToastController, LoadingController, AlertController,
+  NavController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   timeOutline, checkmarkCircleOutline, alertCircleOutline, bicycleOutline,
   flashOutline, documentTextOutline, chevronForwardOutline, calendarOutline,
   sparklesOutline, refreshOutline, shieldCheckmarkOutline, eyeOutline,
-  closeOutline, warningOutline, checkmarkDoneCircleOutline
+  closeOutline, warningOutline, checkmarkDoneCircleOutline, locationOutline
 } from 'ionicons/icons';
 
 import { KoOperationsService } from 'src/app/services/ko-operations.service';
@@ -47,9 +48,12 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
   private koService = inject(KoOperationsService);
   private audioService = inject(AudioNotificationService);
   private router = inject(Router);
+  private navCtrl = inject(NavController);
   private toastCtrl = inject(ToastController);
   private loadingCtrl = inject(LoadingController);
   private alertCtrl = inject(AlertController);
+
+  @ViewChild('dateInput') dateInputElement?: ElementRef<HTMLInputElement>;
 
   selectedDate = this.getTodayDateString();
   selectedTab: 'pagi' | 'siang' | 'sore' | 'malam' | 'insidental' = 'pagi';
@@ -76,7 +80,7 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
       timeOutline, checkmarkCircleOutline, alertCircleOutline, bicycleOutline,
       flashOutline, documentTextOutline, chevronForwardOutline, calendarOutline,
       sparklesOutline, refreshOutline, shieldCheckmarkOutline, eyeOutline,
-      closeOutline, warningOutline, checkmarkDoneCircleOutline
+      closeOutline, warningOutline, checkmarkDoneCircleOutline, locationOutline
     });
   }
 
@@ -307,6 +311,17 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
     }
   }
 
+  openDatePicker() {
+    if (this.dateInputElement?.nativeElement) {
+      const el = this.dateInputElement.nativeElement;
+      if (typeof (el as any).showPicker === 'function') {
+        (el as any).showPicker();
+      } else {
+        el.click();
+      }
+    }
+  }
+
   isAutoAttendanceSlot(slot: ChecksheetSlot): boolean {
     return slot.slug === 'kasir-presensi-buka-depot' || slot.source === 'auto';
   }
@@ -315,10 +330,13 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
     if (slot.requires_vehicle) return false;
     if (slot.is_exempt || slot.status === 'exempt') return false;
     if (slot.source === 'pos_web_sync' || slot.pos_synced) return false;
-    if (this.isAutoAttendanceSlot(slot) && (slot.status === 'done' || slot.status === 'late')) {
-      return false;
-    }
+    // Slot otomatis dari presensi diselesaikan otomatis saat check-in, bukan form manual
+    if (this.isAutoAttendanceSlot(slot)) return false;
     return slot.status === 'open' || slot.status === 'late' || slot.status === 'upcoming';
+  }
+
+  goToAttendance() {
+    this.navCtrl.navigateRoot('/tabs/ko/attendance');
   }
 
   openSlotForm(slot: ChecksheetSlot) {
@@ -347,7 +365,7 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
   }
 
   openHistory() {
-    this.router.navigate(['/tabs/ko/checksheets/history']);
+    this.navCtrl.navigateForward('/tabs/ko/checksheets/history');
   }
 
   doRefresh(event: any) {

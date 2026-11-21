@@ -18,11 +18,11 @@
 
   <!-- Date Picker Bar -->
   <div class="date-bar">
-    <div class="date-input-wrap">
+    <div class="date-input-wrap" (click)="openDatePicker()">
       <ion-icon name="calendar-outline" color="primary"></ion-icon>
-      <input type="date" [(ngModel)]="selectedDate" (change)="onDateChange()" />
+      <input #dateInput type="date" [(ngModel)]="selectedDate" (change)="onDateChange()" (click)="$event.stopPropagation()" />
     </div>
-    <ion-button fill="clear" size="small" (click)="openHistory()">
+    <ion-button fill="clear" size="small" class="history-btn" (click)="openHistory()">
       Riwayat
       <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
     </ion-button>
@@ -129,15 +129,28 @@
           </span>
         </div>
 
-        <!-- Badge Otomatis dari Presensi -->
-        <div *ngIf="isAutoAttendanceSlot(slot)" class="auto-badge-row">
-          <ion-badge color="tertiary">
-            <ion-icon name="sparkles-outline" style="vertical-align: middle; margin-right: 4px;"></ion-icon>
-            Otomatis dari Presensi
-          </ion-badge>
-          <span *ngIf="slot.submitted_at" class="submitted-meta">
-            Selesai pukul {{ slot.submitted_at }}
-          </span>
+        <!-- Badge & Penjelasan Otomatis dari Presensi -->
+        <div *ngIf="isAutoAttendanceSlot(slot)" class="auto-badge-row auto-attendance-box">
+          <div class="auto-badge-header">
+            <ion-badge color="tertiary">
+              <ion-icon name="sparkles-outline" style="vertical-align: middle; margin-right: 4px;"></ion-icon>
+              Otomatis dari Presensi
+            </ion-badge>
+            <span *ngIf="slot.submitted_at || slot.status === 'done'" class="submitted-meta text-success">
+              ✓ Selesai otomatis saat presensi masuk {{ slot.submitted_at ? ('pukul ' + slot.submitted_at) : '' }}
+            </span>
+          </div>
+
+          <div *ngIf="!slot.submitted_at && slot.status !== 'done' && !slot.is_exempt" class="pending-auto-attendance">
+            <p class="auto-notice">
+              <ion-icon name="information-circle-outline" color="primary"></ion-icon>
+              Slot ini selesai otomatis begitu Anda melakukan presensi masuk di depot (tanpa perlu isi form manual).
+            </p>
+            <ion-button fill="outline" color="primary" size="small" (click)="goToAttendance()">
+              <ion-icon name="location-outline" slot="start"></ion-icon>
+              Buka Menu Presensi
+            </ion-button>
+          </div>
         </div>
 
         <!-- Khusus Inspeksi Motor Kolaboratif (requires_vehicle === true) -->

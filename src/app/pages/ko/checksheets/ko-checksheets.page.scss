@@ -17,6 +17,14 @@ ion-content {
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 6px 12px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  ion-icon {
+    font-size: 18px;
+    pointer-events: none;
+  }
 
   input[type='date'] {
     border: none;
@@ -25,6 +33,58 @@ ion-content {
     font-size: 14px;
     font-weight: 600;
     color: #1e293b;
+    cursor: pointer;
+  }
+}
+
+.history-btn {
+  font-weight: 600;
+  --color: #0284c7;
+}
+
+.auto-attendance-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+
+  .auto-badge-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pending-auto-attendance {
+    background: #f0fdf4;
+    border: 1px dashed #86efac;
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-top: 4px;
+
+    .auto-notice {
+      margin: 0 0 8px;
+      font-size: 12px;
+      color: #166534;
+      line-height: 1.4;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+
+      ion-icon {
+        font-size: 16px;
+        flex-shrink: 0;
+        margin-top: 1px;
+      }
+    }
+
+    ion-button {
+      --border-radius: 8px;
+      font-weight: 600;
+      font-size: 12px;
+      height: 32px;
+      margin: 0;
+    }
   }
 }
 
