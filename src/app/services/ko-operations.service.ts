@@ -91,6 +91,13 @@ export class KoOperationsService {
     return this.apiClient.post<ApiResponse<any>>(`ko/deliveries/${id}/approve`, {});
   }
 
+  approveDriverBatch(driverId: number, deliveryDate?: string): Observable<ApiResponse<any>> {
+    return this.apiClient.post<ApiResponse<any>>('ko/deliveries/approve-driver-batch', {
+      driver_id: driverId,
+      delivery_date: deliveryDate,
+    });
+  }
+
   rejectDelivery(id: number, rejection_reason: string): Observable<ApiResponse<any>> {
     return this.apiClient.post<ApiResponse<any>>(`ko/deliveries/${id}/reject`, {
       rejection_reason,

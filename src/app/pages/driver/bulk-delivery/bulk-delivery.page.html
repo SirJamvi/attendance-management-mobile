@@ -36,13 +36,16 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- 2 Mode Segment -->
+  <!-- 3 Mode Segment -->
   <ion-segment [(ngModel)]="activeTab" class="mode-segment">
     <ion-segment-button value="pos_orders">
-      <ion-label>Pesanan POS Hari Ini</ion-label>
+      <ion-label>Pesanan POS</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="manual">
+      <ion-label>Input Manual</ion-label>
     </ion-segment-button>
     <ion-segment-button value="history">
-      <ion-label>Riwayat Pengiriman</ion-label>
+      <ion-label>Riwayat</ion-label>
     </ion-segment-button>
   </ion-segment>
 
@@ -235,7 +238,163 @@
   </div>
 
   <!-- ========================================================= -->
-  <!-- TAB 2: RIWAYAT PENGIRIMAN                                 -->
+  <!-- TAB 2: INPUT PENGIRIMAN MANUAL                            -->
+  <!-- ========================================================= -->
+  <div *ngIf="activeTab === 'manual'">
+    <ion-card class="form-card">
+      <ion-card-header>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ion-icon name="add-circle-outline" color="primary" style="font-size: 1.4rem;"></ion-icon>
+          <div>
+            <ion-card-title style="font-size: 1.05rem; font-weight: 700;">Input Pengiriman Manual</ion-card-title>
+            <ion-card-subtitle style="font-size: 0.78rem;">
+              Isi formulir ini jika nota belum tercatat di POS kasir atau untuk pengiriman langsung di lapangan.
+            </ion-card-subtitle>
+          </div>
+        </div>
+      </ion-card-header>
+
+      <ion-card-content>
+        <!-- Nama Toko / Pelanggan -->
+        <ion-item lines="full" class="ion-no-padding" style="margin-bottom: 12px;">
+          <ion-input
+            label="Nama Warung / Toko Pelanggan *"
+            labelPlacement="stacked"
+            placeholder="Cth: Warung Bu Siti / Toko Barokah"
+            [(ngModel)]="manualForm.customer_name">
+          </ion-input>
+        </ion-item>
+
+        <!-- Grid Input Jumlah Bal per Varian -->
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">
+            Rincian Jumlah Bal (Es Kristal) *
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px; text-align: center;">
+              <span style="font-size: 0.7rem; font-weight: 700; color: #0284c7; display: block;">20 KG</span>
+              <input type="number" min="0" placeholder="0" [(ngModel)]="manualForm.qty_20kg" style="width: 100%; border: none; background: transparent; text-align: center; font-weight: 700; font-size: 1.1rem; padding: 4px 0;" />
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px; text-align: center;">
+              <span style="font-size: 0.7rem; font-weight: 700; color: #0284c7; display: block;">15 KG</span>
+              <input type="number" min="0" placeholder="0" [(ngModel)]="manualForm.qty_15kg" style="width: 100%; border: none; background: transparent; text-align: center; font-weight: 700; font-size: 1.1rem; padding: 4px 0;" />
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px; text-align: center;">
+              <span style="font-size: 0.7rem; font-weight: 700; color: #0284c7; display: block;">10 KG</span>
+              <input type="number" min="0" placeholder="0" [(ngModel)]="manualForm.qty_10kg" style="width: 100%; border: none; background: transparent; text-align: center; font-weight: 700; font-size: 1.1rem; padding: 4px 0;" />
+            </div>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px; text-align: center;">
+              <span style="font-size: 0.7rem; font-weight: 700; color: #0284c7; display: block;">5 KG</span>
+              <input type="number" min="0" placeholder="0" [(ngModel)]="manualForm.qty_5kg" style="width: 100%; border: none; background: transparent; text-align: center; font-weight: 700; font-size: 1.1rem; padding: 4px 0;" />
+            </div>
+          </div>
+
+          <!-- Total Ringkasan Fisik Bal -->
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #e0f2fe; padding: 8px 12px; border-radius: 8px; margin-top: 8px;">
+            <span style="font-size: 0.8rem; color: #0369a1; font-weight: 600;">Total Pengiriman:</span>
+            <strong style="color: #0369a1; font-size: 0.95rem;">{{ manualTotalBalls }} Bal ({{ manualTotalWeightKg }} kg)</strong>
+          </div>
+        </div>
+
+        <!-- Metode Pembayaran & Nominal Cash -->
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">
+            Metode Pembayaran *
+          </label>
+          <ion-segment [(ngModel)]="manualForm.payment_method" style="margin-bottom: 8px;">
+            <ion-segment-button value="cash">
+              <ion-label>Tunai (Cash)</ion-label>
+            </ion-segment-button>
+            <ion-segment-button value="transfer">
+              <ion-label>Transfer / Tempo</ion-label>
+            </ion-segment-button>
+          </ion-segment>
+
+          <ion-item *ngIf="manualForm.payment_method === 'cash'" lines="full" class="ion-no-padding">
+            <ion-input
+              type="number"
+              inputmode="numeric"
+              label="Nominal Uang Tunai Diterima (Rp) *"
+              labelPlacement="stacked"
+              placeholder="0"
+              [(ngModel)]="manualForm.cash_collected">
+            </ion-input>
+          </ion-item>
+        </div>
+
+        <!-- Pilih Armada Motor -->
+        <ion-item lines="full" class="ion-no-padding" style="margin-bottom: 12px;">
+          <ion-select
+            label="Armada Motor / Kendaraan (Opsional)"
+            labelPlacement="stacked"
+            placeholder="Pilih unit motor"
+            [(ngModel)]="manualForm.vehicle_id">
+            <ion-select-option [value]="null">Gunakan Armada Default Hari Ini</ion-select-option>
+            <ion-select-option *ngFor="let v of vehicles" [value]="v.id">
+              {{ v.name }} {{ v.plate_number ? '(' + v.plate_number + ')' : '' }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <!-- Catatan Tambahan -->
+        <ion-item lines="full" class="ion-no-padding" style="margin-bottom: 14px;">
+          <ion-textarea
+            rows="2"
+            label="Catatan Pengiriman (Opsional)"
+            labelPlacement="stacked"
+            placeholder="Cth: Titip di warung sebelah, pelanggan baru..."
+            [(ngModel)]="manualForm.notes">
+          </ion-textarea>
+        </ion-item>
+
+        <!-- Foto Bukti Serah Terima / Nota -->
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">
+            Foto Bukti Serah Terima / Nota Manual (Opsional)
+          </label>
+
+          <div *ngIf="!manualForm.proof_photo">
+            <ion-button expand="block" fill="outline" color="primary" (click)="takeManualProofPhoto()">
+              <ion-icon name="camera-outline" slot="start"></ion-icon>
+              Kamera / Pilih dari Galeri
+            </ion-button>
+          </div>
+
+          <div *ngIf="manualForm.proof_photo" style="border-radius: 10px; overflow: hidden; border: 1px solid #cbd5e1; background: #000; position: relative;">
+            <img [src]="manualForm.proof_photo" alt="Bukti Manual" style="width: 100%; max-height: 180px; object-fit: cover; display: block;" />
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 6px 10px;">
+              <span style="font-size: 0.75rem; color: #16a34a; font-weight: 600;">✓ Foto Siap</span>
+              <ion-button fill="clear" color="danger" size="small" (click)="clearManualProofPhoto()">
+                <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tombol Kirim Pengiriman Manual -->
+        <ion-button
+          expand="block"
+          color="primary"
+          size="large"
+          style="margin-top: 16px; font-weight: 700; height: 48px;"
+          [disabled]="isSubmittingManual || !manualForm.customer_name || manualTotalBalls <= 0"
+          (click)="submitManualDelivery()">
+          <ion-spinner *ngIf="isSubmittingManual" name="crescent" slot="start"></ion-spinner>
+          <ion-icon *ngIf="!isSubmittingManual" name="send-outline" slot="start"></ion-icon>
+          {{ isSubmittingManual ? 'Mengirim...' : 'Kirim Pengiriman Manual' }}
+        </ion-button>
+
+        <p style="text-align: center; font-size: 0.75rem; color: #64748b; margin-top: 8px;">
+          Laporan manual akan masuk status Pending untuk diverifikasi dan disetujui KO.
+        </p>
+      </ion-card-content>
+    </ion-card>
+
+    <div style="height: 60px;"></div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- TAB 3: RIWAYAT PENGIRIMAN                                 -->
   <!-- ========================================================= -->
   <div *ngIf="activeTab === 'history'">
     <!-- Filter Bulan -->

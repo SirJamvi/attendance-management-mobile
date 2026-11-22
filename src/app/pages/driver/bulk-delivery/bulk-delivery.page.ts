@@ -7,21 +7,22 @@ import {
   IonSegment, IonSegmentButton, IonLabel, IonSelect, IonSelectOption,
   IonItem, IonIcon, IonBadge, IonProgressBar, IonSpinner,
   IonRefresher, IonRefresherContent,
-  LoadingController, ToastController
+  IonInput, IonTextarea,
+  LoadingController, ToastController, ActionSheetController, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   sparklesOutline, addCircleOutline, trashOutline, cameraOutline, sendOutline,
   checkmarkCircleOutline, checkmarkDoneCircleOutline, timeOutline, alertCircleOutline,
   cubeOutline, calendarOutline, carOutline, listOutline, refreshOutline, storefrontOutline,
-  cashOutline, cardOutline, receiptOutline
+  cashOutline, cardOutline, receiptOutline, imageOutline
 } from 'ionicons/icons';
-import { CameraDirection } from '@capacitor/camera';
+import { CameraDirection, CameraSource } from '@capacitor/camera';
 
 import { DriverOperationsService } from 'src/app/services/driver-operations.service';
 import { AttendanceService } from 'src/app/services/attendance';
 import { BranchBadgeComponent } from 'src/app/components/branch-badge/branch-badge.component';
-import { captureCompressedPhoto } from 'src/app/utils/image-compressor';
+import { captureCompressedPhoto, captureDetailedPhoto } from 'src/app/utils/image-compressor';
 import {
   DriverDeliveryHistoryData,
   DriverPosOrdersResponse,
@@ -43,7 +44,8 @@ import {
     IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
     IonSegment, IonSegmentButton, IonLabel, IonSelect, IonSelectOption,
     IonItem, IonIcon, IonBadge, IonProgressBar, IonSpinner,
-    IonRefresher, IonRefresherContent
+    IonRefresher, IonRefresherContent,
+    IonInput, IonTextarea
   ]
 })
 export class DriverBulkDeliveryPage implements OnInit {
@@ -51,8 +53,10 @@ export class DriverBulkDeliveryPage implements OnInit {
   private attendanceService = inject(AttendanceService);
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
+  private actionSheetCtrl = inject(ActionSheetController);
+  private alertCtrl = inject(AlertController);
 
-  activeTab: 'pos_orders' | 'history' = 'pos_orders';
+  activeTab: 'pos_orders' | 'manual' | 'history' = 'pos_orders';
 
   // Shared metadata
   vehicles: VehicleOption[] = [];
@@ -64,7 +68,22 @@ export class DriverBulkDeliveryPage implements OnInit {
   posData: DriverPosOrdersResponse | null = null;
   isSubmitting = false;
 
-  // Tab 2: Riwayat Pengiriman
+  // Tab 2: Input Pengiriman Manual
+  manualForm = {
+    customer_name: '',
+    qty_20kg: 0,
+    qty_15kg: 0,
+    qty_10kg: 0,
+    qty_5kg: 0,
+    payment_method: 'cash' as 'cash' | 'transfer',
+    cash_collected: 0,
+    proof_photo: null as string | null,
+    vehicle_id: null as number | null,
+    notes: ''
+  };
+  isSubmittingManual = false;
+
+  // Tab 3: Riwayat Pengiriman
   historyMonth = this.getCurrentMonthString();
   historyData: DriverDeliveryHistoryData | null = null;
 
@@ -73,7 +92,7 @@ export class DriverBulkDeliveryPage implements OnInit {
       sparklesOutline, addCircleOutline, trashOutline, cameraOutline, sendOutline,
       checkmarkCircleOutline, checkmarkDoneCircleOutline, timeOutline, alertCircleOutline,
       cubeOutline, calendarOutline, carOutline, listOutline, refreshOutline, storefrontOutline,
-      cashOutline, cardOutline, receiptOutline
+      cashOutline, cardOutline, receiptOutline, imageOutline
     });
   }
 
@@ -146,6 +165,162 @@ export class DriverBulkDeliveryPage implements OnInit {
 
   clearProofPhoto() {
     this.proofPhoto = null;
+  }
+
+  // ==========================================
+  // TAB 2: INPUT PENGIRIMAN MANUAL
+  // ==========================================
+
+  get manualTotalBalls(): number {
+    return (Number(this.manualForm.qty_20kg) || 0) +
+           (Number(this.manualForm.qty_15kg) || 0) +
+           (Number(this.manualForm.qty_10kg) || 0) +
+           (Number(this.manualForm.qty_5kg) || 0);
+  }
+
+  get manualTotalWeightKg(): number {
+    return ((Number(this.manualForm.qty_20kg) || 0) * 20) +
+           ((Number(this.manualForm.qty_15kg) || 0) * 15) +
+           ((Number(this.manualForm.qty_10kg) || 0) * 10) +
+           ((Number(this.manualForm.qty_5kg) || 0) * 5);
+  }
+
+  async takeManualProofPhoto() {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Foto Bukti Serah Terima / Nota Manual',
+      buttons: [
+        {
+          text: 'Ambil Foto Kamera',
+          icon: 'camera-outline',
+          handler: () => {
+            this.processManualPhoto(CameraSource.Camera);
+          }
+        },
+        {
+          text: 'Pilih dari Galeri Foto',
+          icon: 'image-outline',
+          handler: () => {
+            this.processManualPhoto(CameraSource.Photos);
+          }
+        },
+        {
+          text: 'Batal',
+          role: 'cancel'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  async processManualPhoto(source: CameraSource) {
+    try {
+      const detailed = await captureDetailedPhoto({
+        source,
+        direction: CameraDirection.Rear,
+        maxWidth: 1280,
+        quality: 0.70,
+        promptHeader: 'Foto Bukti Pengiriman'
+      });
+
+      if (!detailed) return;
+
+      if (source === CameraSource.Photos) {
+        if (detailed.hasExifDate && detailed.isOlderThan7Days) {
+          const alert = await this.alertCtrl.create({
+            header: 'Foto Melebihi 7 Hari',
+            subHeader: `Foto diambil ${detailed.daysAgo} hari yang lalu`,
+            message: 'Sistem menolak foto yang diambil lebih dari 1 minggu yang lalu. Harap gunakan foto terbaru.',
+            buttons: ['Mengerti']
+          });
+          await alert.present();
+          return;
+        }
+
+        if (!detailed.hasExifDate) {
+          await this.showToast('Foto tidak memiliki tanggal asli (misal: unduhan WA). Tanggal dicatat hari ini.', 'warning');
+        }
+      }
+
+      this.manualForm.proof_photo = detailed.dataUrl;
+    } catch (err: any) {
+      if (err?.message?.toLowerCase().includes('cancel')) return;
+      await this.showToast('Gagal memuat foto bukti.', 'danger');
+    }
+  }
+
+  clearManualProofPhoto() {
+    this.manualForm.proof_photo = null;
+  }
+
+  resetManualForm() {
+    this.manualForm = {
+      customer_name: '',
+      qty_20kg: 0,
+      qty_15kg: 0,
+      qty_10kg: 0,
+      qty_5kg: 0,
+      payment_method: 'cash',
+      cash_collected: 0,
+      proof_photo: null,
+      vehicle_id: null,
+      notes: ''
+    };
+  }
+
+  async submitManualDelivery() {
+    if (!this.manualForm.customer_name.trim()) {
+      await this.showToast('Nama warung / toko wajib diisi.', 'warning');
+      return;
+    }
+    if (this.manualTotalBalls <= 0) {
+      await this.showToast('Minimal harus mengisi 1 bal pada salah satu varian es (20k, 15k, 10k, atau 5k).', 'warning');
+      return;
+    }
+
+    this.isSubmittingManual = true;
+    const loading = await this.loadingCtrl.create({ message: 'Mengirim laporan manual...' });
+    await loading.present();
+
+    const payload = {
+      input_mode: 'manual' as const,
+      vehicle_id: this.manualForm.vehicle_id || this.selectedVehicleId,
+      proof_photo: this.manualForm.proof_photo,
+      raw_wa_text: this.manualForm.notes || undefined,
+      items: [
+        {
+          customer_name: this.manualForm.customer_name.trim(),
+          qty_20kg: Number(this.manualForm.qty_20kg) || 0,
+          qty_15kg: Number(this.manualForm.qty_15kg) || 0,
+          qty_10kg: Number(this.manualForm.qty_10kg) || 0,
+          qty_5kg: Number(this.manualForm.qty_5kg) || 0,
+          payment_method: this.manualForm.payment_method,
+          cash_collected: this.manualForm.payment_method === 'cash' ? (Number(this.manualForm.cash_collected) || 0) : 0,
+        }
+      ]
+    };
+
+    this.driverService.submitBulkDelivery(payload).subscribe({
+      next: async (res) => {
+        this.isSubmittingManual = false;
+        await loading.dismiss();
+
+        const eligibility = res?.data?.checkout_eligibility || res?.meta?.checkout_eligibility;
+        if (eligibility) {
+          this.attendanceService.updateCheckoutEligibility(eligibility);
+        }
+
+        await this.showToast(res?.message || 'Pengiriman manual berhasil dikirim (status: Pending persetujuan KO)!', 'success');
+        this.resetManualForm();
+        this.loadPosOrders();
+        this.loadDeliveryHistory();
+        this.activeTab = 'history';
+      },
+      error: async (err) => {
+        this.isSubmittingManual = false;
+        await loading.dismiss();
+        await this.showToast(err.error?.message || 'Gagal mengirim pengiriman manual.', 'danger');
+      }
+    });
   }
 
   async confirmDeliveries() {

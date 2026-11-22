@@ -329,7 +329,9 @@ export interface KoDeliveryItem {
   id: number;
   driver_id?: number;
   driver_name: string;
+  driver?: { id: number; name: string } | null;
   customer_name: string;
+  delivery_address?: string | null;
   delivery_date?: string;
   qty_20kg: number;
   qty_15kg: number;
@@ -342,10 +344,14 @@ export interface KoDeliveryItem {
   status: 'pending' | 'approved' | 'rejected' | string;
   rejection_reason?: string | null;
   input_mode?: 'magic_paste' | 'manual' | string;
+  is_manual?: boolean;
+  notes?: string | null;
   raw_wa_text?: string | null;
   proof_photo?: string | null;
   proof_photo_url?: string | null;
+  photo_proof_url?: string | null;
   vehicle_name?: string | null;
+  vehicle?: { id: number; name: string; plate_number?: string } | null;
   created_at?: string;
 }
 

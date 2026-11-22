@@ -17,11 +17,14 @@ import {
   IonSpinner,
   LoadingController,
   ToastController,
-  NavController
+  NavController,
+  ActionSheetController,
+  AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
   cameraOutline,
+  imageOutline,
   locationOutline,
   sendOutline,
   informationCircleOutline,
@@ -36,9 +39,9 @@ import {
 } from 'ionicons/icons';
 
 // Plugin Capacitor & Kompresi Foto Ultra-Ringan
-import { CameraDirection } from '@capacitor/camera';
+import { CameraDirection, CameraSource } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
-import { captureCompressedPhoto } from 'src/app/utils/image-compressor';
+import { captureCompressedPhoto, captureDetailedPhoto } from 'src/app/utils/image-compressor';
 import { BusinessCardService, BusinessCardKpiData } from 'src/app/services/business-card.service';
 
 @Component({
@@ -67,6 +70,8 @@ export class DeliveryProofPage implements OnInit {
   private businessCardService = inject(BusinessCardService);
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
+  private actionSheetCtrl = inject(ActionSheetController);
+  private alertCtrl = inject(AlertController);
   private navCtrl = inject(NavController);
   private router = inject(Router);
 
@@ -102,6 +107,7 @@ export class DeliveryProofPage implements OnInit {
   constructor() {
     addIcons({
       cameraOutline,
+      imageOutline,
       locationOutline,
       sendOutline,
       informationCircleOutline,
@@ -189,26 +195,79 @@ export class DeliveryProofPage implements OnInit {
   }
 
   /**
-   * Ambil foto bukti penyerahan kartu nama (Kompresi otomatis 720px, quality 0.50)
+   * Pilihan sumber foto bukti kartu nama: Kamera langsung atau Galeri foto
    */
   async takePicture() {
+    const actionSheet = await this.actionSheetCtrl.create({
+      header: 'Foto Bukti Kartu Nama',
+      subHeader: 'Foto wajib diambil tidak lebih dari 1 minggu yang lalu',
+      buttons: [
+        {
+          text: 'Ambil Foto Kamera',
+          icon: 'camera-outline',
+          handler: () => {
+            this.processPhoto(CameraSource.Camera);
+          }
+        },
+        {
+          text: 'Pilih dari Galeri Foto',
+          icon: 'image-outline',
+          handler: () => {
+            this.processPhoto(CameraSource.Photos);
+          }
+        },
+        {
+          text: 'Batal',
+          role: 'cancel'
+        }
+      ]
+    });
+    await actionSheet.present();
+  }
+
+  /**
+   * Proses foto dari kamera / galeri dengan validasi batas usia foto maksimal 7 hari
+   */
+  async processPhoto(source: CameraSource) {
     try {
-      const compressed = await captureCompressedPhoto({
+      const detailed = await captureDetailedPhoto({
+        source,
         direction: CameraDirection.Rear,
         maxWidth: 720,
         quality: 0.50,
         promptHeader: 'Foto Bukti Kartu Nama'
       });
 
-      if (compressed) {
-        this.previewImage = compressed;
-        this.formData.photo = compressed;
+      if (!detailed) return;
 
-        // Ambil titik koordinat otomatis saat foto berhasil diambil
-        this.getLocation();
+      // Validasi batas umur foto maksimal 7 hari jika dari galeri
+      if (source === CameraSource.Photos) {
+        if (detailed.hasExifDate && detailed.isOlderThan7Days) {
+          const alert = await this.alertCtrl.create({
+            header: 'Foto Melebihi 7 Hari',
+            subHeader: `Foto terdeteksi diambil ${detailed.daysAgo} hari yang lalu`,
+            message: 'Sistem menolak foto yang diambil lebih dari 1 minggu yang lalu untuk menjaga keaslian data kartu nama. Harap ambil foto terbaru atau potret langsung menggunakan kamera.',
+            buttons: ['Mengerti']
+          });
+          await alert.present();
+          return;
+        }
+
+        if (!detailed.hasExifDate) {
+          await this.showToast('Foto tidak memiliki tanggal asli (misal: unduhan WA / screenshot). Tanggal dicatat hari ini.', 'warning');
+        } else {
+          const labelHari = detailed.daysAgo === 0 ? 'hari ini' : `${detailed.daysAgo} hari lalu`;
+          await this.showToast(`Foto galeri valid (diambil ${labelHari}).`, 'success');
+        }
       }
+
+      this.previewImage = detailed.dataUrl;
+      this.formData.photo = detailed.dataUrl;
+
+      // Ambil titik koordinat otomatis saat foto berhasil diambil
+      this.getLocation();
     } catch (error) {
-      console.error('Kamera dibatalkan atau terjadi error:', error);
+      console.error('Kamera/galeri dibatalkan atau terjadi error:', error);
     }
   }
 
