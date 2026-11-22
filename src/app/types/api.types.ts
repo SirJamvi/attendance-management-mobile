@@ -348,6 +348,7 @@ export interface KoDeliveryItem {
   notes?: string | null;
   raw_wa_text?: string | null;
   proof_photo?: string | null;
+  proof_photo_path?: string | null;
   proof_photo_url?: string | null;
   photo_proof_url?: string | null;
   vehicle_name?: string | null;

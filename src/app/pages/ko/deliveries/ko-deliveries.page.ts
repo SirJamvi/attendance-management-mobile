@@ -230,7 +230,12 @@ export class KoDeliveriesPage implements OnInit {
 
   viewPhoto(url: string | null | undefined) {
     if (!url) return;
-    this.previewPhotoUrl = url;
+    if (url.startsWith('http') || url.startsWith('data:')) {
+      this.previewPhotoUrl = url;
+    } else {
+      const cleanPath = url.replace(/^\/?storage\//, '').replace(/^\//, '');
+      this.previewPhotoUrl = `https://attendance.eskristalkarawang.com/storage/${cleanPath}`;
+    }
     this.isPhotoModalOpen = true;
   }
 

@@ -324,9 +324,9 @@
               </span>
             </div>
 
-            <div class="meta-col" *ngIf="item.photo_proof_url || item.proof_photo_url">
+            <div class="meta-col" *ngIf="item.photo_proof_url || item.proof_photo_url || item.proof_photo_path">
               <span class="col-label">Bukti Foto / Kartu Nama:</span>
-              <ion-button size="small" fill="outline" color="secondary" (click)="viewPhoto(item.photo_proof_url || item.proof_photo_url)">
+              <ion-button size="small" fill="outline" color="secondary" (click)="viewPhoto(item.photo_proof_url || item.proof_photo_url || item.proof_photo_path)">
                 <ion-icon name="image-outline" slot="start"></ion-icon>
                 Lihat Foto
               </ion-button>
