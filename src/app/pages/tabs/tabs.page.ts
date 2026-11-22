@@ -37,10 +37,11 @@ export class TabsPage implements OnInit, OnDestroy {
   private userSub?: Subscription;
 
   koMenuItems: MenuItem[] = [
-    { label: 'Riwayat',  icon: 'time-outline',     route: '/tabs/ko/checksheets/history' },
-    { label: 'Cuti',     icon: 'calendar-outline', route: '/tabs/ko/leave'               },
-    { label: 'Kasbon',   icon: 'cash-outline',     route: '/cash-advance'                },
-    { label: 'Profil',   icon: 'person-outline',   route: '/tabs/profile'                },
+    { label: 'Approval', icon: 'checkmark-done-outline', route: '/tabs/ko/deliveries'           },
+    { label: 'Riwayat',  icon: 'time-outline',           route: '/tabs/ko/checksheets/history'   },
+    { label: 'Cuti',     icon: 'calendar-outline',       route: '/tabs/ko/leave'                 },
+    { label: 'Kasbon',   icon: 'cash-outline',           route: '/cash-advance'                  },
+    { label: 'Profil',   icon: 'person-outline',         route: '/tabs/profile'                  },
   ];
 
   driverMenuItems: MenuItem[] = [

@@ -14,7 +14,8 @@ import {
   calendarOutline, checkmarkCircleOutline, closeCircleOutline, warningOutline,
   shieldCheckmarkOutline, alertCircleOutline, eyeOutline, cashOutline,
   cubeOutline, personOutline, closeOutline, layersOutline, checkmarkDoneOutline,
-  documentAttachOutline, imageOutline, callOutline, timeOutline, checkmarkDoneCircleOutline
+  documentAttachOutline, imageOutline, callOutline, timeOutline, checkmarkDoneCircleOutline,
+  cardOutline, logoWhatsapp, locationOutline, chatbubbleEllipsesOutline, checkmark
 } from 'ionicons/icons';
 
 import { KoOperationsService } from 'src/app/services/ko-operations.service';
@@ -62,6 +63,9 @@ export class KoDeliveriesPage implements OnInit {
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
 
+  // Tab Utama Approval: Pengiriman Bal vs Kartu Nama
+  mainApprovalSection: 'deliveries' | 'business_cards' = 'deliveries';
+
   selectedDate = this.getTodayDateString();
   selectedStatus: 'pending' | 'approved' | 'rejected' | '' = 'pending';
 
@@ -71,6 +75,12 @@ export class KoDeliveriesPage implements OnInit {
   posCrossCheck: PosCrossCheckDriver[] = [];
   deliveries: KoDeliveryItem[] = [];
   driverGroups: DriverDeliveryGroup[] = [];
+
+  // Data Validasi Kartu Nama Pelanggan
+  businessCards: any[] = [];
+  pendingBusinessCardsCount = 0;
+  isLoadingCards = false;
+  cardStatusFilter: 'pending' | 'valid' | 'rejected' | '' = 'pending';
 
   // Group Detail Modal (Melihat seluruh toko milik 1 driver dalam 1 hari)
   isGroupModalOpen = false;
@@ -92,7 +102,8 @@ export class KoDeliveriesPage implements OnInit {
       calendarOutline, checkmarkCircleOutline, closeCircleOutline, warningOutline,
       shieldCheckmarkOutline, alertCircleOutline, eyeOutline, cashOutline,
       cubeOutline, personOutline, closeOutline, layersOutline, checkmarkDoneOutline,
-      documentAttachOutline, imageOutline, callOutline, timeOutline, checkmarkDoneCircleOutline
+      documentAttachOutline, imageOutline, callOutline, timeOutline, checkmarkDoneCircleOutline,
+      cardOutline, logoWhatsapp, locationOutline, chatbubbleEllipsesOutline, checkmark
     });
   }
 
@@ -100,6 +111,7 @@ export class KoDeliveriesPage implements OnInit {
 
   ionViewWillEnter() {
     this.loadDeliveries();
+    this.loadBusinessCards();
   }
 
   private getTodayDateString(): string {
@@ -108,6 +120,14 @@ export class KoDeliveriesPage implements OnInit {
     const m = String(now.getMonth() + 1).padStart(2, '0');
     const d = String(now.getDate()).padStart(2, '0');
     return `${y}-${m}-${d}`;
+  }
+
+  onMainSectionChange() {
+    if (this.mainApprovalSection === 'deliveries') {
+      this.loadDeliveries();
+    } else {
+      this.loadBusinessCards();
+    }
   }
 
   loadDeliveries(event?: any) {
@@ -375,6 +395,115 @@ export class KoDeliveriesPage implements OnInit {
     });
   }
 
+  // ==========================================
+  // FITUR: VALIDASI KARTU NAMA / PROSPEK DRIVER
+  // ==========================================
+
+  loadBusinessCards(event?: any) {
+    this.isLoadingCards = !event && this.businessCards.length === 0;
+
+    this.koService
+      .getBusinessCards({
+        date: this.selectedDate,
+        status: this.cardStatusFilter || undefined,
+      })
+      .subscribe({
+        next: (res) => {
+          if (res?.success && res.data) {
+            this.businessCards = Array.isArray(res.data.cards) ? res.data.cards : [];
+            this.pendingBusinessCardsCount = Number(res.data.pending_count) || 0;
+          }
+          this.isLoadingCards = false;
+          if (event) event.target.complete();
+        },
+        error: (err) => {
+          this.isLoadingCards = false;
+          if (event) event.target.complete();
+          console.warn('Gagal memuat kartu nama:', err);
+        }
+      });
+  }
+
+  async promptApproveCard(card: any) {
+    const alert = await this.alertCtrl.create({
+      header: 'Validasi Kartu Nama?',
+      subHeader: `${card.customer_name} (${card.customer_phone})`,
+      message: `Setujui bukti penyerahan kartu nama ini dari driver ${card.user?.name || ''}? Data terverifikasi akan dicatat valid untuk KPI driver.`,
+      buttons: [
+        { text: 'Batal', role: 'cancel' },
+        {
+          text: 'Setujui (Valid)',
+          handler: () => {
+            this.executeVerifyCard(card.id, 'valid');
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async promptRejectCard(card: any) {
+    const alert = await this.alertCtrl.create({
+      header: 'Tolak Bukti Kartu Nama',
+      subHeader: `${card.customer_name} (${card.customer_phone})`,
+      message: 'Masukkan alasan penolakan (misal: Foto buram, bukan plang/kartu nama toko asli, toko tidak ada):',
+      inputs: [
+        {
+          name: 'reason',
+          type: 'textarea',
+          placeholder: 'Alasan penolakan (wajib)...',
+        }
+      ],
+      buttons: [
+        { text: 'Batal', role: 'cancel' },
+        {
+          text: 'Tolak',
+          cssClass: 'danger',
+          handler: (data) => {
+            const reason = (data?.reason || '').trim();
+            if (!reason) {
+              this.showToast('Alasan penolakan wajib diisi!', 'warning');
+              return false;
+            }
+            this.executeVerifyCard(card.id, 'rejected', reason);
+            return true;
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async executeVerifyCard(id: number, decision: 'valid' | 'rejected', reason?: string) {
+    const loading = await this.loadingCtrl.create({
+      message: decision === 'valid' ? 'Memvalidasi kartu nama...' : 'Menolak kartu nama...'
+    });
+    await loading.present();
+
+    this.koService.verifyBusinessCard(id, decision, reason).subscribe({
+      next: async (res) => {
+        await loading.dismiss();
+        await this.showToast(
+          res?.message || (decision === 'valid' ? 'Kartu nama berhasil divalidasi (Valid)!' : 'Kartu nama ditolak.'),
+          decision === 'valid' ? 'success' : 'warning'
+        );
+        this.loadBusinessCards();
+      },
+      error: async (err) => {
+        await loading.dismiss();
+        await this.showToast(err.error?.message || 'Gagal memvalidasi kartu nama.', 'danger');
+      }
+    });
+  }
+
+  openExternalLink(url?: string | null) {
+    if (!url) return;
+    window.open(url, '_blank');
+  }
+
+  // ==========================================
+  // BYPASS CHECK-OUT DRIVER
+  // ==========================================
   openBypassModal(driver?: PosCrossCheckDriver) {
     this.bypassAttendanceId = driver?.attendance_id ?? null;
     this.bypassDriverName = driver?.driver_name || '';
@@ -415,9 +544,12 @@ export class KoDeliveriesPage implements OnInit {
   getStatusColor(status: string): string {
     switch (status) {
       case 'approved':
+      case 'valid':
         return 'success';
       case 'rejected':
         return 'danger';
+      case 'flagged_duplicate':
+        return 'warning';
       case 'pending':
       default:
         return 'warning';
@@ -428,8 +560,12 @@ export class KoDeliveriesPage implements OnInit {
     switch (status) {
       case 'approved':
         return 'Disetujui';
+      case 'valid':
+        return 'Valid';
       case 'rejected':
         return 'Ditolak';
+      case 'flagged_duplicate':
+        return 'Duplikat';
       case 'pending':
       default:
         return 'Menunggu';
@@ -437,7 +573,11 @@ export class KoDeliveriesPage implements OnInit {
   }
 
   doRefresh(event: any) {
-    this.loadDeliveries(event);
+    if (this.mainApprovalSection === 'deliveries') {
+      this.loadDeliveries(event);
+    } else {
+      this.loadBusinessCards(event);
+    }
   }
 
   async showToast(message: string, color: 'success' | 'warning' | 'danger') {

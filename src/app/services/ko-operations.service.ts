@@ -112,7 +112,31 @@ export class KoOperationsService {
   }
 
   // ==========================================
-  // C. ESTIMASI KPI BULANAN KO
+  // C. VALIDASI KARTU NAMA / PROSPEK PELANGGAN
+  // ==========================================
+
+  getBusinessCards(params?: {
+    date?: string;
+    month?: string;
+    status?: string;
+    driver_id?: number;
+  }): Observable<ApiResponse<{ branch_id: number; cards: any[]; pending_count: number; total_count: number }>> {
+    return this.apiClient.get('ko/business-cards', params);
+  }
+
+  verifyBusinessCard(
+    id: number,
+    decision: 'valid' | 'rejected',
+    rejection_reason?: string
+  ): Observable<ApiResponse<any>> {
+    return this.apiClient.post(`ko/business-cards/${id}/verify`, {
+      decision,
+      rejection_reason,
+    });
+  }
+
+  // ==========================================
+  // D. ESTIMASI KPI BULANAN KO
   // ==========================================
 
   getKpiSummary(month?: string): Observable<ApiResponse<KoKpiSummary>> {

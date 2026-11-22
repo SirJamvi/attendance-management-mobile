@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
   <ion-toolbar color="primary">
-    <ion-title>Approval Delivery</ion-title>
+    <ion-title>Approval Operasional KO</ion-title>
     <ion-buttons slot="end">
       <app-branch-badge></app-branch-badge>
     </ion-buttons>
@@ -12,213 +12,359 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- Date & Bypass Header Bar -->
+  <!-- Segment Utama: Pengiriman Bal vs Kartu Nama Prospek -->
+  <ion-segment [(ngModel)]="mainApprovalSection" (ionChange)="onMainSectionChange()" class="main-approval-segment ion-margin-bottom">
+    <ion-segment-button value="deliveries">
+      <ion-icon name="cube-outline"></ion-icon>
+      <ion-label>Pengiriman Bal ({{ driverGroups.length }})</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="business_cards">
+      <ion-icon name="card-outline"></ion-icon>
+      <ion-label>Kartu Nama ({{ pendingBusinessCardsCount }})</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- Date & Top Bar -->
   <div class="top-controls">
     <div class="date-input-wrap">
       <ion-icon name="calendar-outline" color="primary"></ion-icon>
-      <input type="date" [(ngModel)]="selectedDate" (change)="loadDeliveries()" />
+      <input type="date" [(ngModel)]="selectedDate" (change)="onMainSectionChange()" />
     </div>
-    <ion-button size="small" fill="outline" color="tertiary" (click)="openBypassModal()">
+
+    <!-- Tombol Bypass Check-Out hanya di tab Pengiriman -->
+    <ion-button *ngIf="mainApprovalSection === 'deliveries'" size="small" fill="outline" color="tertiary" (click)="openBypassModal()">
       <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
       Bypass Pulang
     </ion-button>
   </div>
 
-  <!-- Status Filter Segment -->
-  <ion-segment [(ngModel)]="selectedStatus" (ionChange)="loadDeliveries()" class="status-segment">
-    <ion-segment-button value="pending">
-      <ion-label>Pending</ion-label>
-    </ion-segment-button>
-    <ion-segment-button value="approved">
-      <ion-label>Approved</ion-label>
-    </ion-segment-button>
-    <ion-segment-button value="rejected">
-      <ion-label>Rejected</ion-label>
-    </ion-segment-button>
-    <ion-segment-button value="">
-      <ion-label>Semua</ion-label>
-    </ion-segment-button>
-  </ion-segment>
+  <!-- ========================================================= -->
+  <!-- BAGIAN 1: APPROVAL PENGIRIMAN BAL DRIVER                   -->
+  <!-- ========================================================= -->
+  <div *ngIf="mainApprovalSection === 'deliveries'">
+    <!-- Status Filter Segment -->
+    <ion-segment [(ngModel)]="selectedStatus" (ionChange)="loadDeliveries()" class="status-segment">
+      <ion-segment-button value="pending">
+        <ion-label>Pending</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="approved">
+        <ion-label>Approved</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="rejected">
+        <ion-label>Rejected</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="">
+        <ion-label>Semua</ion-label>
+      </ion-segment-button>
+    </ion-segment>
 
-  <div *ngIf="isLoading" class="center-state">
-    <ion-spinner name="crescent" color="primary"></ion-spinner>
-    <p>Memuat data delivery & rekonsiliasi POS...</p>
-  </div>
-
-  <div *ngIf="!isLoading && errorMsg" class="center-state">
-    <ion-icon name="alert-circle-outline" color="danger" style="font-size: 44px;"></ion-icon>
-    <p>{{ errorMsg }}</p>
-    <ion-button fill="outline" size="small" (click)="loadDeliveries()">Muat Ulang</ion-button>
-  </div>
-
-  <div *ngIf="!isLoading && !errorMsg">
-
-    <!-- PANEL ATAS: CROSS-CHECK POS BUKUDIG -->
-    <div *ngIf="posCrossCheck.length > 0" class="section-block">
-      <div class="section-title">
-        <ion-icon name="cash-outline" color="primary"></ion-icon>
-        <span>Cross-Check POS BukuDig per Driver</span>
-      </div>
-
-      <ion-card
-        *ngFor="let drv of posCrossCheck"
-        class="pos-card"
-        [class.anomaly]="drv.is_anomaly">
-        <ion-card-header>
-          <div class="pos-header-row">
-            <div>
-              <ion-card-title>{{ drv.driver_name }}</ion-card-title>
-              <ion-card-subtitle *ngIf="drv.unsettled_hold_count > 0" color="warning">
-                {{ drv.unsettled_hold_count }} transaksi POS masih Hold / Delivering
-              </ion-card-subtitle>
-            </div>
-            <ion-badge *ngIf="drv.is_anomaly" color="danger">ANOMALI</ion-badge>
-            <ion-badge *ngIf="!drv.is_anomaly" color="success">SINKRON</ion-badge>
-          </div>
-        </ion-card-header>
-
-        <ion-card-content>
-          <div class="pos-compare-grid">
-            <div class="pos-metric">
-              <span class="label">Bal Driver vs POS</span>
-              <strong>{{ drv.total_balls_driver }} vs {{ drv.total_balls_pos }} bal</strong>
-            </div>
-            <div class="pos-metric">
-              <span class="label">Cash Driver vs POS</span>
-              <strong>
-                {{ drv.total_cash_driver | currency:'IDR':'Rp ':'1.0-0' }} /
-                {{ drv.total_cash_expected_from_driver | currency:'IDR':'Rp ':'1.0-0' }}
-              </strong>
-            </div>
-            <div class="pos-metric">
-              <span class="label">Hold / Delivering POS</span>
-              <strong>{{ drv.unsettled_hold_count }} order</strong>
-            </div>
-          </div>
-
-          <div *ngIf="drv.is_anomaly && drv.anomaly_reasons?.length" class="anomaly-box">
-            <div class="anomaly-heading">
-              <ion-icon name="warning-outline" color="danger"></ion-icon>
-              <strong>Alasan Anomali:</strong>
-            </div>
-            <ul>
-              <li *ngFor="let r of drv.anomaly_reasons">{{ r }}</li>
-            </ul>
-          </div>
-
-          <div class="pos-actions" *ngIf="drv.attendance_id">
-            <ion-badge *ngIf="drv.bypass_applied" color="success">
-              Bypass Pulang Aktif
-            </ion-badge>
-            <ion-button
-              *ngIf="!drv.bypass_applied"
-              size="small"
-              fill="outline"
-              color="tertiary"
-              (click)="openBypassModal(drv)">
-              <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
-              Bypass Pulang Driver Ini
-            </ion-button>
-          </div>
-        </ion-card-content>
-      </ion-card>
+    <div *ngIf="isLoading" class="center-state">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Memuat data delivery & rekonsiliasi POS...</p>
     </div>
 
-    <!-- DAFTAR PENGIRIMAN DIKELOMPOKKAN PER DRIVER (SINGLE CONTAINER PER DRIVER) -->
-    <div class="section-block">
+    <div *ngIf="!isLoading && errorMsg" class="center-state">
+      <ion-icon name="alert-circle-outline" color="danger" style="font-size: 44px;"></ion-icon>
+      <p>{{ errorMsg }}</p>
+      <ion-button fill="outline" size="small" (click)="loadDeliveries()">Muat Ulang</ion-button>
+    </div>
+
+    <div *ngIf="!isLoading && !errorMsg">
+      <!-- PANEL ATAS: CROSS-CHECK POS BUKUDIG -->
+      <div *ngIf="posCrossCheck.length > 0" class="section-block">
+        <div class="section-title">
+          <ion-icon name="cash-outline" color="primary"></ion-icon>
+          <span>Cross-Check POS BukuDig per Driver</span>
+        </div>
+
+        <ion-card
+          *ngFor="let drv of posCrossCheck"
+          class="pos-card"
+          [class.anomaly]="drv.is_anomaly">
+          <ion-card-header>
+            <div class="pos-header-row">
+              <div>
+                <ion-card-title>{{ drv.driver_name }}</ion-card-title>
+                <ion-card-subtitle *ngIf="drv.unsettled_hold_count > 0" color="warning">
+                  {{ drv.unsettled_hold_count }} transaksi POS masih Hold / Delivering
+                </ion-card-subtitle>
+              </div>
+              <ion-badge *ngIf="drv.is_anomaly" color="danger">ANOMALI</ion-badge>
+              <ion-badge *ngIf="!drv.is_anomaly" color="success">SINKRON</ion-badge>
+            </div>
+          </ion-card-header>
+
+          <ion-card-content>
+            <div class="pos-compare-grid">
+              <div class="pos-metric">
+                <span class="label">Bal Driver vs POS</span>
+                <strong>{{ drv.total_balls_driver }} vs {{ drv.total_balls_pos }} bal</strong>
+              </div>
+              <div class="pos-metric">
+                <span class="label">Cash Driver vs POS</span>
+                <strong>
+                  {{ drv.total_cash_driver | currency:'IDR':'Rp ':'1.0-0' }} /
+                  {{ drv.total_cash_expected_from_driver | currency:'IDR':'Rp ':'1.0-0' }}
+                </strong>
+              </div>
+              <div class="pos-metric">
+                <span class="label">Hold / Delivering POS</span>
+                <strong>{{ drv.unsettled_hold_count }} order</strong>
+              </div>
+            </div>
+
+            <div *ngIf="drv.is_anomaly && drv.anomaly_reasons?.length" class="anomaly-box">
+              <div class="anomaly-heading">
+                <ion-icon name="warning-outline" color="danger"></ion-icon>
+                <strong>Alasan Anomali:</strong>
+              </div>
+              <ul>
+                <li *ngFor="let r of drv.anomaly_reasons">{{ r }}</li>
+              </ul>
+            </div>
+
+            <div class="pos-actions" *ngIf="drv.attendance_id">
+              <ion-badge *ngIf="drv.bypass_applied" color="success">
+                Bypass Pulang Aktif
+              </ion-badge>
+              <ion-button
+                *ngIf="!drv.bypass_applied"
+                size="small"
+                fill="outline"
+                color="tertiary"
+                (click)="openBypassModal(drv)">
+                <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
+                Bypass Pulang Driver Ini
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+
+      <!-- DAFTAR PENGIRIMAN DIKELOMPOKKAN PER DRIVER (SINGLE CONTAINER PER DRIVER) -->
+      <div class="section-block">
+        <div class="section-title">
+          <ion-icon name="layers-outline" color="primary"></ion-icon>
+          <span>Pengiriman Driver Hari Ini ({{ driverGroups.length }} Driver Aktif)</span>
+        </div>
+
+        <div *ngIf="driverGroups.length === 0" class="empty-state">
+          <ion-icon name="cube-outline" style="font-size: 40px; color: #94a3b8; margin-bottom: 8px;"></ion-icon>
+          <p>Tidak ada data pengiriman driver pada tanggal & status ini.</p>
+        </div>
+
+        <!-- CONTAINER PER DRIVER -->
+        <ion-card *ngFor="let group of driverGroups" class="driver-group-card">
+          <ion-card-content>
+            <div class="group-header" (click)="openGroupDetail(group)">
+              <div class="driver-profile">
+                <div class="avatar-circle">
+                  <ion-icon name="person-outline"></ion-icon>
+                </div>
+                <div class="driver-meta">
+                  <h3 class="driver-name">{{ group.driver_name }}</h3>
+                  <span class="vehicle-sub" *ngIf="group.vehicle_name">
+                    <ion-icon name="bicycle-outline"></ion-icon>
+                    {{ group.vehicle_name }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="badge-stack">
+                <ion-badge *ngIf="group.pending_count > 0" color="warning">
+                  {{ group.pending_count }} Menunggu
+                </ion-badge>
+                <ion-badge *ngIf="group.pending_count === 0 && group.rejected_count === 0" color="success">
+                  {{ group.approved_count }} Approved
+                </ion-badge>
+                <ion-badge *ngIf="group.rejected_count > 0" color="danger">
+                  {{ group.rejected_count }} Ditolak
+                </ion-badge>
+                <ion-badge *ngIf="group.has_manual_input" color="tertiary" fill="outline">
+                  Input Manual
+                </ion-badge>
+              </div>
+            </div>
+
+            <!-- Rincian Bal Variant & Total Setoran Kas -->
+            <div class="group-stats-box" (click)="openGroupDetail(group)">
+              <div class="stat-row">
+                <span class="stat-label">Total Pengiriman:</span>
+                <strong class="stat-value">{{ group.total_orders }} Toko · {{ group.total_balls }} Bal ({{ group.total_weight_kg }} kg)</strong>
+              </div>
+
+              <div class="qty-pills">
+                <span *ngIf="group.qty_20kg > 0" class="qty-pill">20kg: <b>{{ group.qty_20kg }}</b></span>
+                <span *ngIf="group.qty_15kg > 0" class="qty-pill">15kg: <b>{{ group.qty_15kg }}</b></span>
+                <span *ngIf="group.qty_10kg > 0" class="qty-pill">10kg: <b>{{ group.qty_10kg }}</b></span>
+                <span *ngIf="group.qty_5kg > 0" class="qty-pill">5kg: <b>{{ group.qty_5kg }}</b></span>
+              </div>
+
+              <div class="stat-row ion-margin-top-xs">
+                <span class="stat-label">Total Setoran Kasir:</span>
+                <strong class="stat-cash">{{ group.total_cash | currency:'IDR':'Rp ':'1.0-0' }}</strong>
+              </div>
+            </div>
+
+            <div class="group-actions">
+              <ion-button
+                size="small"
+                fill="outline"
+                color="primary"
+                (click)="openGroupDetail(group)">
+                <ion-icon name="eye-outline" slot="start"></ion-icon>
+                Rincian Toko ({{ group.total_orders }})
+              </ion-button>
+
+              <ion-button
+                *ngIf="group.pending_count > 0"
+                size="small"
+                color="success"
+                (click)="approveAllForDriver(group, $event)">
+                <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+                Approve Semua ({{ group.pending_count }})
+              </ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- BAGIAN 2: VALIDASI KARTU NAMA / PROSPEK DRIVER             -->
+  <!-- ========================================================= -->
+  <div *ngIf="mainApprovalSection === 'business_cards'">
+    <!-- Status Filter Segment Kartu Nama -->
+    <ion-segment [(ngModel)]="cardStatusFilter" (ionChange)="loadBusinessCards()" class="status-segment">
+      <ion-segment-button value="pending">
+        <ion-label>Menunggu ({{ pendingBusinessCardsCount }})</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="valid">
+        <ion-label>Valid</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="rejected">
+        <ion-label>Ditolak</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="">
+        <ion-label>Semua</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <div *ngIf="isLoadingCards" class="center-state">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Memuat pengajuan kartu nama pelanggan...</p>
+    </div>
+
+    <div *ngIf="!isLoadingCards">
       <div class="section-title">
-        <ion-icon name="layers-outline" color="primary"></ion-icon>
-        <span>Pengiriman Driver Hari Ini ({{ driverGroups.length }} Driver Aktif)</span>
+        <ion-icon name="card-outline" color="primary"></ion-icon>
+        <span>Validasi Bukti Kartu Nama Prospek ({{ businessCards.length }})</span>
       </div>
 
-      <div *ngIf="driverGroups.length === 0" class="empty-state">
-        <ion-icon name="cube-outline" style="font-size: 40px; color: #94a3b8; margin-bottom: 8px;"></ion-icon>
-        <p>Tidak ada data pengiriman driver pada tanggal & status ini.</p>
+      <div *ngIf="businessCards.length === 0" class="empty-state">
+        <ion-icon name="card-outline" style="font-size: 40px; color: #94a3b8; margin-bottom: 8px;"></ion-icon>
+        <p>Tidak ada pengajuan kartu nama pada filter ini.</p>
       </div>
 
-      <!-- CONTAINER PER DRIVER -->
-      <ion-card *ngFor="let group of driverGroups" class="driver-group-card">
+      <!-- KARTU PENYERAHAN KARTU NAMA -->
+      <ion-card *ngFor="let card of businessCards" class="business-card-item">
         <ion-card-content>
-          <!-- Header Driver & Badge Status -->
-          <div class="group-header" (click)="openGroupDetail(group)">
-            <div class="driver-profile">
-              <div class="avatar-circle">
-                <ion-icon name="person-outline"></ion-icon>
-              </div>
-              <div class="driver-meta">
-                <h3 class="driver-name">{{ group.driver_name }}</h3>
-                <span class="vehicle-sub" *ngIf="group.vehicle_name">
-                  <ion-icon name="bicycle-outline"></ion-icon>
-                  {{ group.vehicle_name }}
-                </span>
-              </div>
+          <!-- Header: Driver & Status Badge -->
+          <div class="card-item-header">
+            <div class="driver-chip">
+              <ion-icon name="person-outline"></ion-icon>
+              <span>{{ card.user?.name || 'Driver' }}</span>
+              <span class="date-chip">· {{ card.submission_date }}</span>
+            </div>
+            <ion-badge [color]="getStatusColor(card.status)">
+              {{ card.verified_by ? getStatusLabel(card.status) : 'Menunggu KO' }}
+            </ion-badge>
+          </div>
+
+          <!-- Info Toko / Calon Pelanggan -->
+          <div class="customer-info-box">
+            <h3 class="customer-title">{{ card.customer_name }}</h3>
+
+            <div class="customer-contact-row">
+              <span class="phone-number">
+                <ion-icon name="call-outline"></ion-icon>
+                {{ card.customer_phone }}
+              </span>
+              <ion-button
+                *ngIf="card.whatsapp_url"
+                size="small"
+                fill="outline"
+                color="success"
+                class="wa-btn"
+                (click)="openExternalLink(card.whatsapp_url)">
+                <ion-icon name="logo-whatsapp" slot="start"></ion-icon>
+                Chat WA
+              </ion-button>
             </div>
 
-            <div class="badge-stack">
-              <!-- Pending Badge -->
-              <ion-badge *ngIf="group.pending_count > 0" color="warning">
-                {{ group.pending_count }} Menunggu
-              </ion-badge>
-              <!-- All Approved Badge -->
-              <ion-badge *ngIf="group.pending_count === 0 && group.rejected_count === 0" color="success">
-                {{ group.approved_count }} Approved
-              </ion-badge>
-              <!-- Rejected Badge -->
-              <ion-badge *ngIf="group.rejected_count > 0" color="danger">
-                {{ group.rejected_count }} Ditolak
-              </ion-badge>
-              <!-- Manual Input Badge -->
-              <ion-badge *ngIf="group.has_manual_input" color="tertiary" fill="outline">
-                Input Manual
-              </ion-badge>
+            <p *ngIf="card.address" class="address-text">
+              <ion-icon name="location-outline"></ion-icon>
+              {{ card.address }}
+              <a *ngIf="card.google_maps_url" (click)="openExternalLink(card.google_maps_url)" class="maps-link">
+                (Buka Maps)
+              </a>
+            </p>
+
+            <p *ngIf="card.notes" class="notes-text">
+              <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+              <span>{{ card.notes }}</span>
+            </p>
+          </div>
+
+          <!-- Foto Bukti Penyerahan Kartu Nama / Plang Toko -->
+          <div class="photo-section" *ngIf="card.photo_url || card.photo_path">
+            <div class="photo-thumb-wrap" (click)="viewPhoto(card.photo_url || card.photo_path)">
+              <img [src]="card.photo_url || ('https://attendance.eskristalkarawang.com/storage/' + card.photo_path)" alt="Bukti Kartu Nama" />
+              <div class="photo-overlay">
+                <ion-icon name="eye-outline"></ion-icon>
+                <span>Lihat Foto Asli</span>
+              </div>
             </div>
           </div>
 
-          <!-- Rincian Bal Variant & Total Setoran Kas -->
-          <div class="group-stats-box" (click)="openGroupDetail(group)">
-            <div class="stat-row">
-              <span class="stat-label">Total Pengiriman:</span>
-              <strong class="stat-value">{{ group.total_orders }} Toko · {{ group.total_balls }} Bal ({{ group.total_weight_kg }} kg)</strong>
-            </div>
-
-            <!-- Variant Bal Breakdown -->
-            <div class="qty-pills">
-              <span *ngIf="group.qty_20kg > 0" class="qty-pill">20kg: <b>{{ group.qty_20kg }}</b></span>
-              <span *ngIf="group.qty_15kg > 0" class="qty-pill">15kg: <b>{{ group.qty_15kg }}</b></span>
-              <span *ngIf="group.qty_10kg > 0" class="qty-pill">10kg: <b>{{ group.qty_10kg }}</b></span>
-              <span *ngIf="group.qty_5kg > 0" class="qty-pill">5kg: <b>{{ group.qty_5kg }}</b></span>
-            </div>
-
-            <div class="stat-row ion-margin-top-xs">
-              <span class="stat-label">Total Setoran Kasir:</span>
-              <strong class="stat-cash">{{ group.total_cash | currency:'IDR':'Rp ':'1.0-0' }}</strong>
-            </div>
+          <!-- Verifier Metadata (Jika Sudah Diverifikasi/Ditolak) -->
+          <div *ngIf="card.verified_by" class="verifier-meta-box">
+            <ion-icon name="shield-checkmark-outline" color="success" *ngIf="card.status === 'valid'"></ion-icon>
+            <ion-icon name="alert-circle-outline" color="danger" *ngIf="card.status === 'rejected'"></ion-icon>
+            <span>
+              {{ card.status === 'valid' ? 'Diverifikasi' : 'Ditolak' }} oleh
+              <strong>{{ card.verifier?.name || 'KO' }}</strong>
+              <ng-container *ngIf="card.verified_at"> pada {{ card.verified_at | date:'dd/MM/yyyy HH:mm' }} WIB</ng-container>
+            </span>
           </div>
 
-          <!-- Tombol Aksi Container KO -->
-          <div class="group-actions">
+          <div *ngIf="card.status === 'rejected' && card.rejection_reason" class="rejection-box">
+            Alasan penolakan: {{ card.rejection_reason }}
+          </div>
+
+          <!-- Tombol Aksi KO: Verifikasi & Tolak -->
+          <div class="card-action-row" *ngIf="!card.verified_by || card.status === 'pending'">
             <ion-button
               size="small"
               fill="outline"
-              color="primary"
-              (click)="openGroupDetail(group)">
-              <ion-icon name="eye-outline" slot="start"></ion-icon>
-              Rincian Toko ({{ group.total_orders }})
+              color="danger"
+              (click)="promptRejectCard(card)">
+              <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+              Tolak
             </ion-button>
 
             <ion-button
-              *ngIf="group.pending_count > 0"
               size="small"
               color="success"
-              (click)="approveAllForDriver(group, $event)">
-              <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
-              Approve Semua ({{ group.pending_count }})
+              (click)="promptApproveCard(card)">
+              <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+              Validasi (Setujui)
             </ion-button>
           </div>
         </ion-card-content>
       </ion-card>
     </div>
-
   </div>
 
   <div style="height: 84px;"></div>
