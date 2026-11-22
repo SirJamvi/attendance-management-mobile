@@ -70,6 +70,11 @@ Dokumen ini berisi seluruh ringkasan arsitektur, basis data, aturan bisnis, dan 
   - Ringkasan container: Nama Driver, Armada, Badge Pending/Approved, Total Bal per Varian, Total Setoran Kasir.
   - **Tombol "Rincian Toko"**: Membuka modal detail toko untuk melihat foto kartu nama dan pembayaran.
   - **Tombol "Approve Semua (X)"**: Batch approval 1 klik melalui `POST /api/v1/ko/deliveries/approve-driver-batch`.
+* **Validasi Kartu Nama Pelanggan (Leads Prospek Baru)**:
+  - Halaman Approval KO kini memiliki 2 sub-tab: **Pengiriman Bal** dan **Kartu Nama**.
+  - KO memeriksa calon pelanggan: Nama Toko, Nomor HP (tombol Chat WA 1-klik), alamat, catatan, titik GPS Maps, dan foto kartu nama/plang toko.
+  - **Tombol "Validasi (Setujui)"**: Mengesahkan kartu nama sebagai `valid` (`verified_by = $ko->id`).
+  - **Tombol "Tolak"**: Memasukkan alasan penolakan (misal: foto buram / bukan toko asli). Kartu yang ditolak otomatis gugur dari perhitungan KPI mingguan/bulanan driver.
 * **Notifikasi Suara Live**:
   - Halaman checksheet KO memiliki audio chime + toast alert saat driver mengunggah inspeksi motor baru.
 
