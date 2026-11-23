@@ -245,6 +245,7 @@ export interface ChecksheetFormField {
   field_key?: string;
   label: string;
   field_type: ChecksheetFieldType;
+  photo_category?: string | null;
   required?: boolean;
   is_required?: boolean;
   placeholder?: string | null;
@@ -260,6 +261,7 @@ export interface ChecksheetFormSchema {
   title: string;
   description?: string | null;
   requires_vehicle?: boolean;
+  requires_pos_reconciliation?: boolean;
   fields: ChecksheetFormField[];
   active_schedules?: any[];
   activeSchedules?: any[];

@@ -201,6 +201,198 @@ export class ChecksheetFormPage implements OnInit {
         ]
       };
     }
+
+    if (slug === 'ko-followup-kasbon') {
+      return {
+        id: 0,
+        slug: 'ko-followup-kasbon',
+        title: 'Follow-Up Kasbon Pelanggan',
+        description: 'Rekap dan tindak lanjut tagihan kasbon pelanggan yang belum lunas pada jam siang.',
+        requires_vehicle: false,
+        fields: [
+          {
+            field_key: 'unpaid_customers_summary',
+            label: 'Ringkasan Pelanggan Kasbon Belum Lunas',
+            field_type: 'textarea',
+            is_required: true,
+            placeholder: 'Tuliskan nama toko / pelanggan dan nominal kasbon yang belum lunas...',
+            sort_order: 1,
+          },
+          {
+            field_key: 'followup_status',
+            label: 'Status Follow-Up',
+            field_type: 'select',
+            options: ['Sudah Dihubungi Semua', 'Sebagian Dihubungi', 'Semua Lunas', 'Tidak Ada Kasbon'],
+            is_required: true,
+            sort_order: 2,
+          },
+          {
+            field_key: 'followup_photo',
+            label: 'Bukti Screenshot / Foto Follow-Up (Opsional)',
+            field_type: 'photo',
+            photo_category: 'followup_photo',
+            is_required: false,
+            sort_order: 3,
+          },
+        ]
+      };
+    }
+
+    if (slug === 'kasir-closing-pos') {
+      return {
+        id: 0,
+        slug: 'kasir-closing-pos',
+        title: 'Closing POS & Rekap Kas Laci Sore',
+        description: 'Hitung fisik uang di laci kasir (Blind Count). Sistem otomatis membandingkan dengan expected cash POS.',
+        requires_vehicle: false,
+        requires_pos_reconciliation: true,
+        fields: [
+          {
+            field_key: 'actual_cash',
+            label: 'Total Fisik Uang di Laci Kasir (Rp)',
+            field_type: 'currency',
+            is_required: true,
+            placeholder: 'Masukkan total uang fisik kasir...',
+            sort_order: 1,
+          },
+          {
+            field_key: 'cash_drawer_photo',
+            label: 'Foto Laci Kasir & Fisik Uang',
+            field_type: 'photo',
+            photo_category: 'cash_drawer_photo',
+            is_required: true,
+            sort_order: 2,
+          },
+          {
+            field_key: 'closing_notes',
+            label: 'Catatan Closing Kasir (Opsional)',
+            field_type: 'textarea',
+            is_required: false,
+            placeholder: 'Catatan jika ada selisih kas...',
+            sort_order: 3,
+          },
+        ]
+      };
+    }
+
+    if (slug === 'ko-opname-stok') {
+      return {
+        id: 0,
+        slug: 'ko-opname-stok',
+        title: 'Opname Stok & Cek Freezer',
+        description: 'Hitung stok fisik es di freezer dan unggah foto kondisi freezer per fase.',
+        requires_vehicle: false,
+        fields: [
+          {
+            field_key: 'actual_stock',
+            label: 'Total Stok Bal Es (Fisik)',
+            field_type: 'number',
+            is_required: true,
+            placeholder: 'Total bal es fisik di semua freezer...',
+            sort_order: 1,
+          },
+          {
+            field_key: 'freezer_photo',
+            label: 'Foto Kondisi Freezer & Es',
+            field_type: 'photo',
+            photo_category: 'freezer_photo',
+            is_required: true,
+            sort_order: 2,
+          },
+          {
+            field_key: 'opname_notes',
+            label: 'Catatan Opname',
+            field_type: 'textarea',
+            is_required: false,
+            placeholder: 'Catatan kondisi es / freezer...',
+            sort_order: 3,
+          },
+        ]
+      };
+    }
+
+    if (slug === 'ko-gatepass-rute-jauh') {
+      return {
+        id: 0,
+        slug: 'ko-gatepass-rute-jauh',
+        title: 'Gate-Pass Rute Jauh',
+        description: 'Form insidental surat jalan dan bukti terpal sebelum driver berangkat ke rute jauh.',
+        requires_vehicle: true,
+        fields: [
+          {
+            field_key: 'driver_id',
+            label: 'Driver Pengantar',
+            field_type: 'number',
+            is_required: true,
+            sort_order: 1,
+          },
+          {
+            field_key: 'destination_area',
+            label: 'Area Tujuan / Rute',
+            field_type: 'text',
+            is_required: true,
+            sort_order: 2,
+          },
+          {
+            field_key: 'quantity_ball',
+            label: 'Jumlah Muatan (Bal)',
+            field_type: 'number',
+            is_required: true,
+            sort_order: 3,
+          },
+          {
+            field_key: 'tarp_photo',
+            label: 'Foto Muatan & Terpal Armada',
+            field_type: 'photo',
+            photo_category: 'tarp_photo',
+            is_required: true,
+            sort_order: 4,
+          },
+        ]
+      };
+    }
+
+    if (slug === 'ko-mutasi-cabang') {
+      return {
+        id: 0,
+        slug: 'ko-mutasi-cabang',
+        title: 'Mutasi Stok Antar Cabang',
+        description: 'Form insidental pencatatan perpindahan stok es antar depot/cabang.',
+        requires_vehicle: false,
+        fields: [
+          {
+            field_key: 'target_branch_name',
+            label: 'Cabang Tujuan Mutasi',
+            field_type: 'text',
+            is_required: true,
+            sort_order: 1,
+          },
+          {
+            field_key: 'quantity_ball',
+            label: 'Jumlah Bal Dimutasi',
+            field_type: 'number',
+            is_required: true,
+            sort_order: 2,
+          },
+          {
+            field_key: 'courier_name',
+            label: 'Nama Pengantar / Kurir',
+            field_type: 'text',
+            is_required: true,
+            sort_order: 3,
+          },
+          {
+            field_key: 'delivery_note_photo',
+            label: 'Foto Surat Jalan / Bukti Mutasi',
+            field_type: 'photo',
+            photo_category: 'delivery_note_photo',
+            is_required: true,
+            sort_order: 4,
+          },
+        ]
+      };
+    }
+
     return null;
   }
 

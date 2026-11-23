@@ -5,7 +5,8 @@ ion-content {
 .date-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 12px;
 }
 
@@ -15,15 +16,19 @@ ion-content {
   gap: 8px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 6px 12px;
   cursor: pointer;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  flex: 1 1 135px;
+  min-width: 130px;
+  height: 42px;
 
   ion-icon {
     font-size: 18px;
     pointer-events: none;
+    flex-shrink: 0;
   }
 
   input[type='date'] {
@@ -34,12 +39,14 @@ ion-content {
     font-weight: 600;
     color: #1e293b;
     cursor: pointer;
+    width: 100%;
   }
 }
 
 .history-btn {
   font-weight: 600;
   --color: #0284c7;
+  flex-shrink: 0;
 }
 
 .branch-input-wrap {
@@ -51,10 +58,13 @@ ion-content {
   border-radius: 12px;
   padding: 6px 10px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  flex: 1;
+  flex: 1 1 150px;
+  min-width: 140px;
+  height: 42px;
+  position: relative;
 
   ion-icon {
-    font-size: 16px;
+    font-size: 18px;
     color: var(--ion-color-primary, #06324D);
     flex-shrink: 0;
   }
@@ -67,7 +77,10 @@ ion-content {
     font-weight: 600;
     color: #1e293b;
     width: 100%;
+    min-width: 100px;
     cursor: pointer;
+    -webkit-appearance: menulist;
+    appearance: menulist;
   }
 }
 

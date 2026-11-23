@@ -27,8 +27,8 @@
     <div class="branch-input-wrap" *ngIf="branches.length > 0">
       <ion-icon name="storefront-outline"></ion-icon>
       <select [(ngModel)]="selectedBranchId" (change)="onBranchFilterChanged()">
-        <option value="all">🏢 Semua Cabang</option>
-        <option *ngFor="let b of branches" [value]="b.id">{{ b.name }}</option>
+        <option [ngValue]="'all'">🏢 Semua Cabang</option>
+        <option *ngFor="let b of branches" [ngValue]="b.id">{{ b.name }}</option>
       </select>
     </div>
 
