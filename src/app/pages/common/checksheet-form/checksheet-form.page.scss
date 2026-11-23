@@ -677,6 +677,17 @@ ion-content {
   margin-top: 10px;
 }
 
+.btn-wa-blast {
+  --background: #f59e0b;
+  --background-hover: #d97706;
+  --color: #ffffff;
+  --border-radius: 10px;
+  font-weight: 800;
+  font-size: 0.88rem;
+  text-transform: none;
+  margin-bottom: 8px;
+}
+
 .btn-wa-wide {
   --background: #10b981;
   --background-hover: #059669;
@@ -685,4 +696,125 @@ ion-content {
   font-size: 0.85rem;
   text-transform: none;
   margin: 0;
+}
+
+// === QUEUE WIZARD MODAL ===
+.queue-progress-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.queue-step-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #1e293b;
+  margin-bottom: 8px;
+
+  strong {
+    color: #10b981;
+    font-size: 0.95rem;
+  }
+}
+
+.queue-card {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin-bottom: 16px;
+}
+
+.queue-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 12px;
+
+  h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #0f172a;
+  }
+}
+
+.queue-amount {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #dc2626;
+}
+
+.queue-meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.queue-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+
+  .meta-label {
+    color: #64748b;
+  }
+
+  .meta-value {
+    font-weight: 600;
+    color: #1e293b;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+.queue-preview-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+
+  label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.queue-preview-text {
+  font-size: 0.78rem;
+  color: #334155;
+  white-space: pre-wrap;
+  line-height: 1.45;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.queue-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-send-next {
+  --border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-transform: none;
 }

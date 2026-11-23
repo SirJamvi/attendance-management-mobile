@@ -14,8 +14,8 @@ export class ApiClient {
   private router = inject(Router);
   private apiUrl = environment.apiUrl;
 
-  // Max 12 seconds per request so UI never hangs indefinitely on mobile
-  private readonly REQUEST_TIMEOUT_MS = 12000;
+  // Max 25 seconds per request to tolerate mobile network fluctuations
+  private readonly REQUEST_TIMEOUT_MS = 25000;
 
   private unauthorizedSubject = new Subject<void>();
   public readonly unauthorized$ = this.unauthorizedSubject.asObservable();

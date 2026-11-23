@@ -7,6 +7,7 @@ import {
   IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
   IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption,
   IonCheckbox, IonButton, IonIcon, IonSpinner, IonBadge, IonModal,
+  IonProgressBar,
   AlertController, LoadingController, ToastController, NavController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -15,7 +16,8 @@ import {
   checkmarkCircleOutline, alertCircleOutline, eyeOffOutline, warningOutline,
   carOutline, personOutline, closeOutline, sendOutline, snowOutline,
   logoWhatsapp, receiptOutline, chevronDownOutline, chevronUpOutline,
-  shareSocialOutline, storefrontOutline
+  shareSocialOutline, storefrontOutline, flashOutline, arrowForwardOutline,
+  playForwardOutline, checkmarkDoneOutline
 } from 'ionicons/icons';
 import { CameraDirection } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
@@ -51,7 +53,8 @@ import {
     IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonBackButton,
     IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
     IonItem, IonInput, IonTextarea, IonSelect, IonSelectOption,
-    IonCheckbox, IonButton, IonIcon, IonSpinner, IonBadge, IonModal
+    IonCheckbox, IonButton, IonIcon, IonSpinner, IonBadge, IonModal,
+    IonProgressBar
   ]
 })
 export class ChecksheetFormPage implements OnInit {
@@ -97,13 +100,18 @@ export class ChecksheetFormPage implements OnInit {
   kasbonOverview: KasbonOverview | null = null;
   expandedCustomerKey: string | null = null;
 
+  // Sequential Queue Follow-Up Wizard
+  isQueueModalOpen = false;
+  currentQueueIndex = 0;
+
   constructor() {
     addIcons({
       cameraOutline, trashOutline, locationOutline, refreshOutline,
       checkmarkCircleOutline, alertCircleOutline, eyeOffOutline, warningOutline,
       carOutline, personOutline, closeOutline, sendOutline, snowOutline,
       logoWhatsapp, receiptOutline, chevronDownOutline, chevronUpOutline,
-      shareSocialOutline, storefrontOutline
+      shareSocialOutline, storefrontOutline, flashOutline, arrowForwardOutline,
+      playForwardOutline, checkmarkDoneOutline
     });
   }
 
@@ -626,32 +634,59 @@ export class ChecksheetFormPage implements OnInit {
     this.expandedCustomerKey = this.expandedCustomerKey === groupKey ? null : groupKey;
   }
 
-  shareCustomerKasbonWA(customer: KasbonCustomerItem) {
-    customer.followed_up = true;
-    if (this.kasbonOverview) {
-      const allFollowed = this.kasbonOverview.customers.every((c) => c.followed_up);
-      this.answers['followup_status'] = allFollowed
-        ? 'Sudah Dihubungi Semua'
-        : 'Sebagian Dihubungi';
-    }
+  get currentQueueCustomer(): KasbonCustomerItem | null {
+    if (!this.kasbonOverview || !this.kasbonOverview.customers.length) return null;
+    return this.kasbonOverview.customers[this.currentQueueIndex] || null;
+  }
 
-    let phone = customer.phone || '';
-    if (!phone) {
-      const input = prompt(`Masukkan nomor WhatsApp untuk ${customer.name} (contoh: 08123456789):`, '');
-      if (!input) return;
-      phone = input;
-    }
+  get queueProgress(): number {
+    if (!this.kasbonOverview || !this.kasbonOverview.customers.length) return 0;
+    return (this.currentQueueIndex + 1) / this.kasbonOverview.customers.length;
+  }
 
-    phone = phone.replace(/[^0-9]/g, '');
-    if (phone.startsWith('0')) {
-      phone = '62' + phone.substring(1);
-    } else if (phone.startsWith('8')) {
-      phone = '62' + phone;
+  startKasbonQueue() {
+    if (!this.kasbonOverview || !this.kasbonOverview.customers.length) {
+      this.showToast('Tidak ada data kasbon aktif untuk di-follow up.', 'warning');
+      return;
     }
+    const firstUnfollowed = this.kasbonOverview.customers.findIndex((c) => !c.followed_up);
+    this.currentQueueIndex = firstUnfollowed >= 0 ? firstUnfollowed : 0;
+    this.isQueueModalOpen = true;
+  }
 
-    let msg = `*TAGIHAN KASBON - ADIN CRYSTAL*\n`;
-    msg += `Yth. *${customer.name}*,\n\n`;
-    msg += `Berikut rincian tagihan pesanan Anda yang belum terselesaikan:\n`;
+  closeQueueModal() {
+    this.isQueueModalOpen = false;
+  }
+
+  sendAndNextQueueCustomer() {
+    const cust = this.currentQueueCustomer;
+    if (!cust) return;
+
+    this.shareCustomerKasbonWA(cust);
+
+    if (this.currentQueueIndex + 1 < (this.kasbonOverview?.customers.length || 0)) {
+      this.currentQueueIndex++;
+    } else {
+      this.isQueueModalOpen = false;
+      this.answers['followup_status'] = 'Sudah Dihubungi Semua';
+      this.showToast('Semua pelanggan telah selesai di-follow up via WhatsApp!', 'success');
+    }
+  }
+
+  skipQueueCustomer() {
+    if (this.currentQueueIndex + 1 < (this.kasbonOverview?.customers.length || 0)) {
+      this.currentQueueIndex++;
+    } else {
+      this.isQueueModalOpen = false;
+      this.showToast('Antrean follow-up selesai.', 'success');
+    }
+  }
+
+  generatePoliteKasbonMessage(customer: KasbonCustomerItem): string {
+    let msg = `Halo Kak / Yth. *${customer.name}*,\n`;
+    msg += `Semoga usahanya senantiasa lancar dan berkah. 🙏\n\n`;
+    msg += `Kami dari bagian administrasi *Adin Crystal* ingin mengonfirmasikan bahwa saat ini terdapat catatan tagihan pesanan es kristal yang belum terselesaikan:\n\n`;
+    msg += `📋 *Rincian Pesanan:* \n`;
     msg += `----------------------------------------\n`;
 
     customer.receipts.forEach((r, idx) => {
@@ -667,9 +702,37 @@ export class ChecksheetFormPage implements OnInit {
 
     msg += `----------------------------------------\n`;
     msg += `💰 *TOTAL TAGIHAN: Rp ${new Intl.NumberFormat('id-ID').format(customer.total_amount)}*\n\n`;
-    msg += `Mohon kesediaannya untuk segera melakukan pelunasan via Tunai / Transfer.\n`;
-    msg += `Terima kasih atas perhatian dan kerjasamanya! 🙏`;
+    msg += `Mohon kesediaannya untuk segera melakukan konfirmasi atau pelunasan melalui kasir depot terdekat / transfer ke rekening operasional kami.\n\n`;
+    msg += `_Apabila pembayaran telah diselesaikan, mohon abaikan pesan ini atau kirimkan bukti transfer kepada kami. Terima kasih banyak atas kerja sama dan kepercayaannya!_ 🙏✨`;
 
+    return msg;
+  }
+
+  shareCustomerKasbonWA(customer: KasbonCustomerItem) {
+    customer.followed_up = true;
+    if (this.kasbonOverview) {
+      const allFollowed = this.kasbonOverview.customers.every((c) => c.followed_up);
+      this.answers['followup_status'] = allFollowed
+        ? 'Sudah Dihubungi Semua'
+        : 'Sebagian Dihubungi';
+    }
+
+    let phone = customer.phone || '';
+    if (!phone) {
+      const input = prompt(`Masukkan nomor WhatsApp untuk ${customer.name} (contoh: 08123456789):`, '');
+      if (!input) return;
+      phone = input;
+      customer.phone = phone;
+    }
+
+    phone = phone.replace(/[^0-9]/g, '');
+    if (phone.startsWith('0')) {
+      phone = '62' + phone.substring(1);
+    } else if (phone.startsWith('8')) {
+      phone = '62' + phone;
+    }
+
+    const msg = this.generatePoliteKasbonMessage(customer);
     const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
     try {
       window.open(waUrl, '_system');
