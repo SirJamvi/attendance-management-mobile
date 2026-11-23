@@ -221,7 +221,7 @@
                 *ngIf="!v.completed"
                 size="small"
                 color="primary"
-                (click)="openVehicleInspection(slot, v)">
+                (click)="openVehicleInspection(slot, v); $event.stopPropagation()">
                 Cek Armada Ini
               </ion-button>
 
@@ -231,7 +231,7 @@
                 size="small"
                 color="tertiary"
                 fill="solid"
-                (click)="openVerifyModal(v)">
+                (click)="openVerifyModal(v); $event.stopPropagation()">
                 <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
                 Verifikasi
               </ion-button>
@@ -242,7 +242,7 @@
                 size="small"
                 color="medium"
                 fill="outline"
-                (click)="openVerifyModal(v)">
+                (click)="openVerifyModal(v); $event.stopPropagation()">
                 <ion-icon name="eye-outline" slot="start"></ion-icon>
                 Detail
               </ion-button>
@@ -267,7 +267,7 @@
             size="small"
             [color]="(slot.status === 'late' || slot.status === 'missed') ? 'warning' : 'primary'"
             class="ion-margin-top"
-            (click)="openSlotForm(slot)">
+            (click)="openSlotForm(slot); $event.stopPropagation()">
             <ion-icon name="document-text-outline" slot="start"></ion-icon>
             {{ (slot.status === 'late' || slot.status === 'missed') ? 'Isi Checksheet (Terlambat)' : 'Isi Checksheet' }}
           </ion-button>

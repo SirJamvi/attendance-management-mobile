@@ -294,11 +294,43 @@ export interface OpnameProductItem {
   notes?: string;
 }
 
+export interface KasbonReceiptItem {
+  id: string;
+  date: string;
+  branch: string;
+  cashier: string;
+  amount: number;
+  notes?: string | null;
+  products: string[];
+}
+
+export interface KasbonCustomerItem {
+  group_key: string;
+  customer_id?: number | null;
+  name: string;
+  phone?: string | null;
+  branches: string[];
+  struk_count: number;
+  oldest_order_date: string;
+  days_overdue: number;
+  total_amount: number;
+  receipts: KasbonReceiptItem[];
+  followed_up?: boolean;
+}
+
+export interface KasbonOverview {
+  total_customers: number;
+  total_struk: number;
+  total_amount: number;
+  customers: KasbonCustomerItem[];
+}
+
 export interface ChecksheetFormMeta {
   is_blind_count?: boolean;
   vehicles?: VehicleOption[];
   drivers?: DriverOption[];
   opname_products?: OpnameProductItem[];
+  kasbon_data?: KasbonOverview;
   active_schedule_id?: number | null;
 }
 

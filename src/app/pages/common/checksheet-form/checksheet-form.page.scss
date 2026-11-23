@@ -303,3 +303,386 @@ ion-content {
     border-color: var(--ion-color-primary, #3880ff);
   }
 }
+
+// === KASBON FOLLOW-UP REAL-TIME STYLING ===
+.kasbon-section {
+  margin-bottom: 14px;
+}
+
+.kasbon-loading-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px;
+  margin-bottom: 12px;
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.kasbon-hero-card {
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+  border-radius: 14px;
+  color: #ffffff;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.25);
+}
+
+.kasbon-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.kasbon-hero-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  font-size: 0.86rem;
+  letter-spacing: 0.5px;
+
+  ion-icon {
+    font-size: 1.15rem;
+    color: #fef08a;
+  }
+}
+
+.kasbon-pill-badge {
+  background: rgba(255, 255, 255, 0.22);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.kasbon-hero-body {
+  margin: 10px 0;
+}
+
+.kasbon-hero-desc {
+  font-size: 0.82rem;
+  opacity: 0.95;
+  margin: 0 0 10px;
+  line-height: 1.4;
+
+  strong {
+    color: #ffffff;
+  }
+}
+
+.kasbon-total-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #991b1b;
+}
+
+.total-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.total-nominal {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #dc2626;
+}
+
+.kasbon-hero-action {
+  margin-top: 12px;
+}
+
+.btn-wa-global {
+  --background: #10b981;
+  --background-hover: #059669;
+  --border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.86rem;
+  text-transform: none;
+  margin: 0;
+}
+
+.kasbon-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 14px 2px 8px;
+
+  span {
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #1e293b;
+  }
+
+  small {
+    font-size: 0.75rem;
+    color: #64748b;
+  }
+}
+
+.kasbon-empty-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px 16px;
+  text-align: center;
+
+  ion-icon {
+    font-size: 2.5rem;
+  }
+
+  h4 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 8px 0 4px;
+  }
+
+  p {
+    font-size: 0.82rem;
+    color: #64748b;
+    margin: 0;
+  }
+}
+
+.kasbon-cust-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.cust-card-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.cust-info {
+  flex: 1;
+}
+
+.cust-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.cust-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.followed-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.cust-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  margin-bottom: 6px;
+}
+
+.cust-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  color: #0f766e;
+}
+
+.cust-branches {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.branch-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.cust-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.badge-struk {
+  background: #475569;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+
+.badge-age {
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+
+  &.danger {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+}
+
+.cust-side-amount {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.cust-amount-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #dc2626;
+}
+
+.cust-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed #f1f5f9;
+}
+
+.btn-detail-struk {
+  --border-radius: 8px;
+  --color: #475569;
+  --border-color: #cbd5e1;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: none;
+}
+
+.btn-wa-cust {
+  --background: #10b981;
+  --background-hover: #059669;
+  --border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.receipts-accordion-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 10px;
+}
+
+.receipts-accordion-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.84rem;
+  color: #0f172a;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.receipt-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+}
+
+.receipt-item-title {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.receipt-date {
+  font-weight: 400;
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.receipt-item-meta {
+  color: #475569;
+  font-size: 0.72rem;
+  margin: 3px 0;
+  display: flex;
+  gap: 8px;
+}
+
+.receipt-item-products {
+  color: #1e293b;
+  margin: 4px 0;
+  font-size: 0.75rem;
+}
+
+.receipt-item-notes {
+  color: #64748b;
+  font-size: 0.72rem;
+  font-style: italic;
+}
+
+.receipt-item-subtotal {
+  text-align: right;
+  color: #dc2626;
+  margin-top: 4px;
+  font-size: 0.78rem;
+}
+
+.receipts-accordion-footer {
+  margin-top: 10px;
+}
+
+.btn-wa-wide {
+  --background: #10b981;
+  --background-hover: #059669;
+  --border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: none;
+  margin: 0;
+}

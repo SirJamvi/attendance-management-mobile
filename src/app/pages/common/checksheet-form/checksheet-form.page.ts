@@ -13,7 +13,9 @@ import { addIcons } from 'ionicons';
 import {
   cameraOutline, trashOutline, locationOutline, refreshOutline,
   checkmarkCircleOutline, alertCircleOutline, eyeOffOutline, warningOutline,
-  carOutline, personOutline, closeOutline, sendOutline, snowOutline
+  carOutline, personOutline, closeOutline, sendOutline, snowOutline,
+  logoWhatsapp, receiptOutline, chevronDownOutline, chevronUpOutline,
+  shareSocialOutline, storefrontOutline
 } from 'ionicons/icons';
 import { CameraDirection } from '@capacitor/camera';
 import { Geolocation } from '@capacitor/geolocation';
@@ -31,6 +33,8 @@ import {
   ChecksheetFormSchema,
   ChecksheetSubmitPayload,
   DriverOption,
+  KasbonCustomerItem,
+  KasbonOverview,
   OpnameProductItem,
   VehicleOption
 } from 'src/app/types/api.types';
@@ -87,12 +91,19 @@ export class ChecksheetFormPage implements OnInit {
   isReconciliationOpen = false;
   reconciliationData: BlindCountReconciliation | null = null;
   reconciliationStatus = '';
+  private isInitialized = false;
+
+  // Kasbon Follow-up Real-Time Data (ko-followup-kasbon)
+  kasbonOverview: KasbonOverview | null = null;
+  expandedCustomerKey: string | null = null;
 
   constructor() {
     addIcons({
       cameraOutline, trashOutline, locationOutline, refreshOutline,
       checkmarkCircleOutline, alertCircleOutline, eyeOffOutline, warningOutline,
-      carOutline, personOutline, closeOutline, sendOutline, snowOutline
+      carOutline, personOutline, closeOutline, sendOutline, snowOutline,
+      logoWhatsapp, receiptOutline, chevronDownOutline, chevronUpOutline,
+      shareSocialOutline, storefrontOutline
     });
   }
 
@@ -101,10 +112,13 @@ export class ChecksheetFormPage implements OnInit {
   }
 
   ionViewWillEnter() {
-    this.initPage();
+    if (!this.isInitialized) {
+      this.initPage();
+    }
   }
 
   private initPage() {
+    this.isInitialized = true;
     this.slug = this.route.snapshot.paramMap.get('slug') || '';
     const qp = this.route.snapshot.queryParamMap;
     const role = this.authService.getCurrentUserValue()?.role;
@@ -142,6 +156,10 @@ export class ChecksheetFormPage implements OnInit {
     return this.slug === 'ko-opname-stok';
   }
 
+  get isKasbonFollowupForm(): boolean {
+    return this.slug === 'ko-followup-kasbon';
+  }
+
   onKulkasStockChange(item: OpnameProductItem) {
     const k1 = Number(item.kulkas_1) || 0;
     const k2 = Number(item.kulkas_2) || 0;
@@ -166,7 +184,13 @@ export class ChecksheetFormPage implements OnInit {
             field_key: 'fuel_level',
             label: 'Level Bensin',
             field_type: 'select',
-            options: ['Penuh', '3/4', '1/2', '1/4', 'Hampir Habis'],
+            options: [
+              { label: 'Penuh', value: 'Penuh' },
+              { label: '3/4', value: '3/4' },
+              { label: '1/2', value: '1/2' },
+              { label: '1/4', value: '1/4' },
+              { label: 'Hampir Habis', value: 'Hampir Habis' },
+            ],
             is_required: true,
             sort_order: 1,
           },
@@ -188,7 +212,11 @@ export class ChecksheetFormPage implements OnInit {
             field_key: 'vehicle_condition',
             label: 'Kondisi Armada',
             field_type: 'select',
-            options: ['Layak Jalan', 'Perlu Servis Ringan', 'Mogok / Rusak'],
+            options: [
+              { label: 'Layak Jalan', value: 'Layak Jalan' },
+              { label: 'Perlu Servis Ringan', value: 'Perlu Servis Ringan' },
+              { label: 'Mogok / Rusak', value: 'Mogok / Rusak' },
+            ],
             is_required: true,
             sort_order: 4,
           },
@@ -232,7 +260,12 @@ export class ChecksheetFormPage implements OnInit {
             field_key: 'followup_status',
             label: 'Status Follow-Up',
             field_type: 'select',
-            options: ['Sudah Dihubungi Semua', 'Sebagian Dihubungi', 'Semua Lunas', 'Tidak Ada Kasbon'],
+            options: [
+              { label: 'Sudah Dihubungi Semua', value: 'Sudah Dihubungi Semua' },
+              { label: 'Sebagian Dihubungi', value: 'Sebagian Dihubungi' },
+              { label: 'Semua Lunas', value: 'Semua Lunas' },
+              { label: 'Tidak Ada Kasbon', value: 'Tidak Ada Kasbon' },
+            ],
             is_required: true,
             sort_order: 2,
           },
@@ -428,6 +461,7 @@ export class ChecksheetFormPage implements OnInit {
         const meta = data.meta || res?.meta || {};
 
         if (formObj && Array.isArray(formObj.fields) && formObj.fields.length > 0) {
+          formObj.fields = this.normalizeFormFields(formObj.fields);
           this.formSchema = formObj;
           this.isBlindCount = !!(meta.is_blind_count || this.slug === 'kasir-closing-pos');
           this.initAnswersPreserving(formObj.fields);
@@ -461,6 +495,24 @@ export class ChecksheetFormPage implements OnInit {
             actual_stock: 0,
             notes: '',
           }));
+        }
+
+        if (meta.kasbon_data) {
+          this.kasbonOverview = meta.kasbon_data;
+          const kb = this.kasbonOverview;
+          // Auto-fill field summary jika masih kosong
+          const summaryKey = 'unpaid_customers_summary';
+          if (kb && (!this.answers[summaryKey] || this.answers[summaryKey] === '')) {
+            if (kb.total_customers > 0) {
+              const formattedNominal = new Intl.NumberFormat('id-ID').format(kb.total_amount);
+              this.answers[summaryKey] = `${kb.total_customers} Pelanggan Kasbon Aktif (Total Piutang: Rp ${formattedNominal}). Seluruh rincian struk telah ditinjau dan siap di-follow-up.`;
+            } else {
+              this.answers[summaryKey] = 'Semua pelanggan lunas (Nol kasbon aktif saat ini).';
+              if (!this.answers['followup_status']) {
+                this.answers['followup_status'] = 'Tidak Ada Kasbon';
+              }
+            }
+          }
         }
 
         if (!this.formScheduleId && meta.active_schedule_id) {
@@ -522,13 +574,143 @@ export class ChecksheetFormPage implements OnInit {
     return !!(field.required ?? field.is_required);
   }
 
+  private normalizeFormFields(fields: ChecksheetFormField[]): ChecksheetFormField[] {
+    return (fields || []).map((f) => {
+      if (Array.isArray(f.options)) {
+        const normalized = f.options.map((opt) =>
+          typeof opt === 'string'
+            ? { label: opt, value: opt }
+            : { label: opt.label ?? opt.value, value: opt.value ?? opt.label }
+        );
+        (f as any)._cachedNormalizedOptions = normalized;
+        return {
+          ...f,
+          options: normalized,
+        };
+      }
+      return f;
+    });
+  }
+
   getNormalizedOptions(field: ChecksheetFormField): ChecksheetFieldOption[] {
     if (!Array.isArray(field.options)) return [];
-    return field.options.map((opt) =>
+    if ((field as any)._cachedNormalizedOptions) {
+      return (field as any)._cachedNormalizedOptions;
+    }
+    const normalized = field.options.map((opt) =>
       typeof opt === 'string'
         ? { label: opt, value: opt }
         : { label: opt.label ?? opt.value, value: opt.value ?? opt.label }
     );
+    (field as any)._cachedNormalizedOptions = normalized;
+    return normalized;
+  }
+
+  trackByFieldKey(index: number, field: ChecksheetFormField): string {
+    return field?.field_key || field?.key || String(index);
+  }
+
+  trackByOptionValue(index: number, opt: ChecksheetFieldOption): string {
+    return opt?.value ?? String(index);
+  }
+
+  trackByDriverId(index: number, d: DriverOption): number {
+    return d.id;
+  }
+
+  trackByCustomerGroup(index: number, item: KasbonCustomerItem): string {
+    return item?.group_key || String(index);
+  }
+
+  toggleCustomerExpand(groupKey: string) {
+    this.expandedCustomerKey = this.expandedCustomerKey === groupKey ? null : groupKey;
+  }
+
+  shareCustomerKasbonWA(customer: KasbonCustomerItem) {
+    customer.followed_up = true;
+    if (this.kasbonOverview) {
+      const allFollowed = this.kasbonOverview.customers.every((c) => c.followed_up);
+      this.answers['followup_status'] = allFollowed
+        ? 'Sudah Dihubungi Semua'
+        : 'Sebagian Dihubungi';
+    }
+
+    let phone = customer.phone || '';
+    if (!phone) {
+      const input = prompt(`Masukkan nomor WhatsApp untuk ${customer.name} (contoh: 08123456789):`, '');
+      if (!input) return;
+      phone = input;
+    }
+
+    phone = phone.replace(/[^0-9]/g, '');
+    if (phone.startsWith('0')) {
+      phone = '62' + phone.substring(1);
+    } else if (phone.startsWith('8')) {
+      phone = '62' + phone;
+    }
+
+    let msg = `*TAGIHAN KASBON - ADIN CRYSTAL*\n`;
+    msg += `Yth. *${customer.name}*,\n\n`;
+    msg += `Berikut rincian tagihan pesanan Anda yang belum terselesaikan:\n`;
+    msg += `----------------------------------------\n`;
+
+    customer.receipts.forEach((r, idx) => {
+      msg += `${idx + 1}. *Struk #${r.id}* (${r.date})\n`;
+      if (r.branch) msg += `   Cabang: ${r.branch}\n`;
+      if (r.cashier) msg += `   Kasir: ${r.cashier}\n`;
+      if (r.products && r.products.length > 0) {
+        msg += `   Item: ${r.products.join(', ')}\n`;
+      }
+      if (r.notes) msg += `   Ket: ${r.notes}\n`;
+      msg += `   Nominal: *Rp ${new Intl.NumberFormat('id-ID').format(r.amount)}*\n\n`;
+    });
+
+    msg += `----------------------------------------\n`;
+    msg += `💰 *TOTAL TAGIHAN: Rp ${new Intl.NumberFormat('id-ID').format(customer.total_amount)}*\n\n`;
+    msg += `Mohon kesediaannya untuk segera melakukan pelunasan via Tunai / Transfer.\n`;
+    msg += `Terima kasih atas perhatian dan kerjasamanya! 🙏`;
+
+    const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
+    try {
+      window.open(waUrl, '_system');
+    } catch {
+      window.open(waUrl, '_blank');
+    }
+  }
+
+  shareGlobalKasbonWA() {
+    if (!this.kasbonOverview || !this.kasbonOverview.customers.length) {
+      this.showToast('Tidak ada data kasbon aktif untuk direkap.', 'warning');
+      return;
+    }
+
+    let msg = `🚨 *REKAP SELURUH PIUTANG KASBON* 🚨\n`;
+    msg += `Tanggal: ${new Date().toLocaleDateString('id-ID')}\n`;
+    msg += `Toko: *ADIN CRYSTAL (GABUNGAN SEMUA CABANG)*\n`;
+    msg += `----------------------------------------\n\n`;
+
+    let totalAll = 0;
+    let count = 1;
+
+    for (const c of this.kasbonOverview.customers) {
+      totalAll += c.total_amount;
+      const phoneInfo = c.phone ? ` (${c.phone})` : '';
+      msg += `${count}. *${c.name}*${phoneInfo}\n`;
+      msg += `   • ${c.struk_count} Struk tertunda (${c.oldest_order_date})\n`;
+      msg += `   • Total: *Rp ${new Intl.NumberFormat('id-ID').format(c.total_amount)}*\n\n`;
+      count++;
+    }
+
+    msg += `----------------------------------------\n`;
+    msg += `💰 *GRAND TOTAL PIUTANG: Rp ${new Intl.NumberFormat('id-ID').format(totalAll)}*\n\n`;
+    msg += `Mohon bantuan tim untuk follow up penagihan. Terima kasih.`;
+
+    const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`;
+    try {
+      window.open(waUrl, '_system');
+    } catch {
+      window.open(waUrl, '_blank');
+    }
   }
 
   hasExplicitDriverField(): boolean {

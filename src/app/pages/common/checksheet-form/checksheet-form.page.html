@@ -153,8 +153,142 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- KASBON FOLLOW-UP OVERVIEW (Khusus ko-followup-kasbon) -->
+    <div *ngIf="isKasbonFollowupForm" class="kasbon-section">
+      <!-- Loading State -->
+      <div *ngIf="!kasbonOverview" class="kasbon-loading-box">
+        <ion-spinner name="crescent" color="danger"></ion-spinner>
+        <span>Memuat data kasbon real-time POS Buku Digital...</span>
+      </div>
+
+      <!-- Overview Available -->
+      <ng-container *ngIf="kasbonOverview">
+        <!-- Hero Header Banner (Mirip POS Kasir) -->
+        <div class="kasbon-hero-card">
+          <div class="kasbon-hero-top">
+            <div class="kasbon-hero-title">
+              <ion-icon name="alert-circle-outline"></ion-icon>
+              <span>RINGKASAN PIUTANG KASBON AKTIF</span>
+            </div>
+            <div class="kasbon-pill-badge">Gabungan Semua Cabang</div>
+          </div>
+          <div class="kasbon-hero-body">
+            <p class="kasbon-hero-desc">
+              Terdapat <strong>{{ kasbonOverview.total_struk }} struk</strong> tertunda dari <strong>{{ kasbonOverview.total_customers }} pelanggan / mitra</strong> dalam bisnis ini.
+            </p>
+            <div class="kasbon-total-box">
+              <span class="total-label">Total Seluruh Tagihan:</span>
+              <span class="total-nominal">Rp {{ kasbonOverview.total_amount | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <div class="kasbon-hero-action" *ngIf="kasbonOverview.total_customers > 0">
+            <ion-button expand="block" fill="solid" class="btn-wa-global" (click)="shareGlobalKasbonWA()">
+              <ion-icon name="logo-whatsapp" slot="start"></ion-icon>
+              Bagikan Rekap Semua Kasbon (WA)
+            </ion-button>
+          </div>
+        </div>
+
+        <!-- Daftar Pelanggan Kasbon -->
+        <div class="kasbon-list-header">
+          <span>Daftar Pelanggan Kasbon ({{ kasbonOverview.customers.length }})</span>
+          <small class="text-muted">Klik "Chat WA" untuk follow up</small>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="kasbonOverview.customers.length === 0" class="kasbon-empty-card">
+          <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+          <h4>Semua Tagihan Lunas!</h4>
+          <p>Tidak ada piutang kasbon aktif saat ini di seluruh cabang.</p>
+        </div>
+
+        <!-- Customer Cards -->
+        <div *ngFor="let c of kasbonOverview.customers; trackBy: trackByCustomerGroup" class="kasbon-cust-card">
+          <div class="cust-card-main">
+            <div class="cust-info">
+              <div class="cust-name-row">
+                <span class="cust-name">{{ c.name }}</span>
+                <span *ngIf="c.followed_up" class="followed-pill">
+                  <ion-icon name="checkmark-circle-outline"></ion-icon> Sudah Dihubungi
+                </span>
+              </div>
+              <div class="cust-sub-row">
+                <span class="cust-phone" *ngIf="c.phone">
+                  <ion-icon name="logo-whatsapp" color="success"></ion-icon> {{ c.phone }}
+                </span>
+                <span class="cust-phone text-muted" *ngIf="!c.phone">
+                  <ion-icon name="person-outline"></ion-icon> Tanpa Nomor HP
+                </span>
+                <div class="cust-branches" *ngIf="c.branches && c.branches.length > 0">
+                  <span class="branch-tag" *ngFor="let b of c.branches">
+                    <ion-icon name="storefront-outline"></ion-icon> {{ b }}
+                  </span>
+                </div>
+              </div>
+              <div class="cust-badges-row">
+                <span class="badge-struk">{{ c.struk_count }} Struk</span>
+                <span class="badge-age" [class.danger]="c.days_overdue >= 7">
+                  {{ c.oldest_order_date }} ({{ c.days_overdue }} hari lalu)
+                </span>
+              </div>
+            </div>
+
+            <div class="cust-side-amount">
+              <div class="cust-amount-val">Rp {{ c.total_amount | number:'1.0-0' }}</div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="cust-card-actions">
+            <ion-button fill="outline" size="small" class="btn-detail-struk" (click)="toggleCustomerExpand(c.group_key)">
+              <ion-icon [name]="expandedCustomerKey === c.group_key ? 'chevron-up-outline' : 'chevron-down-outline'" slot="start"></ion-icon>
+              {{ expandedCustomerKey === c.group_key ? 'Tutup Struk' : 'Rincian Struk (' + c.struk_count + ')' }}
+            </ion-button>
+            <ion-button fill="solid" size="small" class="btn-wa-cust" (click)="shareCustomerKasbonWA(c)">
+              <ion-icon name="logo-whatsapp" slot="start"></ion-icon>
+              Chat WA Tagihan
+            </ion-button>
+          </div>
+
+          <!-- Struk Accordion -->
+          <div *ngIf="expandedCustomerKey === c.group_key" class="receipts-accordion-box">
+            <div class="receipts-accordion-header">
+              <ion-icon name="receipt-outline"></ion-icon>
+              <strong>Rekap Struk Tagihan: {{ c.name }}</strong>
+            </div>
+            <div class="receipt-item" *ngFor="let r of c.receipts; let idx = index">
+              <div class="receipt-item-title">
+                <span>{{ idx + 1 }}. Struk #{{ r.id }}</span>
+                <span class="receipt-date">{{ r.date }}</span>
+              </div>
+              <div class="receipt-item-meta">
+                <span>Cabang: {{ r.branch }}</span>
+                <span>Kasir: {{ r.cashier }}</span>
+              </div>
+              <div class="receipt-item-products" *ngIf="r.products && r.products.length > 0">
+                <div *ngFor="let prod of r.products">• {{ prod }}</div>
+              </div>
+              <div class="receipt-item-notes" *ngIf="r.notes">
+                <em>Ket: {{ r.notes }}</em>
+              </div>
+              <div class="receipt-item-subtotal">
+                Subtotal: <strong>Rp {{ r.amount | number:'1.0-0' }}</strong>
+              </div>
+            </div>
+
+            <div class="receipts-accordion-footer">
+              <ion-button expand="block" fill="solid" class="btn-wa-wide" (click)="shareCustomerKasbonWA(c)">
+                <ion-icon name="logo-whatsapp" slot="start"></ion-icon>
+                Bagikan Struk Tagihan (WhatsApp)
+              </ion-button>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
     <!-- DYNAMIC FIELDS -->
-    <ion-card *ngFor="let field of formSchema.fields" class="field-card">
+    <ion-card *ngFor="let field of formSchema.fields; trackBy: trackByFieldKey" class="field-card">
       <ion-card-content>
         <ng-container [ngSwitch]="field.field_type">
 
@@ -257,12 +391,12 @@
                 [(ngModel)]="answers[getFieldKey(field)]">
                 <!-- Jika field_key adalah driver_id, isi dari meta.drivers -->
                 <ng-container *ngIf="getFieldKey(field) === 'driver_id' && drivers.length > 0; else standardOptions">
-                  <ion-select-option *ngFor="let d of drivers" [value]="d.id">
+                  <ion-select-option *ngFor="let d of drivers; trackBy: trackByDriverId" [value]="d.id">
                     {{ d.name }}
                   </ion-select-option>
                 </ng-container>
                 <ng-template #standardOptions>
-                  <ion-select-option *ngFor="let opt of getNormalizedOptions(field)" [value]="opt.value">
+                  <ion-select-option *ngFor="let opt of getNormalizedOptions(field); trackBy: trackByOptionValue" [value]="opt.value">
                     {{ opt.label }}
                   </ion-select-option>
                 </ng-template>
