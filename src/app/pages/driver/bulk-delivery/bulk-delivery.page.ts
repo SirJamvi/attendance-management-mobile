@@ -15,7 +15,9 @@ import {
   sparklesOutline, addCircleOutline, trashOutline, cameraOutline, sendOutline,
   checkmarkCircleOutline, checkmarkDoneCircleOutline, timeOutline, alertCircleOutline,
   cubeOutline, calendarOutline, carOutline, listOutline, refreshOutline, storefrontOutline,
-  cashOutline, cardOutline, receiptOutline, imageOutline
+  cashOutline, cardOutline, receiptOutline, imageOutline, chevronDownOutline, chevronUpOutline,
+  sparkles, searchOutline, closeOutline, chevronForwardOutline, checkmark,
+  person, personOutline, close
 } from 'ionicons/icons';
 import { CameraDirection, CameraSource } from '@capacitor/camera';
 
@@ -67,21 +69,30 @@ export class DriverBulkDeliveryPage implements OnInit {
   isLoadingPos = false;
   posData: DriverPosOrdersResponse | null = null;
   isSubmitting = false;
+  showOrdersList = true; // Driver bisa toggle list agar tidak menumpuk layar
 
-  // Tab 2: Input Pengiriman Manual
+  // Tab 2: Input Pengiriman Manual Terintegrasi POS Buku-Digital
   manualForm = {
+    customer_id: null as number | null,
     customer_name: '',
     qty_20kg: 0,
     qty_15kg: 0,
     qty_10kg: 0,
     qty_5kg: 0,
-    payment_method: 'cash' as 'cash' | 'transfer',
+    payment_method: 'cash' as string,
     cash_collected: 0,
     proof_photo: null as string | null,
     vehicle_id: null as number | null,
     notes: ''
   };
   isSubmittingManual = false;
+
+  // Rekomendasi POS Belum Ada Driver & Pencarian Pelanggan Buku Digital
+  unassignedOrders: any[] = [];
+  isLoadingUnassigned = false;
+  customers: any[] = [];
+  isLoadingCustomers = false;
+  isCustomerDropdownOpen = false;
 
   // Tab 3: Riwayat Pengiriman
   historyMonth = this.getCurrentMonthString();
@@ -92,17 +103,31 @@ export class DriverBulkDeliveryPage implements OnInit {
       sparklesOutline, addCircleOutline, trashOutline, cameraOutline, sendOutline,
       checkmarkCircleOutline, checkmarkDoneCircleOutline, timeOutline, alertCircleOutline,
       cubeOutline, calendarOutline, carOutline, listOutline, refreshOutline, storefrontOutline,
-      cashOutline, cardOutline, receiptOutline, imageOutline
+      cashOutline, cardOutline, receiptOutline, imageOutline, chevronDownOutline, chevronUpOutline,
+      sparkles, searchOutline, closeOutline, chevronForwardOutline, checkmark,
+      person, personOutline, close
     });
   }
 
   ngOnInit() {
     this.loadVehicles();
+    this.loadCustomers();
   }
 
   ionViewWillEnter() {
     this.loadPosOrders();
     this.loadDeliveryHistory();
+    this.loadCustomers();
+  }
+
+  onTabChanged(tab: any) {
+    if (!tab) return;
+    this.activeTab = tab;
+    if (tab === 'manual') {
+      if (this.customers.length === 0) {
+        this.loadCustomers();
+      }
+    }
   }
 
   private getCurrentMonthString(): string {
@@ -117,6 +142,106 @@ export class DriverBulkDeliveryPage implements OnInit {
       },
       error: () => {}
     });
+  }
+
+  loadUnassignedOrders() {
+    this.isLoadingUnassigned = true;
+    this.driverService.getUnassignedPosOrders().subscribe({
+      next: (res) => {
+        this.isLoadingUnassigned = false;
+        this.unassignedOrders = Array.isArray(res?.data) ? res.data : [];
+      },
+      error: (err) => {
+        this.isLoadingUnassigned = false;
+        console.warn('Gagal memuat pesanan POS tanpa driver:', err?.status, err?.error?.message || err?.message || err);
+      }
+    });
+  }
+
+  loadCustomers() {
+    this.isLoadingCustomers = true;
+    this.driverService.getCustomers().subscribe({
+      next: (res) => {
+        this.isLoadingCustomers = false;
+        const list = Array.isArray(res?.data) ? res.data : [];
+        // Pastikan Pelanggan Umum ada di paling atas jika belum ada
+        if (!list.some(c => this.isGeneralCustomer(c.name))) {
+          list.unshift({
+            id: 1,
+            name: 'Pelanggan Umum',
+            address: 'Pelanggan Walk-in / Langsung',
+            phone: ''
+          });
+        }
+        this.customers = list;
+      },
+      error: (err) => {
+        this.isLoadingCustomers = false;
+        console.warn('Gagal memuat daftar pelanggan:', err?.status, err?.error?.message || err?.message || err);
+        // Fallback default jika koneksi gagal agar driver tetap bisa memilih Pelanggan Umum
+        if (this.customers.length === 0) {
+          this.customers = [
+            { id: 1, name: 'Pelanggan Umum', address: 'Pelanggan Walk-in / Langsung', phone: '' }
+          ];
+        }
+      }
+    });
+  }
+
+  isGeneralCustomer(name?: string): boolean {
+    if (!name) return false;
+    return name.toLowerCase().includes('pelanggan umum');
+  }
+
+  get filteredCustomers(): any[] {
+    const q = (this.manualForm.customer_name || '').trim().toLowerCase();
+    if (!q) return this.customers.slice(0, 100);
+    return this.customers.filter(c =>
+      (c.name || '').toLowerCase().includes(q) ||
+      (c.address || '').toLowerCase().includes(q) ||
+      (c.phone || '').includes(q)
+    ).slice(0, 100);
+  }
+
+  openCustomerDropdown() {
+    if (this.customers.length === 0) {
+      this.loadCustomers();
+    }
+    this.isCustomerDropdownOpen = true;
+  }
+
+  closeCustomerDropdown() {
+    this.isCustomerDropdownOpen = false;
+  }
+
+  onCustomerInput() {
+    this.manualForm.customer_id = null;
+    this.isCustomerDropdownOpen = true;
+  }
+
+  selectCustomer(cust: any) {
+    this.manualForm.customer_id = cust.id;
+    this.manualForm.customer_name = cust.name;
+    this.isCustomerDropdownOpen = false;
+  }
+
+  clearCustomer() {
+    this.manualForm.customer_id = null;
+    this.manualForm.customer_name = '';
+    this.isCustomerDropdownOpen = true;
+  }
+
+  selectUnassignedOrder(order: any) {
+    this.manualForm.customer_id = order.customer_id || null;
+    this.manualForm.customer_name = order.customer_name || '';
+    this.manualForm.qty_20kg = order.qty_20kg || 0;
+    this.manualForm.qty_15kg = order.qty_15kg || 0;
+    this.manualForm.qty_10kg = order.qty_10kg || 0;
+    this.manualForm.qty_5kg = order.qty_5kg || 0;
+    this.manualForm.payment_method = order.payment_method || 'cash';
+    this.manualForm.cash_collected = (order.payment_method === 'cash') ? (order.total_amount || 0) : 0;
+    this.manualForm.notes = `Klaim Nota POS ${order.invoice_number}`;
+    this.showToast(`Nota ${order.invoice_number} terpilih! Silakan periksa dan kirim untuk verifikasi otomatis.`, 'primary');
   }
 
   // ==========================================
@@ -254,6 +379,7 @@ export class DriverBulkDeliveryPage implements OnInit {
 
   resetManualForm() {
     this.manualForm = {
+      customer_id: null,
       customer_name: '',
       qty_20kg: 0,
       qty_15kg: 0,
@@ -269,25 +395,32 @@ export class DriverBulkDeliveryPage implements OnInit {
 
   async submitManualDelivery() {
     if (!this.manualForm.customer_name.trim()) {
-      await this.showToast('Nama warung / toko wajib diisi.', 'warning');
+      await this.showToast('Pilih pelanggan toko terlebih dahulu.', 'warning');
       return;
     }
     if (this.manualTotalBalls <= 0) {
       await this.showToast('Minimal harus mengisi 1 bal pada salah satu varian es (20k, 15k, 10k, atau 5k).', 'warning');
       return;
     }
+    if (!this.manualForm.payment_method) {
+      await this.showToast('Pilih metode pembayaran sesuai nota kasir POS.', 'warning');
+      return;
+    }
 
     this.isSubmittingManual = true;
-    const loading = await this.loadingCtrl.create({ message: 'Mengirim laporan manual...' });
+    const loading = await this.loadingCtrl.create({
+      message: 'Mencocokkan dengan POS kasir & verifikasi...',
+    });
     await loading.present();
 
-    const payload = {
+    const payload: any = {
       input_mode: 'manual' as const,
       vehicle_id: this.manualForm.vehicle_id || this.selectedVehicleId,
       proof_photo: this.manualForm.proof_photo,
       raw_wa_text: this.manualForm.notes || undefined,
       items: [
         {
+          customer_id: this.manualForm.customer_id || undefined,
           customer_name: this.manualForm.customer_name.trim(),
           qty_20kg: Number(this.manualForm.qty_20kg) || 0,
           qty_15kg: Number(this.manualForm.qty_15kg) || 0,
@@ -309,16 +442,29 @@ export class DriverBulkDeliveryPage implements OnInit {
           this.attendanceService.updateCheckoutEligibility(eligibility);
         }
 
-        await this.showToast(res?.message || 'Pengiriman manual berhasil dikirim (status: Pending persetujuan KO)!', 'success');
+        const alert = await this.alertCtrl.create({
+          header: 'Pengiriman Berhasil & Terverifikasi! 🎉',
+          message: res?.message || 'Data cocok 100% dengan transaksi POS Buku-Digital dan langsung disetujui (Approved).',
+          buttons: ['OK']
+        });
+        await alert.present();
+
         this.resetManualForm();
         this.loadPosOrders();
+        this.loadUnassignedOrders();
         this.loadDeliveryHistory();
-        this.activeTab = 'history';
+        this.activeTab = 'pos_orders';
       },
       error: async (err) => {
         this.isSubmittingManual = false;
         await loading.dismiss();
-        await this.showToast(err.error?.message || 'Gagal mengirim pengiriman manual.', 'danger');
+        const msg = err.error?.message || err.message || 'Gagal memverifikasi pengiriman dengan POS Buku-Digital.';
+        const alert = await this.alertCtrl.create({
+          header: 'Nota Tidak Cocok / Ditolak',
+          message: msg,
+          buttons: ['Tutup']
+        });
+        await alert.present();
       }
     });
   }
@@ -413,7 +559,7 @@ export class DriverBulkDeliveryPage implements OnInit {
     this.loadDeliveryHistory();
   }
 
-  async showToast(message: string, color: 'success' | 'warning' | 'danger') {
+  async showToast(message: string, color: 'success' | 'warning' | 'danger' | 'primary' = 'success') {
     const toast = await this.toastCtrl.create({
       message,
       color,

@@ -138,25 +138,26 @@ import { VehicleOption } from 'src/app/types/api.types';
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      pointer-events: none;
+      pointer-events: auto;
     }
 
     .vehicle-backdrop {
       position: fixed;
       inset: 0;
-      background: var(--menu-backdrop, rgba(10, 18, 40, 0.45));
-      pointer-events: all;
+      background: var(--menu-backdrop, rgba(10, 18, 40, 0.55));
+      pointer-events: auto;
       animation: fadeInBackdrop 0.25s ease-out forwards;
-      backdrop-filter: blur(2px);
-      -webkit-backdrop-filter: blur(2px);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      z-index: 1;
     }
 
     .vehicle-sheet-card {
       position: relative;
       background: #FFFFFF;
       border-radius: 22px 22px 0 0;
-      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.12);
-      pointer-events: all;
+      box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.18);
+      pointer-events: auto;
       animation: slideUpSheet 0.25s ease-out forwards;
       padding: 0 16px calc(16px + env(safe-area-inset-bottom)) 16px;
       max-width: 500px;
@@ -165,6 +166,7 @@ import { VehicleOption } from 'src/app/types/api.types';
       max-height: 85vh;
       display: flex;
       flex-direction: column;
+      z-index: 2;
     }
 
     .vehicle-modal-overlay.closing {
@@ -482,6 +484,9 @@ export class VehicleSelectModalComponent implements OnChanges {
     }
     if (changes['isOpen'] && this.isOpen) {
       this.isClosing = false;
+      if (this.selectedVehicleId) {
+        this.selectedId = this.selectedVehicleId;
+      }
       // Jika motor yang terpilih saat ini sudah completed, auto-select motor pertama yang belum completed
       if (this.selectedId && this.isVehicleCompleted(this.selectedId)) {
         this.selectedId = this.findFirstAvailableVehicleId();

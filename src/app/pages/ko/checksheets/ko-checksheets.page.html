@@ -16,12 +16,22 @@
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <!-- Date Picker Bar -->
+  <!-- Date Picker & Branch Bar -->
   <div class="date-bar">
     <div class="date-input-wrap" (click)="openDatePicker()">
       <ion-icon name="calendar-outline" color="primary"></ion-icon>
       <input #dateInput type="date" [(ngModel)]="selectedDate" (change)="onDateChange()" (click)="$event.stopPropagation()" />
     </div>
+
+    <!-- Multi-Cabang Filter -->
+    <div class="branch-input-wrap" *ngIf="branches.length > 0">
+      <ion-icon name="storefront-outline"></ion-icon>
+      <select [(ngModel)]="selectedBranchId" (change)="onBranchFilterChanged()">
+        <option value="all">🏢 Semua Cabang</option>
+        <option *ngFor="let b of branches" [value]="b.id">{{ b.name }}</option>
+      </select>
+    </div>
+
     <ion-button fill="clear" size="small" class="history-btn" (click)="openHistory()">
       Riwayat
       <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
@@ -162,8 +172,14 @@
 
           <div *ngFor="let v of slot.vehicles" class="vehicle-row" [class.done]="v.completed">
             <div class="vehicle-info">
-              <strong>{{ v.name }}</strong>
-              <span *ngIf="v.plate_number" class="plate-tag">{{ v.plate_number }}</span>
+              <div class="vehicle-name-line">
+                <strong>{{ v.name || v.vehicle_name }}</strong>
+                <span *ngIf="v.plate_number" class="plate-tag">{{ v.plate_number }}</span>
+                <span *ngIf="v.branch_name" class="branch-pill-tag">
+                  <ion-icon name="storefront-outline"></ion-icon>
+                  {{ v.branch_name }}
+                </span>
+              </div>
               <div *ngIf="v.completed" class="vehicle-done-badge">
                 <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
                 <span>
@@ -171,6 +187,12 @@
                   <ng-container *ngIf="v.submitted_by_role">({{ v.submitted_by_role }})</ng-container>
                   <ng-container *ngIf="v.submitted_at"> pukul {{ v.submitted_at }}</ng-container>
                 </span>
+              </div>
+
+              <!-- Alert Peringatan Bensin Kurang Dari Setengah -->
+              <div *ngIf="v.completed && isFuelBelowHalf(v.answers?.['fuel_level']?.value_text)" class="vehicle-fuel-alert-badge">
+                <ion-icon name="warning-outline"></ion-icon>
+                <span>Bensin Kurang dari 1/2 ({{ v.answers?.['fuel_level']?.value_text }}) — Silakan Isi Bensin</span>
               </div>
 
               <!-- Status Verifikasi KO -->
@@ -375,6 +397,17 @@
             <p>Tidak ada lampiran foto bukti tersimpan.</p>
           </div>
         </ng-template>
+      </div>
+
+      <!-- Alert Banner Peringatan Bensin Kurang dari Setengah untuk KO -->
+      <div *ngIf="isFuelBelowHalf(selectedVehicleForVerify.answers?.['fuel_level']?.value_text)" class="modal-fuel-alert-box">
+        <div class="alert-icon-circle">
+          <ion-icon name="warning-outline"></ion-icon>
+        </div>
+        <div class="alert-body">
+          <h4>⚠️ Reminder KO: Bensin Kurang Dari Setengah ({{ selectedVehicleForVerify.answers?.['fuel_level']?.value_text }})</h4>
+          <p>Indikator bensin motor ini dilaporkan kurang dari 1/2. Silakan segera lakukan atau instruksikan driver untuk mengisi bensin armada!</p>
+        </div>
       </div>
 
       <!-- Ringkasan Hasil Cek Lapangan -->

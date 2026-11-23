@@ -6,6 +6,8 @@ import {
   ApiResponse,
   AttendanceStatusMeta,
   CheckoutEligibility,
+  OperationalShift,
+  ShiftsResponseData,
 } from '../types/api.types';
 
 @Injectable({
@@ -14,6 +16,14 @@ import {
 export class AttendanceService {
   private checkoutEligibilitySubject = new BehaviorSubject<CheckoutEligibility | null>(null);
   public readonly checkoutEligibility$ = this.checkoutEligibilitySubject.asObservable();
+
+  private dutyShiftSubject = new BehaviorSubject<{
+    id: number;
+    name: string;
+    isMatch: boolean;
+    note?: string;
+  } | null>(null);
+  public readonly dutyShift$ = this.dutyShiftSubject.asObservable();
 
   constructor(private apiClient: ApiClient) {}
 
@@ -39,12 +49,44 @@ export class AttendanceService {
     return this.checkoutEligibilitySubject.value;
   }
 
+  setDutyShift(shift: { id: number; name: string; isMatch: boolean; note?: string } | null) {
+    this.dutyShiftSubject.next(shift);
+  }
+
+  getDutyShiftValue() {
+    return this.dutyShiftSubject.value;
+  }
+
+  getShifts() {
+    return this.apiClient.get<ApiResponse<ShiftsResponseData>>('attendance/shifts');
+  }
+
+  updateDutyShift(shiftId: number, note?: string) {
+    const body: Record<string, any> = { shift_id: shiftId };
+    if (note && note.trim()) {
+      body['note'] = note.trim();
+    }
+    return this.apiClient.post<ApiResponse<any>>('attendance/duty-shift', body).pipe(
+      tap((res) => {
+        if (res?.data) {
+          this.setDutyShift({
+            id: res.data.shift_id,
+            name: res.data.shift_name,
+            isMatch: !!res.data.is_match,
+            note: res.data.note,
+          });
+        }
+      })
+    );
+  }
+
   checkIn(
     photoBase64: string,
     latitude: number,
     longitude: number,
     emergencyNote?: string,
-    branchId?: number | null
+    branchId?: number | null,
+    shiftId?: number | null
   ) {
     const body: Record<string, any> = {
       photo: photoBase64,
@@ -56,6 +98,9 @@ export class AttendanceService {
     }
     if (branchId) {
       body['branch_id'] = branchId;
+    }
+    if (shiftId) {
+      body['shift_id'] = shiftId;
     }
     return this.apiClient.post<ApiResponse<AttendanceData>>('attendance/check-in', body);
   }

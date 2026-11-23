@@ -116,8 +116,16 @@
           <span>Pencairan bonus KPI bulanan dijadwalkan pada tutup buku tanggal 30 (Periode 16–30).</span>
         </div>
 
+        <!-- Toggle Rincian 3 Pilar KPI (Agar Halaman Tidak Menumpuk) -->
+        <div (click)="showKpiDetails = !showKpiDetails" style="display: flex; align-items: center; justify-content: space-between; background: #f1f5f9; border-radius: 10px; padding: 10px 12px; margin-bottom: 12px; cursor: pointer;">
+          <span style="font-size: 12.5px; font-weight: 700; color: #334155;">
+            {{ showKpiDetails ? 'Sembunyikan Rincian 3 Pilar' : 'Lihat Rincian 3 Pilar KPI' }}
+          </span>
+          <ion-icon [name]="showKpiDetails ? 'chevron-up-outline' : 'chevron-down-outline'" color="primary"></ion-icon>
+        </div>
+
         <!-- 3 PILAR KPI GRID -->
-        <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div *ngIf="showKpiDetails" style="display: flex; flex-direction: column; gap: 10px;">
           <!-- Pilar 1: Kehadiran & Keterlambatan (40%) -->
           <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">

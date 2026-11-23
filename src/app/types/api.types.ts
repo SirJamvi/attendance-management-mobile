@@ -71,9 +71,36 @@ export interface AttendanceStatusMeta {
   checkout_eligibility?: CheckoutEligibility | null;
   duty_branch_id?: number | null;
   duty_branch_name?: string | null;
+  duty_shift_id?: number | null;
+  duty_shift_name?: string | null;
   previous_sessions?: any[];
   current_session_number?: number;
   can_check_in_next_session?: boolean;
+}
+
+export interface OperationalShift {
+  id: number;
+  name: string;
+  display_name?: string;
+  start_time: string;
+  end_time: string;
+  daily_wage?: number;
+  is_helper?: boolean;
+  is_rangkap?: boolean;
+}
+
+export interface ShiftsResponseData {
+  shifts: OperationalShift[];
+  today_scheduled_shift_id: number | null;
+  today_scheduled_shift: {
+    id: number;
+    name: string;
+    start_time: string;
+    end_time: string;
+  } | null;
+  is_day_off: boolean;
+  selected_duty_shift_id?: number | null;
+  selected_duty_note?: string | null;
 }
 
 export interface Attendance {
@@ -109,6 +136,8 @@ export type ChecksheetSlotStatus =
 export interface ChecksheetVehicleStatus {
   id?: number;
   vehicle_id?: number;
+  branch_id?: number | null;
+  branch_name?: string | null;
   name?: string;
   vehicle_name?: string;
   plate_number?: string | null;
@@ -327,6 +356,8 @@ export interface PosCrossCheckDriver {
 
 export interface KoDeliveryItem {
   id: number;
+  branch_id?: number | null;
+  branch_name?: string | null;
   driver_id?: number;
   driver_name: string;
   driver?: { id: number; name: string } | null;

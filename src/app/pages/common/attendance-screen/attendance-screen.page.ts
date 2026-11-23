@@ -26,6 +26,7 @@ import { CameraViewComponent } from '../../../components/camera-view/camera-view
 import { LoadingSpinnerComponent } from '../../../components/loading-spinner/loading-spinner.component';
 import { BranchBadgeComponent } from '../../../components/branch-badge/branch-badge.component';
 import { BranchSelectModalComponent } from '../../../components/branch-select-modal/branch-select-modal.component';
+import { DriverDutySetupModalComponent } from '../../../components/driver-duty-setup-modal/driver-duty-setup-modal.component';
 import { AttendanceService } from '../../../services/attendance';
 import { AuthService } from '../../../services/auth';
 import { BranchService } from '../../../services/branch.service';
@@ -35,7 +36,8 @@ import {
   Branch,
   CheckoutEligibility,
   CheckoutRequirement,
-  User
+  User,
+  OperationalShift
 } from '../../../types/api.types';
 
 @Component({
@@ -51,6 +53,7 @@ import {
     LoadingSpinnerComponent,
     BranchBadgeComponent,
     BranchSelectModalComponent,
+    DriverDutySetupModalComponent,
     IonContent, IonHeader, IonTitle, IonToolbar, IonButton, IonButtons,
     IonBackButton, IonIcon, IonSpinner, IonModal, IonTextarea,
     IonRefresher, IonRefresherContent
@@ -93,6 +96,58 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
 
   // Driver Active Missions
   activeMissions: any[] = [];
+
+  // Driver Duty Setup (Cabang & Shift)
+  driverShifts: OperationalShift[] = [];
+  scheduledShiftId: number | null = null;
+  scheduledShiftName: string | null = null;
+  selectedShiftId: number | null = null;
+  selectedShiftName: string | null = null;
+  isDriverDutyModalOpen = false;
+
+  get isShiftMatch(): boolean {
+    if (this.isDayOff || !this.scheduledShiftId || !this.selectedShiftId) {
+      return false;
+    }
+    return this.selectedShiftId === this.scheduledShiftId;
+  }
+
+  openDriverDutyModal() {
+    this.isDriverDutyModalOpen = true;
+  }
+
+  closeDriverDutyModal() {
+    this.isDriverDutyModalOpen = false;
+  }
+
+  async onDriverDutyConfirmedFromModal(event: {
+    branch: Branch;
+    shift: OperationalShift;
+    note?: string;
+    isMatch: boolean;
+  }) {
+    this.isDriverDutyModalOpen = false;
+    this.selectedBranchId = event.branch.id;
+    this.selectedShiftId = event.shift.id;
+    this.selectedShiftName = event.shift.name;
+    if (event.note) {
+      this.emergencyNote = event.note;
+    }
+
+    await this.applyDutyBranchChange(event.branch.id, event.branch.name);
+    this.attendanceService.updateDutyShift(event.shift.id, event.note).subscribe({
+      next: () => console.log('✅ Duty shift driver diperbarui:', event.shift.name),
+      error: (err) => console.warn('⚠️ Gagal sinkron duty shift:', err)
+    });
+
+    const toast = await this.toastCtrl.create({
+      message: `Shift tugas: ${event.shift.name} (${event.isMatch ? 'Sesuai Jadwal' : 'Validasi Admin'})`,
+      duration: 2500,
+      color: event.isMatch ? 'success' : 'warning',
+      position: 'bottom'
+    });
+    await toast.present();
+  }
 
   private subs = new Subscription();
 
@@ -305,6 +360,11 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
             }
           }
 
+          if (response.meta.duty_shift_id) {
+            this.selectedShiftId = response.meta.duty_shift_id;
+            this.selectedShiftName = response.meta.duty_shift_name || null;
+          }
+
           this.previousSessions = response.meta.previous_sessions || [];
           this.currentSessionNumber = response.meta.current_session_number || (this.previousSessions.length + 1);
           this.canCheckInNextSession = !!response.meta.can_check_in_next_session;
@@ -321,6 +381,37 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
     });
 
     if (this.isDriver) {
+      this.attendanceService.getShifts().subscribe({
+        next: (sRes) => {
+          if (sRes?.data?.shifts && sRes.data.shifts.length > 0) {
+            this.driverShifts = sRes.data.shifts;
+            this.scheduledShiftId = sRes.data.today_scheduled_shift_id;
+            this.scheduledShiftName = sRes.data.today_scheduled_shift?.name || null;
+            if (!this.selectedShiftId && sRes.data.selected_duty_shift_id) {
+              this.selectedShiftId = sRes.data.selected_duty_shift_id;
+              this.selectedShiftName = this.driverShifts.find((s) => Number(s.id) === Number(this.selectedShiftId))?.name || null;
+            } else if (!this.selectedShiftId && this.scheduledShiftId) {
+              this.selectedShiftId = this.scheduledShiftId;
+              this.selectedShiftName = this.scheduledShiftName;
+            }
+          } else {
+            this.driverShifts = this.getDefaultShifts();
+            if (!this.selectedShiftId) {
+              this.selectedShiftId = this.driverShifts[0].id;
+              this.selectedShiftName = this.driverShifts[0].name;
+            }
+          }
+        },
+        error: (err) => {
+          console.warn('Gagal memuat shift di attendance screen, memakai default:', err);
+          this.driverShifts = this.getDefaultShifts();
+          if (!this.selectedShiftId) {
+            this.selectedShiftId = this.driverShifts[0].id;
+            this.selectedShiftName = this.driverShifts[0].name;
+          }
+        }
+      });
+
       this.attendanceService.getActiveMissions().subscribe({
         next: (res: any) => {
           if (res && Array.isArray(res.data)) {
@@ -408,17 +499,21 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
     if (this.isSubmitDisabled || this.isSubmitting) return;
 
     this.isSubmitting = true;
+    const isUnscheduled = this.isDayOff || (!this.isShiftMatch && this.isDriver);
     const loading = await this.loadingCtrl.create({
-      message: this.isDayOff ? 'Mengirim Presensi Darurat...' : 'Mengirim Absen Masuk...'
+      message: isUnscheduled ? 'Mengirim Presensi (Di Luar Jadwal)...' : 'Mengirim Absen Masuk...'
     });
     await loading.present();
+
+    const noteToSend = isUnscheduled ? (this.emergencyNote || undefined) : undefined;
 
     this.attendanceService.checkIn(
       this.photoData!,
       this.locationData!.latitude,
       this.locationData!.longitude,
-      this.isDayOff ? this.emergencyNote : undefined,
-      this.selectedBranchId
+      noteToSend,
+      this.selectedBranchId,
+      this.selectedShiftId
     ).subscribe({
       next: async (response) => {
         this.isSubmitting = false;
@@ -439,8 +534,8 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
             4000
           );
         } else {
-          const message = this.isDayOff
-            ? 'Presensi darurat berhasil dikirim. Menunggu validasi Admin.'
+          const message = isUnscheduled
+            ? 'Presensi mandiri (di luar jadwal) berhasil dicatat. Menunggu validasi Admin di Dashboard Web.'
             : 'Absen Masuk Tercatat!';
           await this.showAlert('Berhasil', message);
         }
@@ -513,5 +608,16 @@ export class AttendanceScreenPage implements OnInit, OnDestroy {
       position: 'top',
     });
     await toast.present();
+  }
+
+  private getDefaultShifts(): OperationalShift[] {
+    return [
+      { id: 1, name: 'Shift 1 (Pagi)', start_time: '07:20:00', end_time: '15:20:00', daily_wage: 60000 },
+      { id: 3, name: 'Helper Pagi', start_time: '07:20:00', end_time: '12:00:00', daily_wage: 30000, is_helper: true },
+      { id: 2, name: 'Shift 2 (09:40)', start_time: '09:40:00', end_time: '17:40:00', daily_wage: 60000 },
+      { id: 6, name: 'Shift 2 (12:00)', start_time: '12:00:00', end_time: '20:00:00', daily_wage: 60000 },
+      { id: 4, name: 'Helper Sore', start_time: '16:30:00', end_time: '22:00:00', daily_wage: 30000, is_helper: true },
+      { id: 5, name: 'Helper Rangkap (Pagi + Sore)', start_time: '07:20:00', end_time: '22:00:00', daily_wage: 60000, is_rangkap: true },
+    ];
   }
 }

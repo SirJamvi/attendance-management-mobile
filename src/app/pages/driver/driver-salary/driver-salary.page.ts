@@ -13,7 +13,7 @@ import {
   walletOutline, timeOutline, warningOutline, calendarOutline,
   cashOutline, alertCircleOutline, trophyOutline, cubeOutline,
   checkmarkDoneOutline, flameOutline, medalOutline, ribbonOutline,
-  peopleOutline, sparklesOutline
+  peopleOutline, sparklesOutline, chevronDownOutline, chevronUpOutline
 } from 'ionicons/icons';
 import { SalaryService, SalaryData } from 'src/app/services/salary.service';
 import { BranchBadgeComponent } from 'src/app/components/branch-badge/branch-badge.component';
@@ -40,13 +40,14 @@ export class DriverSalaryPage implements OnInit {
   salaryData: SalaryData | null = null;
   isLoading = true;
   errorMsg = '';
+  showKpiDetails = false;
 
   constructor() {
     addIcons({
       walletOutline, timeOutline, warningOutline, calendarOutline,
       cashOutline, alertCircleOutline, trophyOutline, cubeOutline,
       checkmarkDoneOutline, flameOutline, medalOutline, ribbonOutline,
-      peopleOutline, sparklesOutline
+      peopleOutline, sparklesOutline, chevronDownOutline, chevronUpOutline
     });
   }
 

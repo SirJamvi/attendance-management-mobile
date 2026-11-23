@@ -42,6 +42,59 @@ ion-content {
   --color: #0284c7;
 }
 
+.branch-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  padding: 6px 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  flex: 1;
+
+  ion-icon {
+    font-size: 16px;
+    color: var(--ion-color-primary, #06324D);
+    flex-shrink: 0;
+  }
+
+  select {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    width: 100%;
+    cursor: pointer;
+  }
+}
+
+.branch-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  margin-left: 4px;
+
+  ion-icon {
+    font-size: 11px;
+  }
+}
+
+.vehicle-name-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .auto-attendance-box {
   display: flex;
   flex-direction: column;
@@ -282,6 +335,65 @@ ion-content {
 
   ion-icon {
     font-size: 13px;
+  }
+}
+
+.vehicle-fuel-alert-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  margin-top: 5px;
+
+  ion-icon {
+    font-size: 13px;
+    color: #dc2626;
+  }
+}
+
+.modal-fuel-alert-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+
+  .alert-icon-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #fef3c7;
+    color: #d97706;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .alert-body {
+    h4 {
+      margin: 0 0 3px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #92400e;
+    }
+
+    p {
+      margin: 0;
+      font-size: 12px;
+      color: #b45309;
+      line-height: 1.4;
+    }
   }
 }
 

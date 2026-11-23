@@ -101,7 +101,7 @@
   </div>
 </ion-content>
 
-<!-- Pop-up Pemilihan Cabang Tugas Pasca-Login (AJAX Modal) -->
+<!-- Pop-up Pemilihan Cabang Tugas Pasca-Login (AJAX Modal - Non Driver) -->
 <app-branch-select-modal
   [isOpen]="isBranchModalOpen"
   [branches]="branches"
@@ -114,3 +114,20 @@
   (branchSelected)="onBranchConfirmed($event)"
   (dismiss)="onBranchModalDismiss()"
 ></app-branch-select-modal>
+
+<!-- Pop-up 2-Langkah Cabang Tugas & Jadwal Shift Khusus Driver (Pasca-Login) -->
+<app-driver-duty-setup-modal
+  [isOpen]="isDriverDutyModalOpen"
+  [branches]="branches"
+  [selectedBranchId]="selectedBranchId"
+  [homeBranchId]="pendingUser?.branch_id ?? null"
+  [shifts]="shifts"
+  [scheduledShiftId]="scheduledShiftId"
+  [scheduledShiftName]="scheduledShiftName"
+  [isDayOff]="isDayOff"
+  [selectedShiftId]="selectedShiftId"
+  [note]="shiftNote"
+  [canDismiss]="true"
+  (dutyConfirmed)="onDriverDutyConfirmed($event)"
+  (dismiss)="onDriverDutyModalDismiss()"
+></app-driver-duty-setup-modal>

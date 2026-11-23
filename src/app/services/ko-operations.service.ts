@@ -23,10 +23,11 @@ export class KoOperationsService {
   // A. CHECKSHEET 3 FASE & INSIDENTAL
   // ==========================================
 
-  getTodayChecksheets(date?: string): Observable<ApiResponse<ChecksheetTodayData>> {
-    return this.apiClient.get<ApiResponse<ChecksheetTodayData>>('ko/checksheets/today', {
-      date,
-    });
+  getTodayChecksheets(date?: string, branchId?: number | string): Observable<ApiResponse<ChecksheetTodayData>> {
+    const params: Record<string, any> = {};
+    if (date) params['date'] = date;
+    if (branchId !== undefined && branchId !== null) params['branch_id'] = branchId;
+    return this.apiClient.get<ApiResponse<ChecksheetTodayData>>('ko/checksheets/today', params);
   }
 
   getIncidentalChecksheets(): Observable<ApiResponse<ChecksheetIncidentalData>> {
@@ -79,6 +80,7 @@ export class KoOperationsService {
   getDeliveries(params?: {
     date?: string;
     status?: string;
+    branch_id?: number | string;
   }): Observable<ApiResponse<KoDeliveriesData>> {
     return this.apiClient.get<ApiResponse<KoDeliveriesData>>('ko/deliveries', params);
   }
@@ -91,11 +93,15 @@ export class KoOperationsService {
     return this.apiClient.post<ApiResponse<any>>(`ko/deliveries/${id}/approve`, {});
   }
 
-  approveDriverBatch(driverId: number, deliveryDate?: string): Observable<ApiResponse<any>> {
-    return this.apiClient.post<ApiResponse<any>>('ko/deliveries/approve-driver-batch', {
+  approveDriverBatch(driverId: number, deliveryDate?: string, branchId?: number | string): Observable<ApiResponse<any>> {
+    const payload: Record<string, any> = {
       driver_id: driverId,
       delivery_date: deliveryDate,
-    });
+    };
+    if (branchId !== undefined && branchId !== null) {
+      payload['branch_id'] = branchId;
+    }
+    return this.apiClient.post<ApiResponse<any>>('ko/deliveries/approve-driver-batch', payload);
   }
 
   rejectDelivery(id: number, rejection_reason: string): Observable<ApiResponse<any>> {
@@ -120,7 +126,8 @@ export class KoOperationsService {
     month?: string;
     status?: string;
     driver_id?: number;
-  }): Observable<ApiResponse<{ branch_id: number; cards: any[]; pending_count: number; total_count: number }>> {
+    branch_id?: number | string;
+  }): Observable<ApiResponse<{ branch_id: number | string; branch_name?: string; cards: any[]; pending_count: number; total_count: number }>> {
     return this.apiClient.get('ko/business-cards', params);
   }
 

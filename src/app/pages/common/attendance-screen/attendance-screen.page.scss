@@ -257,6 +257,91 @@
   }
 }
 
+// Driver Active Duty Setup Bar (Cabang & Shift)
+.driver-duty-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #F9FAFB;
+  border: 1.5px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin: 10px 0 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:active {
+    background: #F3F4F6;
+    transform: scale(0.99);
+  }
+
+  .duty-bar-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .duty-bar-lbl {
+    font-size: 10.5px;
+    font-weight: 500;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .duty-bar-val {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    ion-icon {
+      font-size: 15px;
+      color: #0277BD;
+      flex-shrink: 0;
+    }
+  }
+
+  .duty-bar-divider {
+    width: 1px;
+    height: 28px;
+    background: #E5E7EB;
+    flex-shrink: 0;
+  }
+
+  .duty-bar-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 7px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    flex-shrink: 0;
+
+    &.match {
+      background: #DCFCE7;
+      color: #15803D;
+    }
+
+    &.mismatch {
+      background: #FEF3C7;
+      color: #B45309;
+    }
+
+    ion-icon {
+      font-size: 12px;
+    }
+  }
+}
+
 // Section D: Emergency Notice
 .emergency-box {
   margin: 10px 0 14px;

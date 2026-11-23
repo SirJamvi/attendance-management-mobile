@@ -7,7 +7,7 @@ import {
   IonIcon, IonCard, IonCardHeader, IonCardTitle, IonCardSubtitle, IonCardContent,
   IonSegment, IonSegmentButton, IonLabel, IonBadge, IonRefresher, IonRefresherContent,
   IonSpinner, IonModal, IonTextarea, IonInput, IonItem,
-  AlertController, LoadingController, ToastController
+  AlertController, LoadingController, ToastController, NavController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import {
@@ -15,17 +15,22 @@ import {
   shieldCheckmarkOutline, alertCircleOutline, eyeOutline, cashOutline,
   cubeOutline, personOutline, closeOutline, layersOutline, checkmarkDoneOutline,
   documentAttachOutline, imageOutline, callOutline, timeOutline, checkmarkDoneCircleOutline,
-  cardOutline, logoWhatsapp, locationOutline, chatbubbleEllipsesOutline, checkmark
+  cardOutline, logoWhatsapp, locationOutline, chatbubbleEllipsesOutline, checkmark,
+  arrowBackOutline, chevronForwardOutline, sparklesOutline, bicycleOutline, refreshOutline,
+  speedometerOutline, constructOutline, checkmarkSharp, storefrontOutline
 } from 'ionicons/icons';
 
 import { KoOperationsService } from 'src/app/services/ko-operations.service';
+import { BranchService } from 'src/app/services/branch.service';
 import { BranchBadgeComponent } from 'src/app/components/branch-badge/branch-badge.component';
-import { KoDeliveryItem, PosCrossCheckDriver } from 'src/app/types/api.types';
+import { Branch, KoDeliveryItem, PosCrossCheckDriver } from 'src/app/types/api.types';
 
 export interface DriverDeliveryGroup {
   driver_id: number;
   driver_name: string;
   vehicle_name?: string;
+  branch_id?: number | null;
+  branch_name?: string | null;
   total_orders: number;
   pending_count: number;
   approved_count: number;
@@ -58,31 +63,52 @@ export interface DriverDeliveryGroup {
 })
 export class KoDeliveriesPage implements OnInit {
   private koService = inject(KoOperationsService);
+  private branchService = inject(BranchService);
   private router = inject(Router);
+  private navCtrl = inject(NavController);
   private alertCtrl = inject(AlertController);
   private loadingCtrl = inject(LoadingController);
   private toastCtrl = inject(ToastController);
 
-  // Tab Utama Approval: Pengiriman Bal vs Kartu Nama
-  mainApprovalSection: 'deliveries' | 'business_cards' = 'deliveries';
+  // Approval Center Hub: 'hub' | 'deliveries' | 'business_cards' | 'inspections'
+  activeHubView: 'hub' | 'deliveries' | 'business_cards' | 'inspections' = 'hub';
 
   selectedDate = this.getTodayDateString();
-  selectedStatus: 'pending' | 'approved' | 'rejected' | '' = 'pending';
 
+  // Multi-Cabang Filter
+  branches: Branch[] = [];
+  selectedBranchId: number | 'all' = 'all';
+
+  // Ringkasan Angka Pending di Approval Center Hub
+  pendingDeliveriesCount = 0;
+  pendingCardsCount = 0;
+  pendingInspectionsCount = 0;
+  totalTodayBalls = 0;
+  totalTodayCash = 0;
+
+  isLoadingHub = false;
+
+  // Fokus 1: Pengiriman Bal
+  selectedStatus: 'pending' | 'approved' | 'rejected' | '' = 'pending';
   isLoading = true;
   errorMsg = '';
-
   posCrossCheck: PosCrossCheckDriver[] = [];
   deliveries: KoDeliveryItem[] = [];
   driverGroups: DriverDeliveryGroup[] = [];
+  showPosCrossCheck = false; // Accordion POS disembunyikan default jika tidak anomali
 
-  // Data Validasi Kartu Nama Pelanggan
+  // Fokus 2: Validasi Kartu Nama
   businessCards: any[] = [];
   pendingBusinessCardsCount = 0;
   isLoadingCards = false;
   cardStatusFilter: 'pending' | 'valid' | 'rejected' | '' = 'pending';
 
-  // Group Detail Modal (Melihat seluruh toko milik 1 driver dalam 1 hari)
+  // Fokus 3: Verifikasi Armada Motor
+  inspectionVehicles: any[] = [];
+  isLoadingInspections = false;
+  inspectionStatusFilter: 'pending' | 'verified' | '' = 'pending';
+
+  // Group Detail Modal
   isGroupModalOpen = false;
   selectedGroup: DriverDeliveryGroup | null = null;
 
@@ -103,15 +129,37 @@ export class KoDeliveriesPage implements OnInit {
       shieldCheckmarkOutline, alertCircleOutline, eyeOutline, cashOutline,
       cubeOutline, personOutline, closeOutline, layersOutline, checkmarkDoneOutline,
       documentAttachOutline, imageOutline, callOutline, timeOutline, checkmarkDoneCircleOutline,
-      cardOutline, logoWhatsapp, locationOutline, chatbubbleEllipsesOutline, checkmark
+      cardOutline, logoWhatsapp, locationOutline, chatbubbleEllipsesOutline, checkmark,
+      arrowBackOutline, chevronForwardOutline, sparklesOutline, bicycleOutline, refreshOutline,
+      speedometerOutline, constructOutline, checkmarkSharp, storefrontOutline
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.branchService.getBranches().subscribe({
+      next: (res) => {
+        if (res?.data && Array.isArray(res.data)) {
+          this.branches = res.data;
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  onBranchFilterChanged() {
+    if (this.activeHubView === 'hub') {
+      this.loadHubSummary();
+    } else if (this.activeHubView === 'deliveries') {
+      this.loadDeliveries();
+    } else if (this.activeHubView === 'business_cards') {
+      this.loadBusinessCards();
+    } else if (this.activeHubView === 'inspections') {
+      this.loadInspections();
+    }
+  }
 
   ionViewWillEnter() {
-    this.loadDeliveries();
-    this.loadBusinessCards();
+    this.loadHubSummary();
   }
 
   private getTodayDateString(): string {
@@ -122,16 +170,106 @@ export class KoDeliveriesPage implements OnInit {
     return `${y}-${m}-${d}`;
   }
 
-  onMainSectionChange() {
-    if (this.mainApprovalSection === 'deliveries') {
+  get totalPendingAll(): number {
+    return this.pendingDeliveriesCount + this.pendingCardsCount + this.pendingInspectionsCount;
+  }
+
+  get hasPosAnomaly(): boolean {
+    return Array.isArray(this.posCrossCheck) && this.posCrossCheck.some(p => p.is_anomaly);
+  }
+
+  // =========================================================
+  // APPROVAL CENTER HUB: NAVIGASI & STATISTIK
+  // =========================================================
+
+  loadHubSummary(event?: any) {
+    this.isLoadingHub = !event;
+
+    // 1. Ambil summary pengiriman bal
+    this.koService.getDeliveries({ date: this.selectedDate, branch_id: this.selectedBranchId }).subscribe({
+      next: (res) => {
+        if (res?.success && res.data) {
+          const list = Array.isArray(res.data.deliveries) ? res.data.deliveries : [];
+          this.deliveries = list;
+          this.posCrossCheck = Array.isArray(res.data.pos_cross_check) ? res.data.pos_cross_check : [];
+          this.driverGroups = this.groupDeliveriesByDriver(list);
+
+          this.pendingDeliveriesCount = list.filter((d: KoDeliveryItem) => d.status === 'pending').length;
+          this.totalTodayBalls = list.reduce((sum: number, d: KoDeliveryItem) => sum + (Number(d.total_balls) || 0), 0);
+          this.totalTodayCash = list.reduce((sum: number, d: KoDeliveryItem) => sum + (Number(d.cash_collected) || 0), 0);
+
+          // Buka panel POS otomatis HANYA jika terdeteksi anomali selisih
+          this.showPosCrossCheck = this.hasPosAnomaly;
+        }
+        this.isLoadingHub = false;
+        if (event) event.target.complete();
+      },
+      error: () => {
+        this.isLoadingHub = false;
+        if (event) event.target.complete();
+      }
+    });
+
+    // 2. Ambil summary kartu nama
+    this.koService.getBusinessCards({ date: this.selectedDate, status: 'pending', branch_id: this.selectedBranchId }).subscribe({
+      next: (res) => {
+        if (res?.success && res.data) {
+          this.pendingCardsCount = Number(res.data.pending_count) || 0;
+        }
+      },
+      error: () => {}
+    });
+
+    // 3. Ambil summary inspeksi motor yang butuh verifikasi KO
+    this.koService.getTodayChecksheets(this.selectedDate, this.selectedBranchId).subscribe({
+      next: (res) => {
+        if (res?.success && res.data?.phases) {
+          const vehicleList: any[] = [];
+          const phases = [res.data.phases.pagi, res.data.phases.siang, res.data.phases.sore, res.data.phases.malam || []];
+          for (const phaseSlots of phases) {
+            if (!Array.isArray(phaseSlots)) continue;
+            for (const slot of phaseSlots) {
+              if (slot.requires_vehicle && Array.isArray(slot.vehicles)) {
+                for (const v of slot.vehicles) {
+                  vehicleList.push({
+                    ...v,
+                    slot_title: slot.title,
+                    slot_slug: slot.slug,
+                  });
+                }
+              }
+            }
+          }
+          this.inspectionVehicles = vehicleList;
+          this.pendingInspectionsCount = vehicleList.filter(v => v.completed && !v.is_verified).length;
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  openHubSection(section: 'deliveries' | 'business_cards' | 'inspections') {
+    this.activeHubView = section;
+    if (section === 'deliveries') {
       this.loadDeliveries();
-    } else {
+    } else if (section === 'business_cards') {
       this.loadBusinessCards();
+    } else if (section === 'inspections') {
+      this.loadInspections();
     }
   }
 
+  backToHub() {
+    this.activeHubView = 'hub';
+    this.loadHubSummary();
+  }
+
+  // =========================================================
+  // FOKUS 1: APPROVAL PENGIRIMAN BAL DRIVER
+  // =========================================================
+
   loadDeliveries(event?: any) {
-    if (!event && this.deliveries.length === 0 && this.posCrossCheck.length === 0) {
+    if (!event && this.deliveries.length === 0) {
       this.isLoading = true;
     }
     this.errorMsg = '';
@@ -140,19 +278,15 @@ export class KoDeliveriesPage implements OnInit {
       .getDeliveries({
         date: this.selectedDate,
         status: this.selectedStatus || undefined,
+        branch_id: this.selectedBranchId,
       })
       .subscribe({
         next: (res) => {
           if (res?.success && res.data) {
-            this.posCrossCheck = Array.isArray(res.data.pos_cross_check)
-              ? res.data.pos_cross_check
-              : [];
-            this.deliveries = Array.isArray(res.data.deliveries)
-              ? res.data.deliveries
-              : [];
+            this.posCrossCheck = Array.isArray(res.data.pos_cross_check) ? res.data.pos_cross_check : [];
+            this.deliveries = Array.isArray(res.data.deliveries) ? res.data.deliveries : [];
             this.driverGroups = this.groupDeliveriesByDriver(this.deliveries);
 
-            // Jika modal sedang terbuka, perbarui data group yang sedang dipilih
             if (this.selectedGroup) {
               const updated = this.driverGroups.find((g) => g.driver_id === this.selectedGroup!.driver_id);
               this.selectedGroup = updated || null;
@@ -174,9 +308,6 @@ export class KoDeliveriesPage implements OnInit {
       });
   }
 
-  /**
-   * Mengelompokkan seluruh pengiriman per driver agar visual clean (Single Container per Driver)
-   */
   private groupDeliveriesByDriver(deliveries: KoDeliveryItem[]): DriverDeliveryGroup[] {
     const map = new Map<number, DriverDeliveryGroup>();
 
@@ -184,12 +315,16 @@ export class KoDeliveriesPage implements OnInit {
       const driverId = item.driver_id || (item.driver as any)?.id || 0;
       const driverName = item.driver_name || (item.driver as any)?.name || 'Driver';
       const vehicleName = item.vehicle_name || (item.vehicle as any)?.name || '';
+      const branchId = item.branch_id || null;
+      const branchName = item.branch_name || null;
 
       if (!map.has(driverId)) {
         map.set(driverId, {
           driver_id: driverId,
           driver_name: driverName,
           vehicle_name: vehicleName,
+          branch_id: branchId,
+          branch_name: branchName,
           total_orders: 0,
           pending_count: 0,
           approved_count: 0,
@@ -228,16 +363,12 @@ export class KoDeliveriesPage implements OnInit {
     }
 
     return Array.from(map.values()).sort((a, b) => {
-      // Prioritaskan yang memiliki pending order
       if (a.pending_count > 0 && b.pending_count === 0) return -1;
       if (a.pending_count === 0 && b.pending_count > 0) return 1;
       return a.driver_name.localeCompare(b.driver_name);
     });
   }
 
-  // ==========================================
-  // MODAL DETAIL TOKO PER DRIVER
-  // ==========================================
   openGroupDetail(group: DriverDeliveryGroup) {
     this.selectedGroup = group;
     this.isGroupModalOpen = true;
@@ -259,9 +390,6 @@ export class KoDeliveriesPage implements OnInit {
     this.isPhotoModalOpen = true;
   }
 
-  // ==========================================
-  // ONE-CLICK BATCH APPROVAL PER DRIVER
-  // ==========================================
   async approveAllForDriver(group: DriverDeliveryGroup, event?: Event) {
     if (event) event.stopPropagation();
 
@@ -293,7 +421,7 @@ export class KoDeliveriesPage implements OnInit {
     });
     await loading.present();
 
-    this.koService.approveDriverBatch(group.driver_id, this.selectedDate).subscribe({
+    this.koService.approveDriverBatch(group.driver_id, this.selectedDate, group.branch_id || undefined).subscribe({
       next: async (res) => {
         await loading.dismiss();
         await this.showToast(res?.message || 'Seluruh delivery driver berhasil disetujui!', 'success');
@@ -306,9 +434,6 @@ export class KoDeliveriesPage implements OnInit {
     });
   }
 
-  // ==========================================
-  // SINGLE APPROVE & REJECT (INDIVIDUAL STOP)
-  // ==========================================
   async approveSingle(item: KoDeliveryItem, event?: Event) {
     if (event) event.stopPropagation();
 
@@ -395,9 +520,9 @@ export class KoDeliveriesPage implements OnInit {
     });
   }
 
-  // ==========================================
-  // FITUR: VALIDASI KARTU NAMA / PROSPEK DRIVER
-  // ==========================================
+  // =========================================================
+  // FOKUS 2: VALIDASI KARTU NAMA / PROSPEK DRIVER
+  // =========================================================
 
   loadBusinessCards(event?: any) {
     this.isLoadingCards = !event && this.businessCards.length === 0;
@@ -406,6 +531,7 @@ export class KoDeliveriesPage implements OnInit {
       .getBusinessCards({
         date: this.selectedDate,
         status: this.cardStatusFilter || undefined,
+        branch_id: this.selectedBranchId,
       })
       .subscribe({
         next: (res) => {
@@ -501,9 +627,159 @@ export class KoDeliveriesPage implements OnInit {
     window.open(url, '_blank');
   }
 
-  // ==========================================
+  // =========================================================
+  // FOKUS 3: VERIFIKASI INSPEKSI ARMADA MOTOR (BUILT-IN)
+  // =========================================================
+
+  loadInspections(event?: any) {
+    this.isLoadingInspections = !event && this.inspectionVehicles.length === 0;
+
+    this.koService.getTodayChecksheets(this.selectedDate, this.selectedBranchId).subscribe({
+      next: (res) => {
+        if (res?.success && res.data?.phases) {
+          const list: any[] = [];
+          const phases = [
+            res.data.phases.pagi,
+            res.data.phases.siang,
+            res.data.phases.sore,
+            res.data.phases.malam || []
+          ];
+          for (const phaseSlots of phases) {
+            if (!Array.isArray(phaseSlots)) continue;
+            for (const slot of phaseSlots) {
+              if (slot.requires_vehicle && Array.isArray(slot.vehicles)) {
+                for (const v of slot.vehicles) {
+                  list.push({
+                    ...v,
+                    slot_title: slot.title,
+                    slot_slug: slot.slug,
+                  });
+                }
+              }
+            }
+          }
+          this.inspectionVehicles = list;
+          this.pendingInspectionsCount = list.filter(v => v.completed && !v.is_verified).length;
+        }
+        this.isLoadingInspections = false;
+        if (event) event.target.complete();
+      },
+      error: () => {
+        this.isLoadingInspections = false;
+        if (event) event.target.complete();
+      }
+    });
+  }
+
+  get filteredInspectionVehicles(): any[] {
+    if (this.inspectionStatusFilter === 'pending') {
+      return this.inspectionVehicles.filter(v => v.completed && !v.is_verified);
+    }
+    if (this.inspectionStatusFilter === 'verified') {
+      return this.inspectionVehicles.filter(v => v.completed && v.is_verified);
+    }
+    return this.inspectionVehicles;
+  }
+
+  isFuelBelowHalf(level?: string | null): boolean {
+    if (!level) return false;
+    const l = level.toLowerCase().trim();
+    return l.includes('1/4') || l.includes('habis') || l === '0%' || l === '25%';
+  }
+
+  async promptApproveInspection(vehicle: any) {
+    if (!vehicle.submission_id) {
+      await this.showToast('Data inspeksi belum memiliki ID valid.', 'warning');
+      return;
+    }
+
+    const fuelLevel = vehicle.answers?.fuel_level?.value_text;
+    const isLowFuel = this.isFuelBelowHalf(fuelLevel);
+    let confirmMsg = `Setujui hasil inspeksi fisik dari driver ${vehicle.submitted_by || ''}? Armada dinyatakan layak beroperasi.`;
+    if (isLowFuel) {
+      confirmMsg += `\n\n⚠️ PERHATIAN BENSIN: Indikator bensin tercatat '${fuelLevel}' (kurang dari 1/2).\nReminder KO: Silakan lakukan / instruksikan isi bensin armada!`;
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: isLowFuel ? '⚠️ Verifikasi (Bensin Kurang)' : 'Verifikasi Armada Aman?',
+      subHeader: `${vehicle.vehicle_name || vehicle.name} (${vehicle.plate_number || '-'})`,
+      message: confirmMsg,
+      buttons: [
+        { text: 'Batal', role: 'cancel' },
+        {
+          text: isLowFuel ? 'Tetap Setujui' : 'Verifikasi Aman',
+          handler: () => {
+            this.executeVerifyInspection(vehicle.submission_id, 'approved');
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  async promptRejectInspection(vehicle: any) {
+    if (!vehicle.submission_id) {
+      await this.showToast('Data inspeksi belum memiliki ID valid.', 'warning');
+      return;
+    }
+
+    const alert = await this.alertCtrl.create({
+      header: 'Catatan Perbaikan Armada',
+      subHeader: `${vehicle.vehicle_name || vehicle.name} (${vehicle.plate_number || '-'})`,
+      message: 'Masukkan catatan kendala armada (misal: Bensin kurang dari batas minimal, lampu mati, rem kurang pakem):',
+      inputs: [
+        {
+          name: 'notes',
+          type: 'textarea',
+          placeholder: 'Catatan kendala / perbaikan...',
+        }
+      ],
+      buttons: [
+        { text: 'Batal', role: 'cancel' },
+        {
+          text: 'Simpan Catatan',
+          cssClass: 'warning',
+          handler: (data) => {
+            const notes = (data?.notes || '').trim();
+            this.executeVerifyInspection(vehicle.submission_id, 'needs_review', notes);
+            return true;
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  private async executeVerifyInspection(submissionId: number, status: 'approved' | 'needs_review', notes?: string) {
+    const loading = await this.loadingCtrl.create({
+      message: status === 'approved' ? 'Menyetujui verifikasi armada...' : 'Menyimpan catatan perbaikan...'
+    });
+    await loading.present();
+
+    this.koService.verifyInspection(submissionId, {
+      status,
+      review_notes: notes
+    }).subscribe({
+      next: async (res) => {
+        await loading.dismiss();
+        await this.showToast(
+          res?.message || (status === 'approved' ? 'Armada berhasil diverifikasi aman!' : 'Catatan perbaikan berhasil disimpan.'),
+          status === 'approved' ? 'success' : 'warning'
+        );
+        this.loadInspections();
+        this.loadHubSummary();
+      },
+      error: async (err) => {
+        await loading.dismiss();
+        await this.showToast(err.error?.message || 'Gagal memproses verifikasi armada.', 'danger');
+      }
+    });
+  }
+
+  // =========================================================
   // BYPASS CHECK-OUT DRIVER
-  // ==========================================
+  // =========================================================
+
   openBypassModal(driver?: PosCrossCheckDriver) {
     this.bypassAttendanceId = driver?.attendance_id ?? null;
     this.bypassDriverName = driver?.driver_name || '';
@@ -573,10 +849,14 @@ export class KoDeliveriesPage implements OnInit {
   }
 
   doRefresh(event: any) {
-    if (this.mainApprovalSection === 'deliveries') {
+    if (this.activeHubView === 'hub') {
+      this.loadHubSummary(event);
+    } else if (this.activeHubView === 'deliveries') {
       this.loadDeliveries(event);
-    } else {
+    } else if (this.activeHubView === 'business_cards') {
       this.loadBusinessCards(event);
+    } else if (this.activeHubView === 'inspections') {
+      this.loadInspections(event);
     }
   }
 

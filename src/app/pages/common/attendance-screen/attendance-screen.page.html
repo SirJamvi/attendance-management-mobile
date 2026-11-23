@@ -106,10 +106,14 @@
         </div>
       </div>
 
-      <!-- Info Cabang Tugas Hari Ini -->
+      <!-- Info Cabang & Shift Tugas Hari Ini -->
       <div *ngIf="attendanceToday && selectedBranchName" class="duty-branch-active-row">
         <ion-icon name="storefront-outline"></ion-icon>
         <span>Tugas Cabang: <strong>{{ selectedBranchName }}</strong></span>
+      </div>
+      <div *ngIf="attendanceToday && isDriver && selectedShiftName" class="duty-branch-active-row" style="margin-top: 6px;">
+        <ion-icon name="time-outline"></ion-icon>
+        <span>Shift Tugas: <strong>{{ selectedShiftName }}</strong></span>
       </div>
     </div>
 
@@ -197,6 +201,46 @@
           : (isKoOrKasir
             ? 'Check-in otomatis menyelesaikan checksheet buka depot pagi.'
             : (isDayOff ? 'Foto selfie untuk pengajuan darurat.' : 'Foto selfie untuk kehadiran.')) }}
+      </div>
+
+      <!-- Driver Active Duty Setup Bar (Cabang & Shift) -->
+      <div *ngIf="isDriver" class="driver-duty-bar" (click)="openDriverDutyModal()">
+        <div class="duty-bar-col">
+          <span class="duty-bar-lbl">Cabang Tugas</span>
+          <span class="duty-bar-val">
+            <ion-icon name="storefront-outline"></ion-icon>
+            {{ selectedBranchName || 'Pilih Cabang' }}
+          </span>
+        </div>
+        <div class="duty-bar-divider"></div>
+        <div class="duty-bar-col">
+          <span class="duty-bar-lbl">Shift Hari Ini</span>
+          <span class="duty-bar-val">
+            <ion-icon name="time-outline"></ion-icon>
+            {{ selectedShiftName || 'Pilih Shift' }}
+          </span>
+        </div>
+        <div class="duty-bar-badge" [class.match]="isShiftMatch" [class.mismatch]="!isShiftMatch">
+          <span class="badge-text">{{ isShiftMatch ? 'Sesuai' : 'Validasi' }}</span>
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </div>
+      </div>
+
+      <!-- Warning & Emergency Note for Shift Mismatch (bila bukan hari libur) -->
+      <div *ngIf="!isDayOff && !isShiftMatch && isDriver" class="emergency-box mismatch-box">
+        <div class="emergency-notice mismatch">
+          <ion-icon name="warning-outline"></ion-icon>
+          <span>Shift berbeda dari jadwal admin. Absen Anda akan memerlukan validasi Admin di Dashboard Web.</span>
+        </div>
+        <label class="ui-field-label">Catatan tukar shift (opsional)</label>
+        <ion-textarea
+          class="ui-input"
+          fill="outline"
+          [(ngModel)]="emergencyNote"
+          placeholder="Contoh: Menggantikan shift rekan / lembur pesanan"
+          [autoGrow]="true"
+          rows="2">
+        </ion-textarea>
       </div>
 
       <!-- Warning & Emergency Note for Day Off -->
@@ -496,3 +540,21 @@
   (branchSelected)="onBranchSelectedFromModal($event)"
   (dismiss)="closeBranchModal()"
 ></app-branch-select-modal>
+
+<!-- Pop-up 2-Langkah Driver Duty Setup (Cabang & Shift) -->
+<app-driver-duty-setup-modal
+  *ngIf="isDriver"
+  [isOpen]="isDriverDutyModalOpen"
+  [branches]="branches"
+  [selectedBranchId]="selectedBranchId"
+  [homeBranchId]="currentUser?.branch_id ?? null"
+  [shifts]="driverShifts"
+  [scheduledShiftId]="scheduledShiftId"
+  [scheduledShiftName]="scheduledShiftName"
+  [isDayOff]="isDayOff"
+  [selectedShiftId]="selectedShiftId"
+  [note]="emergencyNote"
+  [canDismiss]="true"
+  (dutyConfirmed)="onDriverDutyConfirmedFromModal($event)"
+  (dismiss)="closeDriverDutyModal()"
+></app-driver-duty-setup-modal>

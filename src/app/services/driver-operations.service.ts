@@ -66,6 +66,16 @@ export class DriverOperationsService {
     return this.apiClient.get<ApiResponse<DriverPosOrdersResponse>>('driver/deliveries/pos-orders', params);
   }
 
+  getUnassignedPosOrders(date?: string): Observable<ApiResponse<any[]>> {
+    const params: Record<string, string> = {};
+    if (date) params['date'] = date;
+    return this.apiClient.get<ApiResponse<any[]>>('driver/deliveries/unassigned-pos-orders', params);
+  }
+
+  getCustomers(): Observable<ApiResponse<any[]>> {
+    return this.apiClient.get<ApiResponse<any[]>>('driver/customers');
+  }
+
   confirmPosDeliveries(payload: {
     vehicle_id?: number | null;
     proof_photo?: string | null;

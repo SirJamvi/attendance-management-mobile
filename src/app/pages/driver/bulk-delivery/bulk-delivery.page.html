@@ -37,7 +37,7 @@
   </ion-card>
 
   <!-- 3 Mode Segment -->
-  <ion-segment [(ngModel)]="activeTab" class="mode-segment">
+  <ion-segment [(ngModel)]="activeTab" (ionChange)="onTabChanged($event.detail.value)" class="mode-segment">
     <ion-segment-button value="pos_orders">
       <ion-label>Pesanan POS</ion-label>
     </ion-segment-button>
@@ -132,55 +132,11 @@
         <span *ngIf="posData.qty_5kg > 0" class="pill-variant">5kg: <strong>{{ posData.qty_5kg }}</strong></span>
       </div>
 
-      <!-- Daftar Toko / Pesanan POS -->
-      <div class="section-heading">
-        <span>Daftar Pesanan POS ({{ posData.orders.length }} Toko)</span>
-        <ion-button fill="clear" size="small" (click)="loadPosOrders()">
-          <ion-icon name="refresh-outline" slot="icon-only"></ion-icon>
-        </ion-button>
-      </div>
-
-      <ion-card *ngFor="let order of posData.orders; let i = index" class="pos-order-card">
-        <ion-card-content>
-          <div class="order-top">
-            <div class="order-customer">
-              <span class="order-num">#{{ i + 1 }}</span>
-              <strong>{{ order.customer_name }}</strong>
-            </div>
-            <ion-badge [color]="getPaymentBadgeColor(order.payment_method)">
-              {{ order.payment_method | uppercase }}
-            </ion-badge>
-          </div>
-
-          <div *ngIf="order.customer_address" class="order-address">
-            {{ order.customer_address }}
-          </div>
-
-          <div class="order-meta-row">
-            <span class="invoice-tag">{{ order.invoice_number }}</span>
-            <span class="order-balls-tag">
-              <strong>{{ order.total_balls }} bal</strong>
-              <small>
-                ({{ order.qty_20kg ? '20k:' + order.qty_20kg + ' ' : '' }}{{ order.qty_15kg ? '15k:' + order.qty_15kg + ' ' : '' }}{{ order.qty_10kg ? '10k:' + order.qty_10kg + ' ' : '' }}{{ order.qty_5kg ? '5k:' + order.qty_5kg : '' }})
-              </small>
-            </span>
-          </div>
-
-          <div class="order-amount-row">
-            <span class="order-time">{{ order.transaction_time | date:'HH:mm' }} WIB</span>
-            <span class="order-nominal">
-              Rp {{ order.total_amount | number:'1.0-0' }}
-              <small *ngIf="order.payment_method === 'cash'">(Cash)</small>
-            </span>
-          </div>
-        </ion-card-content>
-      </ion-card>
-
-      <!-- Form Tambahan: Armada & Foto Bukti Setoran -->
-      <ion-card class="form-card">
+      <!-- KARTU AKSI CEPAT: VERIFIKASI & KONFIRMASI (LANGSUNG DIAKSES TANPA PERLU SCROLL PANJANG) -->
+      <ion-card class="form-card action-confirm-card">
         <ion-card-header>
-          <ion-card-title>Data Verifikasi Setoran</ion-card-title>
-          <ion-card-subtitle>Pilih armada dan lampirkan bukti setoran kasir</ion-card-subtitle>
+          <ion-card-title>Konfirmasi Pengiriman Bal</ion-card-title>
+          <ion-card-subtitle>Pilih armada dan verifikasi selesai pengiriman</ion-card-subtitle>
         </ion-card-header>
         <ion-card-content>
           <!-- Pilih Kendaraan / Armada -->
@@ -200,7 +156,7 @@
             <div *ngIf="!proofPhoto">
               <ion-button expand="block" fill="outline" color="primary" (click)="takeProofPhoto()">
                 <ion-icon name="camera-outline" slot="start"></ion-icon>
-                Foto Bukti Setoran Kasir / Rekap
+                Foto Bukti Setoran Kasir / Rekap (Opsional)
               </ion-button>
             </div>
 
@@ -212,24 +168,74 @@
               </ion-button>
             </div>
           </div>
+
+          <!-- Tombol Konfirmasi Selesai Kirim -->
+          <div class="action-footer ion-margin-top">
+            <ion-button
+              expand="block"
+              color="success"
+              size="large"
+              class="submit-btn"
+              [disabled]="isSubmitting"
+              (click)="confirmDeliveries()">
+              <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
+              {{ posData.is_confirmed ? 'Perbarui Konfirmasi (' + posData.total_balls + ' Bal)' : 'Konfirmasi Selesai Kirim (' + posData.total_balls + ' Bal)' }}
+            </ion-button>
+            <p class="action-subtext">
+              Data 100% dari transaksi POS Buku-Digital dan otomatis disetujui untuk perhitungan KPI & Gaji.
+            </p>
+          </div>
         </ion-card-content>
       </ion-card>
 
-      <!-- Tombol Konfirmasi Selesai Kirim -->
-      <div class="action-footer ion-margin-top ion-margin-bottom">
-        <ion-button
-          expand="block"
-          color="success"
-          size="large"
-          class="submit-btn"
-          [disabled]="isSubmitting"
-          (click)="confirmDeliveries()">
-          <ion-icon name="checkmark-circle-outline" slot="start"></ion-icon>
-          {{ posData.is_confirmed ? 'Perbarui Konfirmasi (' + posData.total_balls + ' Bal)' : 'Konfirmasi Selesai Kirim (' + posData.total_balls + ' Bal)' }}
-        </ion-button>
-        <p class="action-subtext">
-          Data 100% dari transaksi POS Buku-Digital dan otomatis disetujui untuk perhitungan KPI & Gaji.
-        </p>
+      <!-- Daftar Toko / Pesanan POS (Collapsible agar tidak menumpuk layar) -->
+      <div class="orders-toggle-bar" (click)="showOrdersList = !showOrdersList">
+        <div class="toggle-left">
+          <ion-icon name="receipt-outline" color="primary"></ion-icon>
+          <strong>Rincian Pesanan Toko ({{ posData.orders.length }} Nota)</strong>
+        </div>
+        <div class="toggle-right">
+          <span class="toggle-action-text">{{ showOrdersList ? 'Sembunyikan' : 'Lihat Semua' }}</span>
+          <ion-icon [name]="showOrdersList ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+        </div>
+      </div>
+
+      <div *ngIf="showOrdersList" class="orders-compact-list">
+        <ion-card *ngFor="let order of posData.orders; let i = index" class="pos-order-card">
+          <ion-card-content>
+            <div class="order-top">
+              <div class="order-customer">
+                <span class="order-num">#{{ i + 1 }}</span>
+                <strong>{{ order.customer_name }}</strong>
+              </div>
+              <ion-badge [color]="getPaymentBadgeColor(order.payment_method)">
+                {{ order.payment_method | uppercase }}
+              </ion-badge>
+            </div>
+
+            <div *ngIf="order.customer_address" class="order-address">
+              {{ order.customer_address }}
+            </div>
+
+            <div class="order-meta-row">
+              <span class="invoice-tag">{{ order.invoice_number }}</span>
+              <span class="order-balls-tag">
+                <strong>{{ order.total_balls }} bal</strong>
+                <small>
+                  ({{ order.qty_20kg ? '20k:' + order.qty_20kg + ' ' : '' }}{{ order.qty_15kg ? '15k:' + order.qty_15kg + ' ' : '' }}{{ order.qty_10kg ? '10k:' + order.qty_10kg + ' ' : '' }}{{ order.qty_5kg ? '5k:' + order.qty_5kg : '' }})
+                </small>
+              </span>
+            </div>
+
+            <div class="order-amount-row">
+              <span class="order-time">{{ order.transaction_time | date:'HH:mm' }} WIB</span>
+              <span class="order-nominal">
+                Rp {{ order.total_amount | number:'1.0-0' }}
+                <small *ngIf="order.payment_method === 'cash'">(Cash)</small>
+              </span>
+            </div>
+          </ion-card-content>
+        </ion-card>
       </div>
 
       <!-- Spacer agar tombol bebas dari tab bar bawah -->
@@ -238,34 +244,71 @@
   </div>
 
   <!-- ========================================================= -->
-  <!-- TAB 2: INPUT PENGIRIMAN MANUAL                            -->
+  <!-- TAB 2: INPUT PENGIRIMAN MANUAL TERINTEGRASI POS           -->
   <!-- ========================================================= -->
   <div *ngIf="activeTab === 'manual'">
+    <!-- FORMULIR INPUT MANUAL -->
     <ion-card class="form-card">
       <ion-card-header>
         <div style="display: flex; align-items: center; gap: 8px;">
           <ion-icon name="add-circle-outline" color="primary" style="font-size: 1.4rem;"></ion-icon>
           <div>
-            <ion-card-title style="font-size: 1.05rem; font-weight: 700;">Input Pengiriman Manual</ion-card-title>
+            <ion-card-title style="font-size: 1.05rem; font-weight: 700;">Input & Verifikasi POS</ion-card-title>
             <ion-card-subtitle style="font-size: 0.78rem;">
-              Isi formulir ini jika nota belum tercatat di POS kasir atau untuk pengiriman langsung di lapangan.
+              Pilih pelanggan Buku Digital, jumlah bal, dan metode pembayaran sesuai nota kasir.
             </ion-card-subtitle>
           </div>
         </div>
       </ion-card-header>
 
       <ion-card-content>
-        <!-- Nama Toko / Pelanggan -->
-        <ion-item lines="full" class="ion-no-padding" style="margin-bottom: 12px;">
-          <ion-input
-            label="Nama Warung / Toko Pelanggan *"
-            labelPlacement="stacked"
-            placeholder="Cth: Warung Bu Siti / Toko Barokah"
-            [(ngModel)]="manualForm.customer_name">
-          </ion-input>
-        </ion-item>
+        <!-- A. Pelanggan Toko (Persis POS Buku Digital - Dropdown Langsung) -->
+        <div class="pos-customer-combobox-group">
+          <div class="pos-customer-label">
+            <ion-icon name="person" color="primary"></ion-icon>
+            <span>Pelanggan (Pesanan 1) *</span>
+          </div>
 
-        <!-- Grid Input Jumlah Bal per Varian -->
+          <div class="pos-customer-input-box" [class.is-focused]="isCustomerDropdownOpen">
+            <ion-icon name="person-outline" class="pos-icon-left"></ion-icon>
+            <input
+              type="text"
+              class="pos-customer-input"
+              placeholder="Cari pelanggan berdasarkan nama..."
+              [(ngModel)]="manualForm.customer_name"
+              (focus)="openCustomerDropdown()"
+              (input)="onCustomerInput()" />
+            <ion-icon
+              *ngIf="manualForm.customer_name"
+              name="close"
+              class="pos-icon-clear"
+              (click)="clearCustomer()">
+            </ion-icon>
+          </div>
+
+          <!-- Dropdown Popover Langsung Muncul di Bawah Input (Persis Image 1) -->
+          <div *ngIf="isCustomerDropdownOpen" class="pos-customer-dropdown-menu">
+            <div *ngIf="isLoadingCustomers" class="pos-dropdown-loading">
+              <ion-spinner name="crescent" size="small" color="primary"></ion-spinner>
+              <span>Memuat data pelanggan Buku Digital...</span>
+            </div>
+
+            <div *ngIf="!isLoadingCustomers && filteredCustomers.length === 0" class="pos-dropdown-empty">
+              <span>Tidak ada pelanggan yang cocok dengan pencarian.</span>
+            </div>
+
+            <div
+              *ngFor="let c of filteredCustomers"
+              class="pos-customer-item"
+              [class.is-general]="isGeneralCustomer(c.name)"
+              (mousedown)="selectCustomer(c)">
+              <div class="cust-title">{{ c.name }}</div>
+              <div class="cust-sub" *ngIf="c.address">{{ c.address }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- B. Grid Input Jumlah Bal per Varian -->
         <div style="margin-bottom: 14px;">
           <label style="font-size: 0.85rem; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">
             Rincian Jumlah Bal (Es Kristal) *
@@ -296,21 +339,26 @@
           </div>
         </div>
 
-        <!-- Metode Pembayaran & Nominal Cash -->
+        <!-- C. Metode Pembayaran (Persis Dropdown POS Kasir) -->
         <div style="margin-bottom: 14px;">
           <label style="font-size: 0.85rem; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">
             Metode Pembayaran *
           </label>
-          <ion-segment [(ngModel)]="manualForm.payment_method" style="margin-bottom: 8px;">
-            <ion-segment-button value="cash">
-              <ion-label>Tunai (Cash)</ion-label>
-            </ion-segment-button>
-            <ion-segment-button value="transfer">
-              <ion-label>Transfer / Tempo</ion-label>
-            </ion-segment-button>
-          </ion-segment>
+          <ion-item lines="outline" class="select-payment-item">
+            <ion-select
+              [(ngModel)]="manualForm.payment_method"
+              placeholder="-- Pilih Metode --"
+              interface="popover"
+              class="payment-pos-select">
+              <ion-select-option value="kasbon">⚠️ BELUM LUNAS (KASBON)</ion-select-option>
+              <ion-select-option value="cash">Cash</ion-select-option>
+              <ion-select-option value="dana">Dana</ion-select-option>
+              <ion-select-option value="transfer">Transfer Bank</ion-select-option>
+            </ion-select>
+          </ion-item>
 
-          <ion-item *ngIf="manualForm.payment_method === 'cash'" lines="full" class="ion-no-padding">
+          <!-- Input Uang Tunai Diterima jika Cash -->
+          <ion-item *ngIf="manualForm.payment_method === 'cash'" lines="outline" class="ion-no-padding mt-8">
             <ion-input
               type="number"
               inputmode="numeric"
@@ -322,7 +370,7 @@
           </ion-item>
         </div>
 
-        <!-- Pilih Armada Motor -->
+        <!-- D. Pilih Armada Motor -->
         <ion-item lines="full" class="ion-no-padding" style="margin-bottom: 12px;">
           <ion-select
             label="Armada Motor / Kendaraan (Opsional)"
@@ -336,18 +384,18 @@
           </ion-select>
         </ion-item>
 
-        <!-- Catatan Tambahan -->
+        <!-- E. Catatan Tambahan -->
         <ion-item lines="full" class="ion-no-padding" style="margin-bottom: 14px;">
           <ion-textarea
             rows="2"
             label="Catatan Pengiriman (Opsional)"
             labelPlacement="stacked"
-            placeholder="Cth: Titip di warung sebelah, pelanggan baru..."
+            placeholder="Cth: Titip di warung sebelah, nota kasir..."
             [(ngModel)]="manualForm.notes">
           </ion-textarea>
         </ion-item>
 
-        <!-- Foto Bukti Serah Terima / Nota -->
+        <!-- F. Foto Bukti Serah Terima / Nota -->
         <div style="margin-bottom: 16px;">
           <label style="font-size: 0.85rem; font-weight: 600; color: #475569; display: block; margin-bottom: 6px;">
             Foto Bukti Serah Terima / Nota Manual (Opsional)
@@ -371,21 +419,25 @@
           </div>
         </div>
 
-        <!-- Tombol Kirim Pengiriman Manual -->
+        <!-- Tombol Kirim & Verifikasi POS Otomatis -->
         <ion-button
           expand="block"
           color="primary"
           size="large"
           style="margin-top: 16px; font-weight: 700; height: 48px;"
-          [disabled]="isSubmittingManual || !manualForm.customer_name || manualTotalBalls <= 0"
+          [disabled]="isSubmittingManual"
           (click)="submitManualDelivery()">
           <ion-spinner *ngIf="isSubmittingManual" name="crescent" slot="start"></ion-spinner>
-          <ion-icon *ngIf="!isSubmittingManual" name="send-outline" slot="start"></ion-icon>
-          {{ isSubmittingManual ? 'Mengirim...' : 'Kirim Pengiriman Manual' }}
+          <ion-icon *ngIf="!isSubmittingManual" name="checkmark-done-circle-outline" slot="start"></ion-icon>
+          {{ isSubmittingManual ? 'Mencocokkan dengan POS...' : 'Kirim & Verifikasi POS Otomatis' }}
         </ion-button>
 
-        <p style="text-align: center; font-size: 0.75rem; color: #64748b; margin-top: 8px;">
-          Laporan manual akan masuk status Pending untuk diverifikasi dan disetujui KO.
+        <div *ngIf="!manualForm.customer_name || manualTotalBalls <= 0" style="text-align: center; font-size: 0.78rem; color: #ef4444; margin-top: 6px;">
+          * Wajib memilih pelanggan toko dan minimal 1 bal es.
+        </div>
+
+        <p style="text-align: center; font-size: 0.75rem; color: #64748b; margin-top: 6px;">
+          Sistem akan mencocokkan Pelanggan, Jumlah Bal, dan Pembayaran dengan POS Kasir. Jika cocok, langsung disetujui (Approved) otomatis.
         </p>
       </ion-card-content>
     </ion-card>

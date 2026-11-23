@@ -7,6 +7,7 @@ import {
   IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton,
   IonIcon, IonSpinner, IonRefresher, IonRefresherContent,
   IonModal, IonCheckbox, IonInput, IonTextarea, IonFooter,
+  IonSegment, IonSegmentButton, IonLabel,
   ToastController, LoadingController, AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -15,7 +16,7 @@ import {
   lockClosedOutline, alertCircleOutline, addCircleOutline, cameraOutline,
   trashOutline, closeOutline, sendOutline, shieldCheckmarkOutline, imageOutline,
   checkmark, chevronForward, checkmarkCircle, storefrontOutline, close,
-  checkmarkDoneCircleOutline
+  checkmarkDoneCircleOutline, chevronDownOutline, chevronUpOutline, chevronForwardOutline
 } from 'ionicons/icons';
 
 import { DriverOperationsService } from 'src/app/services/driver-operations.service';
@@ -42,7 +43,8 @@ import { CameraDirection } from '@capacitor/camera';
     BranchSelectModalComponent,
     IonContent, IonHeader, IonTitle, IonToolbar, IonButtons, IonButton,
     IonIcon, IonSpinner, IonRefresher, IonRefresherContent,
-    IonModal, IonCheckbox, IonInput, IonTextarea, IonFooter
+    IonModal, IonCheckbox, IonInput, IonTextarea, IonFooter,
+    IonSegment, IonSegmentButton, IonLabel
   ]
 })
 export class DriverInspectionPage implements OnInit, OnDestroy {
@@ -63,6 +65,12 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
   slots: ChecksheetSlot[] = [];
   vehicles: VehicleOption[] = [];
   branches: Branch[] = [];
+
+  // ==========================================
+  // STATE SLOT AKTIF & TAMPILAN FOKUS
+  // ==========================================
+  activeSlotId: number | string | null = null;
+  showOtherVehicles = false;
 
   // ==========================================
   // STATE MODAL PILIH CABANG & MODAL MOTOR (AJAX)
@@ -112,7 +120,7 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
       lockClosedOutline, alertCircleOutline, addCircleOutline, cameraOutline,
       trashOutline, closeOutline, sendOutline, shieldCheckmarkOutline, imageOutline,
       checkmark, chevronForward, checkmarkCircle, storefrontOutline, close,
-      checkmarkDoneCircleOutline
+      checkmarkDoneCircleOutline, chevronDownOutline, chevronUpOutline, chevronForwardOutline
     });
   }
 
@@ -121,6 +129,10 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
   // ==========================================
   get fuelFillPercent(): number {
     return (this.fuelSliderIndex / (this.fuelOptions.length - 1)) * 100;
+  }
+
+  get isFuelBelowHalf(): boolean {
+    return this.fuelSliderIndex < 2; // Index 0: 'Hampir Habis' (0%), Index 1: '1/4' (25%)
   }
 
   setFuelByIndex(index: number) {
@@ -146,7 +158,24 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
   // ==========================================
   get selectedVehicle(): VehicleOption | undefined {
     if (!this.selectedVehicleId) return undefined;
-    return this.vehicles.find((v) => v.id === this.selectedVehicleId);
+    const found = this.vehicles.find((v) => v.id === this.selectedVehicleId);
+    if (found) return found;
+    if (this.selectedSlot?.vehicles) {
+      const sv = this.selectedSlot.vehicles.find((v: any) => (v.vehicle_id ?? v.id) === this.selectedVehicleId);
+      if (sv) {
+        const vId = (sv.vehicle_id ?? sv.id) as number;
+        if (vId) {
+          return {
+            id: vId,
+            name: sv.name ?? sv.vehicle_name ?? `Motor #${vId}`,
+            plate_number: sv.plate_number || '',
+            type: (sv as any).type || 'motor',
+            is_active: true
+          };
+        }
+      }
+    }
+    return undefined;
   }
 
   get selectedVehicleName(): string {
@@ -204,6 +233,31 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
     if (!slot?.vehicles) return '';
     const v = slot.vehicles.find((item) => item.completed && this.isCurrentUserInspector(item));
     return v ? (v.name || v.vehicle_name || 'Motor') : '';
+  }
+
+  getCurrentUserVehicle(slot: ChecksheetSlot): ChecksheetVehicleStatus | undefined {
+    if (!slot?.vehicles) return undefined;
+    return slot.vehicles.find((item) => item.completed && this.isCurrentUserInspector(item));
+  }
+
+  getOtherVehicles(slot: ChecksheetSlot): ChecksheetVehicleStatus[] {
+    if (!slot?.vehicles) return [];
+    return slot.vehicles.filter((v) => !this.isCurrentUserInspector(v));
+  }
+
+  getSlotShortLabel(slot: any): string {
+    if (!slot) return 'Slot';
+    const name = (slot.phase || slot.slot_name || slot.title || '').toLowerCase();
+    if (name.includes('pagi')) return 'Pagi';
+    if (name.includes('siang')) return 'Siang (Wajib)';
+    if (name.includes('sore')) return 'Sore';
+    if (name.includes('malam')) return 'Malam';
+    return slot.title || 'Slot';
+  }
+
+  get currentActiveSlot(): ChecksheetSlot | undefined {
+    if (!this.slots || this.slots.length === 0) return undefined;
+    return this.slots.find(s => (s.id || s.form_schedule_id) === this.activeSlotId) || this.slots[0];
   }
 
   // ==========================================
@@ -281,6 +335,17 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
         } else {
           this.slots = [];
         }
+
+        if (this.slots.length > 0) {
+          const exists = this.slots.some(s => (s.id || s.form_schedule_id) === this.activeSlotId);
+          if (!this.activeSlotId || !exists) {
+            const openSlot = this.slots.find(s => s.status === 'open' || s.window_status === 'open');
+            const siangSlot = this.slots.find(s => this.isSiangGatekeeper(s));
+            const target = openSlot || siangSlot || this.slots[0];
+            this.activeSlotId = target.id || target.form_schedule_id || null;
+          }
+        }
+
         this.isLoading = false;
         if (event) event.target.complete();
       },
@@ -306,6 +371,23 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
   // HANDLER MODAL PEMILIHAN MOTOR & CABANG (AJAX)
   // ==========================================
   openVehicleSelectModal() {
+    if (!this.vehicles || this.vehicles.length === 0) {
+      if (this.selectedSlot?.vehicles && this.selectedSlot.vehicles.length > 0) {
+        this.vehicles = this.selectedSlot.vehicles.map((sv: any) => {
+          const vId = (sv.vehicle_id ?? sv.id) as number;
+          return {
+            id: vId,
+            name: sv.name ?? sv.vehicle_name ?? `Motor #${vId}`,
+            plate_number: sv.plate_number || '',
+            type: sv.type || 'motor',
+            is_active: true
+          };
+        });
+      } else {
+        const userBranchId = this.authService.getCurrentUserValue()?.branch_id;
+        this.loadVehicles(userBranchId);
+      }
+    }
     this.isVehicleModalOpen = true;
   }
 
@@ -509,6 +591,11 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
       return;
     }
 
+    if (!this.selectedScheduleId && this.slots.length > 0) {
+      const targetSlot = this.selectedSlot || this.slots.find(s => s.status === 'open' || s.window_status === 'open') || this.slots[0];
+      this.selectedScheduleId = targetSlot?.form_schedule_id ?? targetSlot?.id ?? null;
+    }
+
     this.isSubmitting = true;
     const loading = await this.loadingCtrl.create({ message: 'Mengirim inspeksi armada...' });
     await loading.present();
@@ -539,9 +626,14 @@ export class DriverInspectionPage implements OnInit, OnDestroy {
 
         this.closeModal();
 
+        let successMsg = 'Laporan inspeksi armada berhasil dicatat. Syarat absen pulang siang Anda telah selesai.';
+        if (this.isFuelBelowHalf) {
+          successMsg += '\n\n⛽ PENGINGAT: Indikator bensin motor di bawah 1/2 (' + this.fuelLevel + '). Silakan segera isi bensin armada!';
+        }
+
         const alert = await this.alertCtrl.create({
           header: 'Inspeksi Berhasil! 🎉',
-          message: 'Laporan inspeksi armada berhasil dicatat. Syarat absen pulang siang Anda telah selesai.',
+          message: successMsg,
           buttons: ['OK']
         });
         await alert.present();

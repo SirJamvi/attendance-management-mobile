@@ -15,7 +15,8 @@ import { Storage } from 'src/app/services/storage';
 import { BranchService } from 'src/app/services/branch.service';
 import { AttendanceService } from 'src/app/services/attendance';
 import { BranchSelectModalComponent } from 'src/app/components/branch-select-modal/branch-select-modal.component';
-import { Branch, User } from 'src/app/types/api.types';
+import { DriverDutySetupModalComponent } from 'src/app/components/driver-duty-setup-modal/driver-duty-setup-modal.component';
+import { Branch, User, OperationalShift } from 'src/app/types/api.types';
 import { environment } from 'src/environments/environment';
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
@@ -32,7 +33,8 @@ declare const google: any;
     FormsModule,
     IonContent,
     IonItem, IonLabel, IonInput, IonButton, IonIcon, IonText, IonSpinner,
-    BranchSelectModalComponent
+    BranchSelectModalComponent,
+    DriverDutySetupModalComponent
   ]
 })
 export class LoginPage implements OnInit {
@@ -48,11 +50,20 @@ export class LoginPage implements OnInit {
   showPassword = false;
   errorMessage = '';
 
-  // State Pop-up Pemilihan Cabang Pasca-Login
+  // State Pop-up Pemilihan Cabang Pasca-Login (KO / Kasir / Sales)
   isBranchModalOpen = false;
   branches: Branch[] = [];
   selectedBranchId: number | null = null;
   pendingUser: User | null = null;
+
+  // State Pop-up 2-Langkah Driver Pasca-Login (Cabang + Shift)
+  isDriverDutyModalOpen = false;
+  shifts: OperationalShift[] = [];
+  scheduledShiftId: number | null = null;
+  scheduledShiftName: string | null = null;
+  isDayOff = false;
+  selectedShiftId: number | null = null;
+  shiftNote = '';
 
   constructor(
     private authService: AuthService,
@@ -347,8 +358,35 @@ export class LoginPage implements OnInit {
         if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
           this.branches = res.data;
           this.selectedBranchId = user.branch_id || this.branches[0].id;
-          // Tampilkan pop-up modal pemilihan cabang
-          this.isBranchModalOpen = true;
+
+          // Jika role DRIVER: Muat daftar shift & buka Modal 2-Langkah (Cabang + Shift)
+          if (user.role === 'driver') {
+            this.attendanceService.getShifts().subscribe({
+              next: (shiftRes) => {
+                if (shiftRes?.data?.shifts && shiftRes.data.shifts.length > 0) {
+                  this.shifts = shiftRes.data.shifts;
+                  this.scheduledShiftId = shiftRes.data.today_scheduled_shift_id;
+                  this.scheduledShiftName = shiftRes.data.today_scheduled_shift?.name || null;
+                  this.isDayOff = !!shiftRes.data.is_day_off;
+                  this.selectedShiftId = shiftRes.data.selected_duty_shift_id || this.scheduledShiftId || (this.shifts[0]?.id ?? null);
+                  this.shiftNote = shiftRes.data.selected_duty_note || '';
+                } else {
+                  this.shifts = this.getDefaultShifts();
+                  this.selectedShiftId = this.shifts[0].id;
+                }
+                this.isDriverDutyModalOpen = true;
+              },
+              error: (err) => {
+                console.warn('Gagal memuat shift pasca login driver, memakai default:', err);
+                this.shifts = this.getDefaultShifts();
+                this.selectedShiftId = this.shifts[0].id;
+                this.isDriverDutyModalOpen = true;
+              }
+            });
+          } else {
+            // Tampilkan pop-up modal pemilihan cabang standar untuk KO, Kasir, Sales
+            this.isBranchModalOpen = true;
+          }
         } else {
           this.proceedToApp(user);
         }
@@ -358,6 +396,43 @@ export class LoginPage implements OnInit {
         this.proceedToApp(user);
       }
     });
+  }
+
+  async onDriverDutyConfirmed(event: {
+    branch: Branch;
+    shift: OperationalShift;
+    note?: string;
+    isMatch: boolean;
+  }) {
+    this.isDriverDutyModalOpen = false;
+    if (this.pendingUser) {
+      // 1. Simpan cabang ke auth & duty branch backend
+      await this.authService.updateUserBranch(event.branch.id, event.branch.name);
+      this.attendanceService.updateDutyBranch(event.branch.id).subscribe({
+        next: (res) => console.log('✅ Duty branch driver tersinkron:', res),
+        error: (err) => console.warn('⚠️ Gagal sinkron duty branch driver:', err)
+      });
+
+      // 2. Simpan shift ke duty shift backend & client state
+      this.attendanceService.updateDutyShift(event.shift.id, event.note).subscribe({
+        next: (res) => console.log('✅ Duty shift driver tersinkron:', res),
+        error: (err) => console.warn('⚠️ Gagal sinkron duty shift driver:', err)
+      });
+
+      const matchMsg = event.isMatch
+        ? `Shift ${event.shift.name} sesuai jadwal resmi`
+        : `Shift ${event.shift.name} di luar jadwal (Menunggu validasi admin)`;
+
+      await this.showToast(`Login berhasil (${event.branch.name} • ${matchMsg})`, event.isMatch ? 'success' : 'warning');
+      await this.proceedToApp(this.pendingUser);
+    }
+  }
+
+  onDriverDutyModalDismiss() {
+    this.isDriverDutyModalOpen = false;
+    if (this.pendingUser) {
+      this.proceedToApp(this.pendingUser);
+    }
   }
 
   async onBranchConfirmed(branch: Branch) {
@@ -407,5 +482,16 @@ export class LoginPage implements OnInit {
       position: 'bottom'
     });
     await toast.present();
+  }
+
+  private getDefaultShifts(): OperationalShift[] {
+    return [
+      { id: 1, name: 'Shift 1 (Pagi)', start_time: '07:20:00', end_time: '15:20:00', daily_wage: 60000 },
+      { id: 3, name: 'Helper Pagi', start_time: '07:20:00', end_time: '12:00:00', daily_wage: 30000, is_helper: true },
+      { id: 2, name: 'Shift 2 (09:40)', start_time: '09:40:00', end_time: '17:40:00', daily_wage: 60000 },
+      { id: 6, name: 'Shift 2 (12:00)', start_time: '12:00:00', end_time: '20:00:00', daily_wage: 60000 },
+      { id: 4, name: 'Helper Sore', start_time: '16:30:00', end_time: '22:00:00', daily_wage: 30000, is_helper: true },
+      { id: 5, name: 'Helper Rangkap (Pagi + Sore)', start_time: '07:20:00', end_time: '22:00:00', daily_wage: 60000, is_rangkap: true },
+    ];
   }
 }

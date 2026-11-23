@@ -15,13 +15,16 @@ import {
   timeOutline, checkmarkCircleOutline, alertCircleOutline, bicycleOutline,
   flashOutline, documentTextOutline, chevronForwardOutline, calendarOutline,
   sparklesOutline, refreshOutline, shieldCheckmarkOutline, eyeOutline,
-  closeOutline, warningOutline, checkmarkDoneCircleOutline, locationOutline
+  closeOutline, warningOutline, checkmarkDoneCircleOutline, locationOutline,
+  storefrontOutline
 } from 'ionicons/icons';
 
 import { KoOperationsService } from 'src/app/services/ko-operations.service';
+import { BranchService } from 'src/app/services/branch.service';
 import { AudioNotificationService } from 'src/app/services/audio-notification.service';
 import { BranchBadgeComponent } from 'src/app/components/branch-badge/branch-badge.component';
 import {
+  Branch,
   ChecksheetIncidentalData,
   ChecksheetSlot,
   ChecksheetTodayData,
@@ -46,6 +49,7 @@ import {
 })
 export class KoChecksheetsPage implements OnInit, OnDestroy {
   private koService = inject(KoOperationsService);
+  private branchService = inject(BranchService);
   private audioService = inject(AudioNotificationService);
   private router = inject(Router);
   private navCtrl = inject(NavController);
@@ -57,6 +61,10 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
 
   selectedDate = this.getTodayDateString();
   selectedTab: 'pagi' | 'siang' | 'sore' | 'malam' | 'insidental' = 'pagi';
+
+  // Multi-Cabang Filter
+  branches: Branch[] = [];
+  selectedBranchId: number | 'all' = 'all';
 
   isLoading = true;
   errorMsg = '';
@@ -80,12 +88,25 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
       timeOutline, checkmarkCircleOutline, alertCircleOutline, bicycleOutline,
       flashOutline, documentTextOutline, chevronForwardOutline, calendarOutline,
       sparklesOutline, refreshOutline, shieldCheckmarkOutline, eyeOutline,
-      closeOutline, warningOutline, checkmarkDoneCircleOutline, locationOutline
+      closeOutline, warningOutline, checkmarkDoneCircleOutline, locationOutline,
+      storefrontOutline
     });
   }
 
   ngOnInit() {
     this.selectInitialPhaseByHour();
+    this.branchService.getBranches().subscribe({
+      next: (res) => {
+        if (res?.data && Array.isArray(res.data)) {
+          this.branches = res.data;
+        }
+      },
+      error: () => {}
+    });
+  }
+
+  onBranchFilterChanged() {
+    this.loadAll();
   }
 
   ngOnDestroy() {
@@ -126,7 +147,7 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
     if (!event && !this.todayData) this.isLoading = true;
     this.errorMsg = '';
 
-    this.koService.getTodayChecksheets(this.selectedDate).subscribe({
+    this.koService.getTodayChecksheets(this.selectedDate, this.selectedBranchId).subscribe({
       next: (res) => {
         if (res?.success && res.data) {
           this.processTodayDataAndDetectNewInspections(res.data);
@@ -178,7 +199,7 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
   }
 
   private checkNewInspectionsSilently() {
-    this.koService.getTodayChecksheets(this.selectedDate).subscribe({
+    this.koService.getTodayChecksheets(this.selectedDate, this.selectedBranchId).subscribe({
       next: (res) => {
         if (res?.success && res.data) {
           this.processTodayDataAndDetectNewInspections(res.data);
@@ -399,6 +420,7 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
     }
 
     const subId = this.selectedVehicleForVerify.submission_id;
+    const isLowFuel = this.isFuelBelowHalf(this.selectedVehicleForVerify?.answers?.['fuel_level']?.value_text);
     this.isVerifying = true;
     const loading = await this.loadingCtrl.create({
       message: decision === 'approved' ? 'Menyetujui verifikasi armada...' : 'Menandai catatan perbaikan...'
@@ -414,12 +436,13 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
         await loading.dismiss();
         this.closeVerifyModal();
 
+        const fuelMsg = (decision === 'approved' && isLowFuel) ? ' (⚠️ Reminder: Bensin armada < 1/2, pastikan bensin diisi!)' : '';
         const toast = await this.toastCtrl.create({
           message: decision === 'approved'
-            ? 'Armada berhasil diverifikasi & disetujui! ✅'
+            ? 'Armada berhasil diverifikasi & disetujui! ✅' + fuelMsg
             : 'Catatan perbaikan berhasil disimpan ⚠️',
-          duration: 3000,
-          color: decision === 'approved' ? 'success' : 'warning'
+          duration: isLowFuel ? 4500 : 3000,
+          color: decision === 'approved' ? (isLowFuel ? 'warning' : 'success') : 'warning'
         });
         await toast.present();
         this.loadAll();
@@ -435,5 +458,11 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
         await toast.present();
       }
     });
+  }
+
+  isFuelBelowHalf(level?: string | null): boolean {
+    if (!level) return false;
+    const l = level.toLowerCase().trim();
+    return l.includes('1/4') || l.includes('habis') || l === '0%' || l === '25%';
   }
 }
