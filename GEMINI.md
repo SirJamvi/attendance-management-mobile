@@ -82,7 +82,13 @@ Dokumen ini berisi seluruh ringkasan arsitektur, basis data, aturan bisnis, dan 
 
 ## 4. Alur Kerja & Deploy Standar
 
-* **Jika ada perubahan Backend**:
+* **Otomatisasi Deploy Staging via FTP (`staging.resdigaza.my.id`)**:
+  - Setiap kali Antigravity membuat atau mengubah file backend di `attendance-management`, Antigravity **WAJIB LANGSUNG** mengeksekusi skrip upload:
+    ```powershell
+    powershell -ExecutionPolicy Bypass -File "E:\SYSTEM\attendance-management\deploy-ftp.ps1" -Recent
+    ```
+    atau `-Files "<path/file>"` agar server staging langsung terupdate otomatis tanpa menunggu manual git push/pull.
+* **Jika ada perubahan Backend Production**:
   ```bash
   # Di server:
   cd /home/resdigaz/attendance.eskristalkarawang.com
