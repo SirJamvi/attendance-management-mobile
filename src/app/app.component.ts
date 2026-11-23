@@ -10,6 +10,7 @@ import {
   addCircleOutline, documentTextOutline
 } from 'ionicons/icons';
 import { RadialMenuService, MenuItem } from './services/radial-menu.service';
+import { OtaUpdateService } from './services/ota-update.service';
 
 @Component({
   selector: 'app-root',
@@ -24,7 +25,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   constructor(
     public radialMenu: RadialMenuService,
-    private platform: Platform
+    private platform: Platform,
+    private otaService: OtaUpdateService
   ) {
     addIcons({
       close,
@@ -42,6 +44,9 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // Inisialisasi OTA Live Update di background
+    this.otaService.init();
+
     // Intersep tombol back hardware Android saat menu sheet terbuka
     this.backButtonSub = this.platform.backButton.subscribeWithPriority(10000, (processNextHandler) => {
       if (this.radialMenu.isOpen) {

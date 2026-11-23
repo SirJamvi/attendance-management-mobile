@@ -14,7 +14,8 @@
     "cap:sync": "npx cap sync",
     "cap:open:android": "npx cap open android",
     "android:dev": "ionic build && npx cap sync android && npx cap open android",
-    "android:prod": "ionic build --prod && npx cap sync android && npx cap open android"
+    "android:prod": "ionic build --prod && npx cap sync android && npx cap open android",
+    "ota:pack": "powershell -ExecutionPolicy Bypass -File ./scripts/pack-ota.ps1"
   },
   "private": true,
   "dependencies": {
@@ -35,6 +36,7 @@
     "@capacitor/keyboard": "7.0.3",
     "@capacitor/status-bar": "7.0.3",
     "@capgo/capacitor-social-login": "^7.20.0",
+    "@capgo/capacitor-updater": "^7.53.0",
     "@ionic/angular": "^8.0.0",
     "@ionic/pwa-elements": "^3.3.0",
     "@ionic/storage-angular": "^4.0.0",
