@@ -496,26 +496,83 @@
           <p>Ditemukan selisih kas laci yang memerlukan peninjauan Owner. Laporan telah ditandai otomatis.</p>
         </div>
 
-        <ion-card class="recon-card">
+        <!-- Rincian SSOT POS BukuDig (Hanya tampil setelah submit) -->
+        <ion-card class="recon-card ion-margin-bottom" *ngIf="reconciliationData.pos_breakdown">
+          <ion-card-header style="padding-bottom: 4px;">
+            <ion-card-subtitle style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--ion-color-medium);">
+              Rincian Kas POS BukuDig (07:00 – Closing)
+            </ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="recon-row">
+              <span>Modal Awal (Opening)</span>
+              <strong>{{ (reconciliationData.pos_breakdown.opening_cash ?? 0) | currency:'IDR':'Rp ':'1.0-0' }}</strong>
+            </div>
+            <div class="recon-row">
+              <span>Penjualan Tunai Meja</span>
+              <strong style="color: #16a34a;">+{{ (reconciliationData.pos_breakdown.cash_sales ?? 0) | currency:'IDR':'Rp ':'1.0-0' }}</strong>
+            </div>
+            <div class="recon-row">
+              <span>Pelunasan Kasbon / Driver</span>
+              <strong style="color: #16a34a;">+{{ (reconciliationData.pos_breakdown.pelunasan_cash ?? 0) | currency:'IDR':'Rp ':'1.0-0' }}</strong>
+            </div>
+            <div class="recon-row" *ngIf="(reconciliationData.pos_breakdown.operational_and_stock_expenses ?? 0) > 0 || !(reconciliationData.pos_breakdown.drawer_expenses)">
+              <span>Beban & Beli Es Luar</span>
+              <strong style="color: #e53e3e;">-{{ (reconciliationData.pos_breakdown.operational_and_stock_expenses ?? reconciliationData.pos_breakdown.drawer_expenses ?? 0) | currency:'IDR':'Rp ':'1.0-0' }}</strong>
+            </div>
+            <div class="recon-row" *ngIf="(reconciliationData.pos_breakdown.mid_shift_handovers ?? 0) > 0">
+              <span>Setor Tengah Shift</span>
+              <strong style="color: #e53e3e;">-{{ reconciliationData.pos_breakdown.mid_shift_handovers | currency:'IDR':'Rp ':'1.0-0' }}</strong>
+            </div>
+            <div class="recon-row" *ngIf="(reconciliationData.pos_breakdown.cash_refunds ?? 0) > 0">
+              <span>Void / Refund Tunai</span>
+              <strong style="color: #e53e3e;">-{{ reconciliationData.pos_breakdown.cash_refunds | currency:'IDR':'Rp ':'1.0-0' }}</strong>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Ringkasan Rekonsiliasi & Selisih Fisik -->
+        <ion-card class="recon-card ion-margin-bottom">
           <ion-card-content>
             <div class="recon-row">
               <span>Ekspektasi Kas POS BukuDig</span>
               <strong>{{ reconciliationData.pos_expected_cash | currency:'IDR':'Rp ':'1.0-0' }}</strong>
             </div>
             <div class="recon-row">
-              <span>Kas Fisik Laci (Input Anda)</span>
+              <span>Kas Fisik Laci (Dihitung)</span>
               <strong>{{ reconciliationData.actual_cash_drawer | currency:'IDR':'Rp ':'1.0-0' }}</strong>
             </div>
             <div class="recon-row divider">
               <span>Selisih Kas (Variance)</span>
               <strong [style.color]="reconciliationData.cash_variance < 0 ? '#e53e3e' : '#16a34a'">
-                {{ reconciliationData.cash_variance | currency:'IDR':'Rp ':'1.0-0' }}
+                {{ (reconciliationData.cash_variance > 0 ? '+' : '') + (reconciliationData.cash_variance | currency:'IDR':'Rp ':'1.0-0') }}
               </strong>
             </div>
-            <div class="recon-row">
+            <div class="recon-row" *ngIf="reconciliationData.shortage_amount > 0">
               <span>Nominal Tekor (Shortage)</span>
-              <strong [style.color]="reconciliationData.shortage_amount > 0 ? '#e53e3e' : '#16a34a'">
+              <strong style="color: #e53e3e;">
                 {{ reconciliationData.shortage_amount | currency:'IDR':'Rp ':'1.0-0' }}
+              </strong>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Informasi Setor ke Owner & Sisa Kas Besok -->
+        <ion-card class="recon-card ion-margin-bottom" *ngIf="(reconciliationData.cash_handover_amount ?? 0) > 0">
+          <ion-card-header style="padding-bottom: 4px;">
+            <ion-card-subtitle style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--ion-color-primary);">
+              Serah Terima Kas Tutup Shift
+            </ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="recon-row">
+              <span>Disetor ke Owner / Bank</span>
+              <strong style="color: #2563eb;">{{ reconciliationData.cash_handover_amount | currency:'IDR':'Rp ':'1.0-0' }}</strong>
+            </div>
+            <div class="recon-row divider">
+              <span>Sisa Kas Laci Besok</span>
+              <strong style="color: #059669;">
+                {{ (reconciliationData.ending_cash_for_next_shift ?? (reconciliationData.actual_cash_drawer - (reconciliationData.cash_handover_amount || 0))) | currency:'IDR':'Rp ':'1.0-0' }}
               </strong>
             </div>
           </ion-card-content>

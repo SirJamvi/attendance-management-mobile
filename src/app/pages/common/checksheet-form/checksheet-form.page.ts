@@ -299,7 +299,7 @@ export class ChecksheetFormPage implements OnInit {
         requires_pos_reconciliation: true,
         fields: [
           {
-            field_key: 'actual_cash',
+            field_key: 'actual_cash_drawer',
             label: 'Total Fisik Uang di Laci Kasir (Rp)',
             field_type: 'currency',
             is_required: true,
@@ -307,20 +307,36 @@ export class ChecksheetFormPage implements OnInit {
             sort_order: 1,
           },
           {
-            field_key: 'cash_drawer_photo',
-            label: 'Foto Laci Kasir & Fisik Uang',
-            field_type: 'photo',
-            photo_category: 'cash_drawer_photo',
-            is_required: true,
+            field_key: 'cash_handover_amount',
+            label: 'Nominal Setor ke Owner / Bank (Opsional)',
+            field_type: 'currency',
+            is_required: false,
+            placeholder: 'Nominal setor ke Owner (isi 0 jika disimpan di laci)...',
             sort_order: 2,
           },
           {
-            field_key: 'closing_notes',
+            field_key: 'cash_evidence_photo',
+            label: 'Foto Laci Kasir & Fisik Uang',
+            field_type: 'photo',
+            photo_category: 'cash_evidence_photo',
+            is_required: true,
+            sort_order: 3,
+          },
+          {
+            field_key: 'handover_receiver',
+            label: 'Nama Penerima Serah Terima',
+            field_type: 'text',
+            is_required: true,
+            placeholder: 'Nama penerima serah terima kas...',
+            sort_order: 4,
+          },
+          {
+            field_key: 'notes',
             label: 'Catatan Closing Kasir (Opsional)',
             field_type: 'textarea',
             is_required: false,
             placeholder: 'Catatan jika ada selisih kas...',
-            sort_order: 3,
+            sort_order: 5,
           },
         ]
       };
@@ -866,6 +882,15 @@ export class ChecksheetFormPage implements OnInit {
       return 'Silakan pilih driver untuk Gatepass Rute Jauh.';
     }
 
+    // Validasi nominal setor tidak boleh melebihi uang fisik laci pada mode Blind Count closing
+    if (this.isBlindCount) {
+      const actualVal = Number(this.answers['actual_cash_drawer'] ?? this.answers['actual_cash'] ?? 0);
+      const handoverVal = Number(this.answers['cash_handover_amount'] ?? 0);
+      if (handoverVal > actualVal) {
+        return 'Nominal setor ke Owner/Bank tidak boleh melebihi total uang fisik di laci.';
+      }
+    }
+
     for (const field of this.formSchema.fields || []) {
       const key = this.getFieldKey(field);
       if (!key || !this.isFieldRequired(field)) continue;
@@ -948,8 +973,16 @@ export class ChecksheetFormPage implements OnInit {
       }));
     }
 
-    if (this.isBlindCount && sanitizedAnswers['actual_cash_drawer'] !== undefined) {
-      payload.actual_cash_drawer = sanitizedAnswers['actual_cash_drawer'];
+    if (this.isBlindCount) {
+      const actualVal = sanitizedAnswers['actual_cash_drawer'] ?? sanitizedAnswers['actual_cash'];
+      if (actualVal !== undefined && actualVal !== null) {
+        payload.actual_cash_drawer = Number(actualVal);
+        sanitizedAnswers['actual_cash_drawer'] = Number(actualVal);
+      }
+      const handoverVal = sanitizedAnswers['cash_handover_amount'];
+      if (handoverVal !== undefined && handoverVal !== null) {
+        payload.cash_handover_amount = Number(handoverVal);
+      }
     }
 
     const submit$ = this.isDriverMode
@@ -970,7 +1003,7 @@ export class ChecksheetFormPage implements OnInit {
         }
 
         // Handle Blind Count Reconciliation Result
-        const recon = data.reconciliation || (
+        const recon: BlindCountReconciliation | null = data.reconciliation || (
           data.pos_expected_cash !== undefined || data.actual_cash_drawer !== undefined
             ? {
                 pos_expected_cash: Number(data.pos_expected_cash ?? 0),
@@ -978,6 +1011,13 @@ export class ChecksheetFormPage implements OnInit {
                 cash_variance: Number(data.cash_variance ?? 0),
                 shortage_amount: Number(data.shortage_amount ?? 0),
                 status: data.status,
+                cash_handover_amount: Number(data.cash_handover_amount ?? data.pos_breakdown?.cash_handover_amount ?? 0),
+                ending_cash_for_next_shift: data.ending_cash_for_next_shift !== undefined && data.ending_cash_for_next_shift !== null
+                  ? Number(data.ending_cash_for_next_shift)
+                  : (data.pos_breakdown?.ending_cash_for_next_shift !== undefined
+                      ? Number(data.pos_breakdown.ending_cash_for_next_shift)
+                      : null),
+                pos_breakdown: data.pos_breakdown || null,
               }
             : null
         );

@@ -348,6 +348,7 @@ export interface ChecksheetSubmitPayload {
   answers: Record<string, any>;
   items?: any[];
   actual_cash_drawer?: number | null;
+  cash_handover_amount?: number | null;
 }
 
 export interface BlindCountReconciliation {
@@ -356,6 +357,21 @@ export interface BlindCountReconciliation {
   cash_variance: number;
   shortage_amount: number;
   status?: ChecksheetSlotStatus;
+  cash_handover_amount?: number;
+  ending_cash_for_next_shift?: number | null;
+  pos_breakdown?: {
+    opening_cash?: number;
+    cash_sales?: number;
+    pelunasan_cash?: number;
+    operational_and_stock_expenses?: number;
+    mid_shift_handovers?: number;
+    cash_refunds?: number;
+    drawer_expenses?: number;
+    expected_cash?: number;
+    cash_handover_amount?: number;
+    ending_cash_for_next_shift?: number;
+    [key: string]: any;
+  } | null;
 }
 
 export interface ChecksheetSubmitResult {
