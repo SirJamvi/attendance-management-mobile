@@ -733,7 +733,8 @@ export class ChecksheetFormPage implements OnInit {
     }
 
     const msg = this.generatePoliteKasbonMessage(customer);
-    const waUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`;
+    // Gunakan universal deep link wa.me agar di Android fisik langsung direct buka WhatsApp app
+    const waUrl = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     try {
       window.open(waUrl, '_system');
     } catch {
