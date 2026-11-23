@@ -105,7 +105,7 @@
       *ngFor="let slot of currentPhaseSlots"
       class="slot-card"
       [class.card-clickable]="canFillSlot(slot)"
-      (click)="onCardClicked(slot)">
+      (click)="handleCardClick($event, slot)">
       <ion-card-header>
         <div class="slot-header-row">
           <div class="slot-title-col">
@@ -267,7 +267,7 @@
             size="small"
             [color]="(slot.status === 'late' || slot.status === 'missed') ? 'warning' : 'primary'"
             class="ion-margin-top"
-            (click)="openSlotForm(slot); $event.stopPropagation()">
+            (click)="openSlotForm(slot)">
             <ion-icon name="document-text-outline" slot="start"></ion-icon>
             {{ (slot.status === 'late' || slot.status === 'missed') ? 'Isi Checksheet (Terlambat)' : 'Isi Checksheet' }}
           </ion-button>

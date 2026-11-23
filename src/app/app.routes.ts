@@ -253,6 +253,14 @@ export const routes: Routes = [
 
   // --- RUTE DI LUAR TABS ---
   {
+    path: 'checksheets/form/:slug',
+    loadComponent: () =>
+      import('./pages/common/checksheet-form/checksheet-form.page').then(
+        (m) => m.ChecksheetFormPage
+      ),
+    canActivate: [authGuard],
+  },
+  {
     path: 'leave-create',
     loadComponent: () =>
       import('./pages/common/leave-create/leave-create.page').then(

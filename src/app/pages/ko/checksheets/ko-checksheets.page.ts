@@ -357,7 +357,14 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
     return slot.status === 'open' || slot.status === 'late' || slot.status === 'missed' || slot.status === 'upcoming';
   }
 
-  onCardClicked(slot: ChecksheetSlot) {
+  private isNavigating = false;
+
+  handleCardClick(event: Event, slot: ChecksheetSlot) {
+    const target = event?.target as HTMLElement;
+    // Hindari dobel trigger jika yang diklik adalah ion-button di dalamnya
+    if (target && target.closest('ion-button')) {
+      return;
+    }
     if (this.canFillSlot(slot)) {
       this.openSlotForm(slot);
     }
@@ -368,27 +375,61 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
   }
 
   openSlotForm(slot: ChecksheetSlot) {
-    this.router.navigate(['/tabs/ko/checksheets/form', slot.slug], {
-      queryParams: {
-        mode: 'ko',
-        form_schedule_id: slot.form_schedule_id || slot.id || undefined,
-      },
+    if (this.isNavigating) return;
+    this.isNavigating = true;
+
+    const queryParams: any = { mode: 'ko' };
+    const schedId = slot.form_schedule_id || slot.id;
+    if (schedId) queryParams.form_schedule_id = schedId;
+
+    console.log('🚀 [KoChecksheets] Navigating to form:', slot.slug, queryParams);
+
+    this.navCtrl.navigateForward(`/tabs/ko/checksheets/form/${slot.slug}`, {
+      queryParams,
+    }).catch((err) => {
+      console.warn('⚠️ [KoChecksheets] navCtrl navigateForward failed, trying router:', err);
+      return this.router.navigate(['/tabs/ko/checksheets/form', slot.slug], { queryParams });
+    }).finally(() => {
+      setTimeout(() => { this.isNavigating = false; }, 800);
     });
   }
 
   openVehicleInspection(slot: ChecksheetSlot, vehicle: ChecksheetVehicleStatus) {
-    this.router.navigate(['/tabs/ko/checksheets/form', slot.slug], {
-      queryParams: {
-        mode: 'ko',
-        form_schedule_id: slot.form_schedule_id || slot.id || undefined,
-        vehicle_id: vehicle.vehicle_id || vehicle.id,
-      },
+    if (this.isNavigating) return;
+    this.isNavigating = true;
+
+    const queryParams: any = {
+      mode: 'ko',
+      vehicle_id: vehicle.vehicle_id || vehicle.id,
+    };
+    const schedId = slot.form_schedule_id || slot.id;
+    if (schedId) queryParams.form_schedule_id = schedId;
+
+    console.log('🚀 [KoChecksheets] Navigating to vehicle inspection:', slot.slug, queryParams);
+
+    this.navCtrl.navigateForward(`/tabs/ko/checksheets/form/${slot.slug}`, {
+      queryParams,
+    }).catch((err) => {
+      console.warn('⚠️ [KoChecksheets] navCtrl failed for vehicle inspection, trying router:', err);
+      return this.router.navigate(['/tabs/ko/checksheets/form', slot.slug], { queryParams });
+    }).finally(() => {
+      setTimeout(() => { this.isNavigating = false; }, 800);
     });
   }
 
   openIncidentalForm(slug: string) {
-    this.router.navigate(['/tabs/ko/checksheets/form', slug], {
+    if (this.isNavigating) return;
+    this.isNavigating = true;
+
+    console.log('🚀 [KoChecksheets] Navigating to incidental form:', slug);
+
+    this.navCtrl.navigateForward(`/tabs/ko/checksheets/form/${slug}`, {
       queryParams: { mode: 'ko' },
+    }).catch((err) => {
+      console.warn('⚠️ [KoChecksheets] navCtrl failed for incidental, trying router:', err);
+      return this.router.navigate(['/tabs/ko/checksheets/form', slug], { queryParams: { mode: 'ko' } });
+    }).finally(() => {
+      setTimeout(() => { this.isNavigating = false; }, 800);
     });
   }
 

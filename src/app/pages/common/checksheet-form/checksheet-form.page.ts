@@ -97,6 +97,14 @@ export class ChecksheetFormPage implements OnInit {
   }
 
   ngOnInit() {
+    this.initPage();
+  }
+
+  ionViewWillEnter() {
+    this.initPage();
+  }
+
+  private initPage() {
     this.slug = this.route.snapshot.paramMap.get('slug') || '';
     const qp = this.route.snapshot.queryParamMap;
     const role = this.authService.getCurrentUserValue()?.role;
@@ -108,6 +116,8 @@ export class ChecksheetFormPage implements OnInit {
     const vehicleParam = qp.get('vehicle_id');
     this.formScheduleId = scheduleParam ? Number(scheduleParam) : null;
     this.selectedVehicleId = vehicleParam ? Number(vehicleParam) : null;
+
+    console.log('📄 [ChecksheetFormPage] initPage for slug:', this.slug, 'scheduleId:', this.formScheduleId);
 
     // Fast-path: pasang fallback schema instan agar form muncul 0ms tanpa menunggu jaringan
     const fallback = this.getFallbackSchema(this.slug);
@@ -627,8 +637,10 @@ export class ChecksheetFormPage implements OnInit {
   }
 
   async submitForm() {
+    console.log('📤 [ChecksheetFormPage] submitForm clicked. Slug:', this.slug, 'Answers:', this.answers);
     const validationErr = this.validateForm();
     if (validationErr) {
+      console.warn('⚠️ [ChecksheetFormPage] Validation error:', validationErr);
       await this.showToast(validationErr, 'warning');
       return;
     }
