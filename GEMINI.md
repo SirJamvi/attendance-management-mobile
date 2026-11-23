@@ -96,6 +96,21 @@ Dokumen ini berisi seluruh ringkasan arsitektur, basis data, aturan bisnis, dan 
   php artisan route:clear
   php artisan cache:clear
   ```
-* **Jika ada perubahan Mobile**:
+* **Jika ada perubahan Mobile (Live Update OTA tanpa install ulang APK)**:
+  - Edit kode Angular/TypeScript di mobile seperti biasa.
   - Pastikan `npm run build` berhasil tanpa error TypeScript / Angular.
-  - Push ke branch `main`.
+  - Jalankan packaging bundle OTA di terminal mobile:
+    ```bash
+    npm run ota:pack
+    ```
+    *(Menghasilkan bundle zip web super ringan ~0.8 MB di `dist-ota/bundle-<versi>.zip`)*.
+  - Unggah file zip tersebut ke server backend (`storage/app/ota/`) dan jalankan publish:
+    ```bash
+    php artisan app:publish-ota <versi> --zip="storage/app/ota/bundle-<versi>.zip" --notes="<Catatan perbaikan fitur>"
+    ```
+  - Push kode mobile ke branch `main`.
+  - *Hasil*: Seluruh Driver dan KO otomatis menerima fitur baru di latar belakang saat membuka aplikasi tanpa perlu install ulang / update APK Play Store.
+  - *(Khusus jika ada update native skala besar seperti penambahan plugin hardware baru / izin Android baru, gunakan opsi `--force-native`)*:
+    ```bash
+    php artisan app:publish-ota <versi> --force-native --notes="Pembaruan besar sistem. Silakan update APK."
+    ```
