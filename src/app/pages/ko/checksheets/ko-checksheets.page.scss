@@ -205,6 +205,17 @@ ion-content {
   border-radius: 14px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 
+  &.card-clickable {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.05);
+
+    &:active {
+      transform: scale(0.99);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+  }
+
   ion-card-title {
     font-size: 1rem;
     font-weight: 700;

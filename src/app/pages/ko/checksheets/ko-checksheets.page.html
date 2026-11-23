@@ -101,7 +101,11 @@
       <p>Tidak ada jadwal checksheet pada fase ini.</p>
     </div>
 
-    <ion-card *ngFor="let slot of currentPhaseSlots" class="slot-card">
+    <ion-card
+      *ngFor="let slot of currentPhaseSlots"
+      class="slot-card"
+      [class.card-clickable]="canFillSlot(slot)"
+      (click)="onCardClicked(slot)">
       <ion-card-header>
         <div class="slot-header-row">
           <div class="slot-title-col">
@@ -261,11 +265,11 @@
             *ngIf="canFillSlot(slot)"
             expand="block"
             size="small"
-            [color]="slot.status === 'late' ? 'warning' : 'primary'"
+            [color]="(slot.status === 'late' || slot.status === 'missed') ? 'warning' : 'primary'"
             class="ion-margin-top"
-            (click)="openSlotForm(slot)">
+            (click)="openSlotForm(slot); $event.stopPropagation()">
             <ion-icon name="document-text-outline" slot="start"></ion-icon>
-            {{ slot.status === 'late' ? 'Isi Checksheet (Terlambat)' : 'Isi Checksheet' }}
+            {{ (slot.status === 'late' || slot.status === 'missed') ? 'Isi Checksheet (Terlambat)' : 'Isi Checksheet' }}
           </ion-button>
         </div>
 

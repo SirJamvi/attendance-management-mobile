@@ -351,9 +351,16 @@ export class KoChecksheetsPage implements OnInit, OnDestroy {
     if (slot.requires_vehicle) return false;
     if (slot.is_exempt || slot.status === 'exempt') return false;
     if (slot.source === 'pos_web_sync' || slot.pos_synced) return false;
+    if (slot.status === 'done') return false;
     // Slot otomatis dari presensi diselesaikan otomatis saat check-in, bukan form manual
     if (this.isAutoAttendanceSlot(slot)) return false;
-    return slot.status === 'open' || slot.status === 'late' || slot.status === 'upcoming';
+    return slot.status === 'open' || slot.status === 'late' || slot.status === 'missed' || slot.status === 'upcoming';
+  }
+
+  onCardClicked(slot: ChecksheetSlot) {
+    if (this.canFillSlot(slot)) {
+      this.openSlotForm(slot);
+    }
   }
 
   goToAttendance() {
